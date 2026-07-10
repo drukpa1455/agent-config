@@ -8,6 +8,7 @@ Shared global policy and portable skills for coding agents.
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
+skills/epic-loop/            stage-gated epic delivery
 skills/persistent-browser/   on-demand browser capability
 ```
 
@@ -47,6 +48,18 @@ npx skills add drukpa1455/agent-config --skill curated-wiki
 ```
 
 See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
+
+## Epic loop
+
+`epic-loop` turns an approved plan into a native GitHub epic, stage, and implementation sub-issue hierarchy. It prepares each stage against repository and upstream evidence, executes it as an unmerged PR stack, pauses once for the stage merge gate, then verifies the landed stage before the next begins.
+
+The target repository's `AGENTS.md` remains authoritative. The skill adds no labels, tracker setup, database, telemetry, or background service.
+
+```sh
+npx skills add drukpa1455/agent-config --skill epic-loop
+```
+
+Use `/skill:epic-loop shape <plan>`, `prepare <stage-issue>`, `run <stage-issue>`, or `review <epic-issue>`. See [`skills/epic-loop/SKILL.md`](skills/epic-loop/SKILL.md).
 
 ## Persistent browser
 
