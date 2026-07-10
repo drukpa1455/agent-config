@@ -1,0 +1,47 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+skills_dir="$HOME/.agents/skills"
+
+link_file() {
+  source=$1
+  destination=$2
+
+  mkdir -p "$(dirname "$destination")"
+
+  if [ -L "$destination" ]; then
+    [ "$(readlink "$destination")" = "$source" ] || {
+      echo "refusing to replace $destination" >&2
+      exit 1
+    }
+    return
+  fi
+
+  [ ! -e "$destination" ] || {
+    echo "refusing to replace $destination" >&2
+    exit 1
+  }
+
+  ln -s "$source" "$destination"
+}
+
+if [ -L "$skills_dir" ]; then
+  [ "$(readlink "$skills_dir")" = "$root/skills" ] || {
+    echo "refusing to replace $skills_dir" >&2
+    exit 1
+  }
+  rm "$skills_dir"
+fi
+
+mkdir -p "$skills_dir"
+
+for source in "$root"/skills/*; do
+  [ -f "$source/SKILL.md" ] || continue
+  link_file "$source" "$skills_dir/$(basename "$source")"
+done
+
+link_file "$root/global/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
+link_file "$root/global/AGENTS.md" "$HOME/.codex/AGENTS.md"
+
+echo "linked agent config from $root"
