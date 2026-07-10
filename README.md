@@ -6,6 +6,7 @@ Shared global policy and portable skills for coding agents.
 
 ```text
 global/AGENTS.md             always-loaded working policy
+scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
 skills/persistent-browser/   on-demand browser capability
 ```
@@ -14,17 +15,16 @@ Project-level `AGENTS.md` files remain authoritative for project-specific rules 
 
 ## Use the shared configuration
 
-Clone once, then point supported harnesses at the checkout:
+Clone once, then link the shared files:
 
 ```sh
 git clone https://github.com/drukpa1455/agent-config.git ~/src/agent-config
-mkdir -p ~/.agents ~/.pi/agent ~/.codex
-ln -s ~/src/agent-config/skills ~/.agents/skills
-ln -s ~/src/agent-config/global/AGENTS.md ~/.pi/agent/AGENTS.md
-ln -s ~/src/agent-config/global/AGENTS.md ~/.codex/AGENTS.md
+~/src/agent-config/scripts/link
 ```
 
-The commands fail rather than overwrite existing configuration. Pi and Codex both read the same files. Run `/reload` in Pi after changes; start a new Codex session to reload global policy.
+The linker creates a real `~/.agents/skills/` aggregation directory and links each owned skill into it. Existing foreign skill entries are preserved, so reviewed third-party skills can be installed without writing them into this repository. The linker migrates the legacy whole-directory symlink only when it points to this checkout and otherwise refuses conflicting paths.
+
+Pi and Codex both read the same skills and global policy. Run `/reload` in Pi after changes; start a new Codex session to reload them.
 
 Update explicitly after review:
 
