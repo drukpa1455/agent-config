@@ -6,6 +6,7 @@ Shared global policy and portable skills for coding agents.
 
 ```text
 global/AGENTS.md             always-loaded working policy
+skills/curated-wiki/         schema-driven knowledge curation
 skills/persistent-browser/   on-demand browser capability
 ```
 
@@ -32,6 +33,20 @@ git -C ~/src/agent-config pull --ff-only
 ```
 
 Unattended pulls are intentionally excluded because skills and global instructions can execute policy and code.
+
+## Curated wiki
+
+`curated-wiki` queries and maintains a user-owned Markdown wiki without imposing a storage layout or note format. The target repository's `AGENTS.md` remains its schema; the skill supplies cross-context discovery, side-effect boundaries, and query, curation, and lint flows.
+
+The design follows the persistent, compounding [LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) while keeping each wiki's operating contract local.
+
+Set `KNOWLEDGE_BASE_PATH` when the wiki should be available outside its own checkout, or provide its path in the request.
+
+```sh
+npx skills add drukpa1455/agent-config --skill curated-wiki
+```
+
+See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
 
 ## Persistent browser
 
