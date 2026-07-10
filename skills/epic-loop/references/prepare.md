@@ -20,9 +20,22 @@ Name the assumption most likely to invalidate this stage. Obtain fresh evidence 
 
 Each implementation child must be one independently reviewable PR purpose with explicit acceptance and verification. Split or combine provisional children accordingly. Put special investigation, prototype, migration-risk, or contract questions before implementation and close them before launch.
 
-Order implementation children as the intended PR stack. Encode real prerequisites with native `blocked by` relationships. Do not create user checkpoints between children.
+Order implementation children as the intended PR stack. The stack is a total merge order even when semantic dependencies form a smaller DAG; encode only real prerequisites with native `blocked by` relationships. Every child must leave its branch green. Do not create user checkpoints between children.
 
-## 3. Draft the execution lease
+## 3. Prove launch readiness
+
+A stage is ready only when:
+
+- every question that could change scope, architecture, contracts, migration, stack shape, or verification is resolved;
+- residual unknowns are classified as reversible execution choices inside the lease;
+- the plan-invalidating assumption has fresh evidence;
+- the complete stack fits one bounded integrated review and merge budget;
+- landing the stage creates a coherent trunk state from which the next stage can start;
+- rollback and repair paths are explicit.
+
+Keep unresolved load-bearing work in investigation or prototype children. Close it before launch; do not hide fog inside an implementation issue.
+
+## 4. Draft the execution lease
 
 Update the stage body with:
 
@@ -35,6 +48,8 @@ Update the stage body with:
 
 ## Stage base revision
 
+## Base drift policy
+
 ## Evidence and plan-invalidating assumption
 
 ## Reference and submodule snapshot
@@ -45,6 +60,10 @@ Update the stage body with:
 
 ## Verification contract
 
+## Rollback and repair
+
+## Context and concurrency budget
+
 ## Allowed external actions and resource cap
 
 ## Stop conditions
@@ -52,9 +71,9 @@ Update the stage body with:
 ## Out of scope
 ```
 
-The lease should authorize routine implementation, commits, pushes, PR creation, debugging, and review for the named children. It must state whether the post-review stack merge is authorized only after the human merge gate; production remains separately revision-bounded.
+The lease should authorize routine implementation, commits, pushes, PR creation, debugging, fresh-context child execution, checkpoint comments, and review for the named children. Its base drift policy may allow one clean pre-review stack rebase only when range-diff, layer behavior, and checks remain equivalent; conflicts or semantic drift stop the stage. The post-review stack merge is authorized only after the human merge gate; production remains separately revision-bounded.
 
-## 4. Present the launch gate
+## 5. Present the launch gate
 
 Show:
 
@@ -65,6 +84,11 @@ Show:
 - evidence gathered and unresolved risks;
 - execution authority and stop conditions.
 
-Ask once whether to publish the refinements and launch this exact lease. On approval, apply the bounded GitHub edits, verify native relationships, and post a launch comment recording the frozen base, source revision, child issue numbers, and stack order.
+Ask once whether to publish the refinements and launch this exact lease. On approval:
 
-Stop. Do not create a worktree or begin implementation in prepare mode.
+1. Apply the bounded GitHub edits and verify native relationships.
+2. Normalize and hash the final stage body as defined in `state.md`.
+3. Post exactly one launch marker with the lease ID, frozen base commit and tree, source revision, child issue numbers, and stack order.
+4. Re-fetch the body and comment, recompute the lease ID, and verify the transition.
+
+Stop. Do not create a worktree or begin implementation in prepare mode. Prepare is complete only when all launch-readiness checks pass and another session can reconstruct the exact lease from GitHub alone.

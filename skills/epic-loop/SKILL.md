@@ -47,7 +47,7 @@ shape epic -> human epic gate
 review epic -> human epic-acceptance gate
 ```
 
-Each stage recursively performs `discover -> plan -> execute -> verify -> learn`. Before launch, verify the assumption most likely to invalidate the stage. After landing, feed new evidence into later stages rather than following stale plans.
+Each stage recursively performs `discover -> plan -> execute -> verify -> learn`. Before launch, verify the assumption most likely to invalidate the stage. After landing, propose how new evidence should change later stages rather than following stale plans.
 
 ## Canonical Artifacts
 
@@ -56,21 +56,22 @@ Each stage recursively performs `discover -> plan -> execute -> verify -> learn`
 - A stage issue owns its refined plan, frozen execution lease, and landed report.
 - Implementation sub-issues own one purpose, branch, worktree, and PR each.
 - GitHub native parents and dependencies own hierarchy and blocking state.
+- Machine-readable issue comments own lifecycle transitions and stack evidence.
 
-Reference the plan by canonical path or URL and immutable revision. Copy only the issue-specific contract; do not fork the whole plan into every issue.
+Reference the plan by canonical path or URL and immutable revision. Copy only the issue-specific contract; do not fork the whole plan into every issue. A launched stage lease supersedes the initial plan for that stage while remaining inside epic invariants; later plan edits have no effect until prepare mode approves a new lease.
 
 ## Modes
 
 - **shape** — read [`references/shape.md`](references/shape.md).
-- **prepare** — read [`references/prepare.md`](references/prepare.md).
-- **run** — read [`references/run.md`](references/run.md).
-- **review** — read [`references/review.md`](references/review.md).
+- **prepare** — read [`references/state.md`](references/state.md), then [`references/prepare.md`](references/prepare.md).
+- **run** — read [`references/state.md`](references/state.md), then [`references/run.md`](references/run.md).
+- **review** — read [`references/state.md`](references/state.md), then [`references/review.md`](references/review.md).
 
 ## Gates and Authority
 
 Before any GitHub write, show the exact repository, source revision, proposed issues or edits, parent relationships, blockers, and write count. One approval authorizes that bounded publication pass. Stop on unknown success; inspect before retrying so duplicate issues are never created.
 
-A stage launch approves only its frozen execution lease: child issue set, base revision, stack order, verification contract, allowed external actions, resource cap, and stop conditions. Routine reversible choices inside that lease do not return to the user.
+A stage launch approves only its hashed execution lease: child issue set, base revision and drift policy, stack order, verification and repair contracts, allowed external actions, resource cap, and stop conditions. The stage body becomes immutable until landing or renewed preparation. Routine reversible choices inside that lease do not return to the user.
 
 Stop the stage when new evidence changes epic scope, architecture, contracts, stage order, controlled-resource exposure, or the reviewed effective diff; when verification cannot establish correctness; or when an external write has unknown success.
 
