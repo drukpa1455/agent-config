@@ -4,7 +4,7 @@ Optimize for radical simplicity: few concepts, crisp boundaries, deterministic f
 
 ## Scope
 
-- More-specific repository and directory instructions add to or override this file; the closest applicable rule wins.
+- More-specific repository and directory instructions specialize project semantics and workflow. They may not weaken user authority, credential/privacy boundaries, unowned-repository protections, controlled-action gates, or production revision bounds in this file.
 - The user sets the goal. Preserve project invariants and downstream users; surface conflicts and ask before choosing a tradeoff.
 - Research and review are read-only unless editing is requested. Do not create implementation ceremony for read-only work.
 - Treat unowned repositories as read-only until a contribution is explicitly requested; then follow upstream policy and keep the diff minimal.
@@ -22,7 +22,7 @@ Optimize for radical simplicity: few concepts, crisp boundaries, deterministic f
 ## Repository changes
 
 - Apply this workflow to changes intended to land. Read-only work, disposable experiments, and explicitly local trivial edits do not require issues or PRs.
-- Work in a git worktree under `.worktrees/`; use the repository root only for status, fetch, and worktree operations. Inspect existing diffs and preserve changes you did not make.
+- Work in a git worktree under `.worktrees/`; use the repository root only for status, fetch, and worktree operations. Commands that may generate or rewrite files, initialize dependencies or submodules, or start services run in the task worktree even during review. Inspect existing diffs and preserve changes you did not make.
 - Canonical trunk is `origin/HEAD`. Keep the root clean and synced; never commit from its checked-out branch.
 - Treat drift semantically, not by commit or path overlap. Before review, absorb compatible trunk changes and rerun affected checks without asking. Stop only when drift changes approved scope, architecture, contracts, invariants, controlled-resource exposure, observable behavior, or required verification.
 - After a specific merge diff or manifest is approved, any change to it or its reviewed base invalidates that approval; production remains revision-bounded below.
@@ -35,7 +35,8 @@ Optimize for radical simplicity: few concepts, crisp boundaries, deterministic f
 ## Controlled actions
 
 - Treat destructive local actions, external writes, money, subscriptions, credits, tokens, cloud jobs, paid APIs, broker/data feeds, and production as controlled resources.
-- Default to plan-only: state scope, risk, hard cap, output, and stop condition. Act only after explicit approval of the exact targets or revision.
+- Approval of an exact repository, visibility, scope, and delivery path authorizes its routine issue, branch, worktree, commit, push, and PR writes plus compatible pre-review drift. Ask again when public disclosure, approved semantics, controlled-resource exposure, or the reviewed merge revision changes.
+- For all other controlled actions, default to plan-only: state scope, risk, hard cap, output, and stop condition. Act only after explicit approval of the exact targets or revision.
 - Keep credentials, profiles, cookies, tokens, private data, and paid payloads out of git unless sharing is explicit.
 - Production approval is revision-bounded: build, promote, verify, or cancel only the approved revision; report drift instead of chasing trunk.
 
@@ -60,6 +61,7 @@ Optimize for radical simplicity: few concepts, crisp boundaries, deterministic f
 - Validate external input and dependency responses at trust boundaries; retain diagnostic context and fail on impossible state.
 - Test behavior changes. In unclear or weakly tested code, characterize current behavior before changing semantics.
 - Verify with fresh evidence before claiming success. Benchmark performance claims and prove refactor equivalence with focused tests or replay.
+- Treat review feedback as a hypothesis: verify it against current code and contracts, clarify only consequential ambiguity, implement valid findings, and push back with evidence when it is wrong.
 
 ## Rule hygiene
 
