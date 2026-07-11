@@ -24,8 +24,10 @@ Choose authority by the question, not by convenience:
 - a `diff` compares named revisions and does not choose one as current truth.
 
 A plan and code may legitimately differ. Label them as intended and current in
-a comparison. If the question asks for one current or intended claim and the
-sources conflict, return `SOURCE_GAP` rather than selecting a winner.
+a comparison. Preserve a source-declared status verbatim: `Ready for approval`
+is not approved evidence. If required authority is absent or sources conflict
+about the requested current or intended claim, return `SOURCE_GAP` rather than
+selecting a winner.
 
 ### Live GitHub sources
 
@@ -95,8 +97,12 @@ protocol:<name>@<revision>:section-4
 
 If no source-native identifier exists, derive
 `source:<sha256-of-normalized-citation>` and include the full citation in the
-evidence map. A short display key may abbreviate a canonical ID only when the
-legend maps it back. Never assign `N1`, `N2`, or another traversal-order ID.
+evidence map. Never assign `N1`, `N2`, or another traversal-order ID.
+
+Keep canonical IDs in the evidence model. The visual core uses a short,
+readable display label such as `truth builder` or `current-corridor mask`.
+Print a canonical ID only when a trace, diff, repeated label, or audit question
+needs it; otherwise a legend must not be necessary to understand the topology.
 
 A cycle points to an existing canonical ID. Do not duplicate a node to make a
 cycle appear acyclic, and do not recurse through a cycle.
@@ -123,8 +129,11 @@ abstraction levels merely to make a comprehensive-looking graph.
 ### `overview`
 
 Show the target boundary, direct external boundaries, major owners, and the
-few relationships needed to explain the requested context. Do not descend into
-an owner unless its internals cross the change frontier.
+few relationships needed to explain the requested context. Choose one visible
+primary structure: delivery pipeline, fan-in/fan-out, or meaningful
+containment. Do not descend into an owner unless its internals cross the change
+frontier. Split a delivery question from an artifact-composition question
+instead of flattening both into one edge list.
 
 ### `expand`
 
@@ -179,59 +188,53 @@ remaining decisions are reversible implementation details. There is no fixed
 diagram count or depth. Split views when a graph would otherwise mix levels,
 require unexplained crossings, or exceed its width budget.
 
-## 5. Render portable ASCII
+## 5. Render topology-first ASCII
+
+Read [`layout.md`](layout.md) before rendering. The visual core answers the
+question first; it is not an edge ledger, full legend, or source dump.
 
 Use a fenced `text` block and printable ASCII only. The default maximum is 80
 columns. If it cannot be legible at that width, split the view; exceed the
 width only when the user explicitly asks and state the measured width.
 
-Use line-oriented labeled edges:
+Select one grammar from the semantic graph:
 
-```text
-[I25] --contains--> [S1]
-[S1]  --blocked by--> [I24]
-[API] --writes--> [STORE]
-[READY] --approval--> [RUNNING]
-```
+- left-to-right pipeline for ordered delivery or a primary transformation;
+- fan-in/fan-out for multiple source inputs or consumers;
+- a plain-ASCII containment box for a real owner, artifact, or contract;
+- hierarchy, state, sequence, or trace when that is the question.
 
-Use forward arrows only. A relation label is a verb or an explicit dependency
-phrase; `uses`, unlabeled arrows, bidirectional arrows, decoration, and layout
-as semantics are not permitted. Keep hierarchy, blockers, PR stack order,
-status, and data/control flow in separate panels when they use different
-relations.
+Use readable labels in the visual core. Plain-ASCII `+`, `-`, and `|` boxes are
+allowed only when their border expresses real containment. A pipeline arrow may
+be unlabeled when the title establishes its single meaning, such as `precedes`;
+all other connectors use an explicit directed verb. Keep status, blockers,
+stack order, and data/control flow in separate views when they have different
+meanings.
 
-For delivery graphs, show at least these distinct panels when applicable:
-
-```text
-Hierarchy: [EPIC] --contains--> [STAGE]
-Blockers:  [STAGE] --blocked by--> [INVESTIGATION]
-Stack:     [PR1] --precedes--> [PR2]
-Status:    [STAGE] open
-```
-
-Each diagram includes a title, source identity, question, view, scope,
-completeness statement, legend, evidence map, and explicit unknowns. The
-legend maps display keys to canonical IDs; the evidence map maps every edge to
-its citations.
+Do not make an opaque ID, exhaustive file inventory, or per-edge citation part
+of the visual core. Keep canonical IDs and complete citations in the evidence
+model. Return a compact source/evidence summary after the visual; expand it to
+a full node/edge audit only when the user asks or an ambiguity requires it.
 
 Before returning, measure actual ASCII byte width rather than estimating it.
 Reject tabs, trailing whitespace, non-ASCII bytes, and lines over the agreed
-limit. Do not use box drawing, Mermaid, PlantUML, Graph::Easy, HTML, SVG, or a
-renderer dependency.
+limit. For boxes, also verify aligned borders and unambiguous connector
+endpoints. Do not use Unicode box drawing, Mermaid, PlantUML, Graph::Easy,
+HTML, SVG, or a renderer dependency.
 
 Return a result in this order:
 
 ```text
-Source: <identity, authority, and revision or observation digest>
 Question: <one question>
 View: <overview|expand|trace|state|sequence|diff>
 Scope: <named boundary>
 Completeness: <complete within scope|partial with listed unknowns>
 
-<one ASCII diagram>
+<one topology-first ASCII visual core>
 
-Legend: <display key -> canonical node ID>
-Evidence: <edge -> citations>
+Source: <identity, authority, and revision or observation digest>
+Evidence: <compact citation groups>
+Node map: <only ambiguous labels or audit-requested IDs>
 Unknowns: <none or explicit list>
 ```
 

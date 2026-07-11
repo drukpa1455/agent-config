@@ -72,11 +72,12 @@ in chat as a fenced `text` block.
 
 ## 3. Build an evidence model
 
-Read [`references/projection-contract.md`](references/projection-contract.md).
-Create a node only for a source-backed entity and an edge only for a source-
-backed, directed relationship. Give each node a source-native canonical ID and
-cite the evidence for every relationship. Preserve cycles as edges to existing
-nodes; never duplicate nodes or recurse indefinitely.
+Read [`references/projection-contract.md`](references/projection-contract.md)
+and [`references/layout.md`](references/layout.md). Create a node only for a
+source-backed entity and an edge only for a source-backed, directed
+relationship. Give each node a source-native canonical ID and cite the evidence
+for every relationship. Preserve cycles as edges to existing nodes; never
+duplicate nodes or recurse indefinitely.
 
 Keep hierarchy, dependency, stack order, status, and data/control flow in
 separate panels whenever combining them would make an edge ambiguous. A status
@@ -91,18 +92,27 @@ boundary. Stop when one owner contains the remaining internals, its external
 contract is explicit, cross-boundary state and failure behavior are resolved,
 and the remainder is reversible implementation detail.
 
-Use plain ASCII in a `text` fence. Default to 80 columns or fewer; split the
-view rather than shrinking labels or mixing abstraction levels. Every edge uses
-an explicit directed verb such as `--contains-->`, `--blocked by-->`, or
-`--writes-->`. Include a title, source identity, scope, legend, evidence map,
-and explicit unknowns outside or below the diagram as appropriate.
+Select a topology-first grammar before rendering: pipeline, fan-in/fan-out,
+containment, hierarchy, state, sequence, or trace. Use readable labels in the
+visual core. Plain-ASCII containment boxes are allowed only when they show a
+real owner, artifact, or contract boundary. Split delivery order, artifact
+composition, and future-stage behavior into focused views when they answer
+different questions.
+
+Return one fenced `text` visual core, then compact audit notes for source,
+evidence groups, necessary ID mappings, and unknowns. Default to 80 columns or
+fewer; split the view rather than shrinking labels, adding opaque IDs, or
+mixing abstraction levels. Every connector has an explicit directed meaning;
+keep detailed per-edge evidence outside the visual core unless the user asks
+for an audit appendix.
 
 ## 5. Validate and stop honestly
 
 Mechanically measure the diagram rather than estimating character positions.
 Its lines must be printable ASCII, free of tabs and trailing whitespace, and
-within the agreed width. Split an unreadable graph; do not conceal omitted
-relationships.
+within the agreed width. For boxes, also verify aligned borders and
+unambiguous connector endpoints. Split an unreadable graph; do not conceal
+omitted relationships.
 
 Return `SOURCE_GAP` instead of a provisional diagram when a required edge,
 state transition, ordering, source revision, authority decision, or live
