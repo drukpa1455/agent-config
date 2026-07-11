@@ -36,6 +36,11 @@ fi
 
 mkdir -p "$skills_dir"
 
+legacy_epic_loop="$skills_dir/epic-loop"
+if [ -L "$legacy_epic_loop" ] && [ "$(readlink "$legacy_epic_loop")" = "$root/skills/epic-loop" ]; then
+  rm "$legacy_epic_loop"
+fi
+
 for source in "$root"/skills/*; do
   [ -f "$source/SKILL.md" ] || continue
   link_file "$source" "$skills_dir/$(basename "$source")"

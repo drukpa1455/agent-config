@@ -8,7 +8,7 @@ Shared global policy and portable skills for coding agents.
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
-skills/epic-loop/            stage-gated epic delivery
+skills/staged-delivery/      stage-gated change delivery
 skills/implementation-planning/ repository-grounded planning
 skills/persistent-browser/   on-demand browser capability
 skills/systematic-debugging/  evidence-first root-cause diagnosis
@@ -55,7 +55,7 @@ See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
 
 `implementation-planning` turns consequential engineering intent into an approved, repository-grounded plan. It verifies current behavior, resolves load-bearing decisions, scales delivery from one issue to genuinely staged work, and names interfaces, evidence, rollback, repair, and resource bounds without pre-writing routine implementation.
 
-The skill is read-only until the exact plan is approved. It does not publish issues or execute work; a stable approved plan hands off explicitly to `epic-loop`.
+The skill is read-only until the exact plan is approved. It does not publish issues or execute work; a stable approved plan hands off explicitly to `staged-delivery`.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill implementation-planning
@@ -63,17 +63,17 @@ npx skills add drukpa1455/agent-config --skill implementation-planning
 
 Use `/skill:implementation-planning <intent-or-spec>`. See [`skills/implementation-planning/SKILL.md`](skills/implementation-planning/SKILL.md).
 
-## Epic loop
+## Staged delivery
 
-`epic-loop` turns an approved plan into a native GitHub epic, stage, and implementation sub-issue hierarchy. It prepares each stage against repository and upstream evidence, executes it as an unmerged PR stack, pauses once for the stage merge gate, then verifies the landed stage before the next begins.
+`staged-delivery` turns an approved plan into a native GitHub epic, stage, and implementation sub-issue hierarchy. It prepares each stage against repository and upstream evidence, executes it as an unmerged PR stack, pauses once for the stage merge gate, then verifies the landed stage before the next begins.
 
 The target repository's `AGENTS.md` remains authoritative. The skill adds no labels, tracker setup, database, telemetry, or background service.
 
 ```sh
-npx skills add drukpa1455/agent-config --skill epic-loop
+npx skills add drukpa1455/agent-config --skill staged-delivery
 ```
 
-Use `/skill:epic-loop shape <plan>`, `prepare <stage-issue>`, `run <stage-issue>`, or `review <epic-issue>`. See [`skills/epic-loop/SKILL.md`](skills/epic-loop/SKILL.md).
+Use `/skill:staged-delivery shape <plan>`, `prepare <stage-issue>`, `run <stage-issue>`, or `review <epic-issue>`. See [`skills/staged-delivery/SKILL.md`](skills/staged-delivery/SKILL.md).
 
 ## Systematic debugging
 
