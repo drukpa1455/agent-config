@@ -9,6 +9,7 @@ global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
 skills/epic-loop/            stage-gated epic delivery
+skills/implementation-planning/ repository-grounded planning
 skills/persistent-browser/   on-demand browser capability
 ```
 
@@ -48,6 +49,18 @@ npx skills add drukpa1455/agent-config --skill curated-wiki
 ```
 
 See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
+
+## Implementation planning
+
+`implementation-planning` turns consequential engineering intent into an approved, repository-grounded plan. It verifies current behavior, resolves load-bearing decisions, scales delivery from one issue to genuinely staged work, and names interfaces, evidence, rollback, repair, and resource bounds without pre-writing routine implementation.
+
+The skill is read-only until the exact plan is approved. It does not publish issues or execute work; a stable approved plan hands off explicitly to `epic-loop`.
+
+```sh
+npx skills add drukpa1455/agent-config --skill implementation-planning
+```
+
+Use `/skill:implementation-planning <intent-or-spec>`. See [`skills/implementation-planning/SKILL.md`](skills/implementation-planning/SKILL.md).
 
 ## Epic loop
 
