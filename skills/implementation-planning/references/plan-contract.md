@@ -5,7 +5,7 @@ Scale sections to the work. Omit empty optional sections; never fill them with p
 ```markdown
 # <Observable outcome> Implementation Plan
 
-Status: Draft
+Status: Draft | Ready for approval
 Repository: <owner/repo>
 Source inputs: <paths or URLs with revisions>
 
@@ -77,7 +77,7 @@ For genuinely staged work, repeat:
 
 ## Open decisions
 
-None.
+For `Draft`, list each consequential unresolved choice and the evidence or decision needed. For `Ready for approval`, write exactly `None`.
 ```
 
 ## Review gate
@@ -96,4 +96,4 @@ The plan is approvable only when all answers are yes:
 - **References:** Are load-bearing external contracts pinned and verified?
 - **Decisions:** Are all remaining choices reversible implementation details?
 
-If any answer is no, revise or return `BLOCKED` with the exact missing evidence. Never convert the gap into a placeholder implementation task.
+If any answer is no, revise or return `BLOCKED` with the exact missing evidence. A blocked response contains no provisional implementation checklist. Never convert the gap into a placeholder implementation task.

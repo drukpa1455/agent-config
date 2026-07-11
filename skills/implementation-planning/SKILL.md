@@ -43,7 +43,7 @@ Use the least structure the work earns:
 - genuinely sequential outcomes requiring separate evidence or human control: multiple stages;
 - unresolved load-bearing uncertainty: investigation or prototype before implementation.
 
-A stage is a human-controlled landing boundary, not a document heading. For one coherent change, emit one implementation unit with no stage wrapper; fold tests, docs, and final verification into that unit. For expand-migrate-contract work, compatibility removal cannot land until runtime evidence proves migration complete, so it cannot share the introducing PR or stage. Implementation units own one PR purpose, not architecture layers or two-minute steps. Order work by dependencies and risk retirement.
+A stage is a human-controlled landing boundary, not a document heading. For one coherent change, emit one implementation unit with no stage wrapper; fold tests, docs, and final verification into that unit. When compatibility removal depends on evidence produced after migration lands, use at least three outcomes: expand compatibility, migrate and verify, then contract. They cannot be one PR, one stage, or a flat checklist because the contract gate does not exist until runtime evidence does. Implementation units own one PR purpose, not architecture layers or two-minute steps. Order work by dependencies and risk retirement.
 
 If the requested issue, PR, or stage shape conflicts with safe intermediate states, name the conflict and recommend the smallest valid shape. Do not encode the invalid shape to satisfy formatting pressure; keep approval blocked until the consequential choice is resolved.
 
@@ -51,7 +51,15 @@ If the requested issue, PR, or stage shape conflicts with safe intermediate stat
 
 Use [`references/plan-contract.md`](references/plan-contract.md). Name exact files and symbols when evidence supports them, interfaces between units, acceptance evidence, commands and expected results, migration, rollback, repair, resource bounds, pinned references, and the assumption most likely to invalidate each stage.
 
-Review the complete plan against destination, scope, ownership, architecture, state, failures, verification, operations, references, and cleanup. Remove placeholders, duplicated truth, speculative files, and load-bearing open decisions. `Open decisions: None` is valid only after repository and external-contract evidence is verified; otherwise return a draft with explicit gaps or `BLOCKED`, never an approvable plan.
+Review the complete plan against destination, scope, ownership, architecture, state, failures, verification, operations, references, and cleanup. Remove placeholders, duplicated truth, speculative files, and load-bearing open decisions.
+
+Use one honest status:
+
+- `BLOCKED`: required repository or external evidence is unavailable; return only the gap and reads needed, not a provisional implementation checklist.
+- `Draft`: evidence permits planning but consequential choices remain; list every one under `Open decisions`.
+- `Ready for approval`: all load-bearing evidence is verified and `Open decisions` is exactly `None`.
+
+Never write `Open decisions: None` alongside “unknown,” “unverified,” “to be confirmed,” “if needed,” or another unresolved branch.
 
 ## 6. Present the plan gate
 
