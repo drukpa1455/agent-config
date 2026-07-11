@@ -67,10 +67,10 @@ Use `/skill:implementation-planning <intent-or-spec>`. See [`skills/implementati
 ## Terminal diagrams
 
 `terminal-diagrams` projects pinned plans, repository architecture, protocols,
-state machines, and live GitHub delivery graphs into concise plain-ASCII views.
-It is user-invoked and read-only: source prose, code, GitHub state, and
-manifests remain authoritative. The skill returns `SOURCE_GAP` instead of
-inventing a relationship or silently resolving a contradiction.
+state machines, and live GitHub delivery graphs into concise, topology-first
+plain-ASCII views. It is user-invoked and read-only: source prose, code, GitHub
+state, and manifests remain authoritative. The skill returns `SOURCE_GAP`
+instead of inventing a relationship or silently resolving a contradiction.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill terminal-diagrams
