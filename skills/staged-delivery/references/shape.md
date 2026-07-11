@@ -9,7 +9,7 @@ Read the plan completely. Require a stable source:
 - tracked file: repository path plus blob or commit SHA;
 - GitHub artifact: issue or discussion URL plus current revision context.
 
-Stop if the plan is unapproved, contains unresolved consequential choices, contradicts repository policy, or cannot name an observable destination. Resolve repository visibility before drafting issue bodies.
+Require canonical `Status: Approved`; do not reconstruct approval from chat, a PR title, or invocation wording. Stop if that status is absent, the plan contains unresolved consequential choices, contradicts repository policy, or cannot name an observable destination. Resolve repository visibility before drafting issue bodies.
 
 When the user invokes [`terminal-diagrams`](../../terminal-diagrams/SKILL.md), it
 may project the approved plan revision's outcome dependencies before
@@ -20,10 +20,12 @@ until it exists; the projection neither publishes nor changes the graph.
 
 Use no more hierarchy than the work earns:
 
-- one coherent purpose: one implementation issue;
+- one coherent purpose: return it to the repository's ordinary issue/worktree/PR workflow without publishing a staged graph;
 - genuinely multi-stage effort: one epic with ordered stage sub-issues;
 - multiple independently reviewable changes inside a stage: implementation sub-issues;
 - unresolved load-bearing question: an investigation or prototype sub-issue that must close before stage launch.
+
+If the plan has one coherent purpose, stop here with the ordinary workflow handoff; do not present or publish a staged graph.
 
 Stages are outcome-shaped, not architecture layers. Implementation issues are one-purpose PR units. For wide mechanical refactors, use expand, bounded migrations, then contract rather than forcing false vertical slices.
 
@@ -68,11 +70,7 @@ Record every returned URL immediately. On partial failure, stop and report the e
 
 Verify parent and dependency fields with `gh issue view --json parent,subIssues,blockedBy,blocking`.
 
-For one implementation issue:
-
-- report its URL and native blockers;
-- hand it to the target repository's ordinary issue → branch → worktree → PR workflow;
-- stop staged delivery without invoking `prepare`, `run`, or `review`.
+A one-unit plan is a terminal no-write result: report the ordinary workflow handoff and stop staged delivery.
 
 For an epic hierarchy, report the epic URL, stage order, provisional children, and recommended first stage. Do not prepare it until the user selects that stage.
 
