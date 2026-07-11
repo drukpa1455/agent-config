@@ -11,6 +11,7 @@ skills/curated-wiki/         schema-driven knowledge curation
 skills/epic-loop/            stage-gated epic delivery
 skills/implementation-planning/ repository-grounded planning
 skills/persistent-browser/   on-demand browser capability
+skills/systematic-debugging/  evidence-first root-cause diagnosis
 ```
 
 Project-level `AGENTS.md` files remain authoritative for project-specific rules and layer after the shared global policy.
@@ -73,6 +74,16 @@ npx skills add drukpa1455/agent-config --skill epic-loop
 ```
 
 Use `/skill:epic-loop shape <plan>`, `prepare <stage-issue>`, `run <stage-issue>`, or `review <epic-issue>`. See [`skills/epic-loop/SKILL.md`](skills/epic-loop/SKILL.md).
+
+## Systematic debugging
+
+`systematic-debugging` traces bugs, test failures, and unexpected behavior to evidence-backed root causes before changing code. The owned adaptation preserves the reviewed Superpowers workflow while using repository policy—not an unavailable global TDD skill—to define the narrowest failing regression test or characterization.
+
+```sh
+npx skills add drukpa1455/agent-config --skill systematic-debugging
+```
+
+See [`skills/systematic-debugging/SKILL.md`](skills/systematic-debugging/SKILL.md).
 
 ## Persistent browser
 
