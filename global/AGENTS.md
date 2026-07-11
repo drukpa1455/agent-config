@@ -24,6 +24,8 @@ Optimize for radical simplicity: few concepts, crisp boundaries, deterministic f
 - Apply this workflow to changes intended to land. Read-only work, disposable experiments, and explicitly local trivial edits do not require issues or PRs.
 - Work in a git worktree under `.worktrees/`; use the repository root only for status, fetch, and worktree operations. Inspect existing diffs and preserve changes you did not make.
 - Canonical trunk is `origin/HEAD`. Keep the root clean and synced; never commit from its checked-out branch.
+- Treat drift semantically, not by commit or path overlap. Before review, absorb compatible trunk changes and rerun affected checks without asking. Stop only when drift changes approved scope, architecture, contracts, invariants, controlled-resource exposure, observable behavior, or required verification.
+- After a specific merge diff or manifest is approved, any change to it or its reviewed base invalidates that approval; production remains revision-bounded below.
 - One landing change gets one branch, worktree, and PR. Use a scoped issue when work is nontrivial, already tracked, or part of a larger plan; the PR closes it.
 - For issue-backed work, use `agent/aNN/issue-<id>-<slug>` and `.worktrees/aNN-issue-<id>-<slug>`.
 - Use epics and ordered stages only for genuinely multi-stage work; implementation stays in scoped issues.

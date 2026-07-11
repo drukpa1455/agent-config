@@ -94,6 +94,7 @@ The plan is approvable only when all answers are yes:
 - **Verification:** Does every behavior change have fresh, executable acceptance evidence?
 - **Operations:** Are migration, rollback, observability, cleanup, resources, and production actions bounded?
 - **References:** Are load-bearing external contracts pinned and verified?
+- **Drift:** Does the plan separate its evidence revision from the future execution base and stop only for semantic invalidation rather than a moved commit or overlapping path?
 - **Decisions:** Are all remaining choices reversible implementation details?
 
 If any answer is no, revise or return `BLOCKED` with the exact missing evidence. A blocked response contains no provisional implementation checklist. Never convert the gap into a placeholder implementation task.

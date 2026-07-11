@@ -94,7 +94,7 @@ Use `/skill:staged-delivery shape <plan>`, `prepare <stage-issue>`, `run <stage-
 
 ## Systematic debugging
 
-`systematic-debugging` traces bugs, test failures, and unexpected behavior to evidence-backed root causes before changing code. The owned adaptation preserves the reviewed Superpowers workflow while using repository policy—not an unavailable global TDD skill—to define the narrowest failing regression test or characterization.
+`systematic-debugging` applies a proportional evidence loop to reproducible defects and unexplained required-check failures. It classifies expected baselines, read-only findings, command mistakes, and explained environment failures without turning each one into an implementation workflow.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill systematic-debugging

@@ -27,7 +27,7 @@ Use no more hierarchy than the work earns:
 
 Stages are outcome-shaped, not architecture layers. Implementation issues are one-purpose PR units. For wide mechanical refactors, use expand, bounded migrations, then contract rather than forcing false vertical slices.
 
-Normalization may change tracker structure, not plan semantics. Preserve the approved outcomes, architecture, stage order, interfaces, and invariants. If any must change, stop and return to `implementation-planning` for a new approved revision.
+Normalization may change tracker structure, not plan semantics. Preserve the approved outcomes, architecture, stage order, interfaces, and invariants. The plan revision pins those semantics, not the current trunk commit. If trunk moved, refresh factual execution-base context and absorb compatible changes; a changed SHA or overlapping path alone is not a plan amendment. If an approved outcome, architecture, interface, invariant, controlled-resource exposure, observable behavior, or required verification must change, stop and return to `implementation-planning` for a new approved revision.
 
 For every node draft:
 
