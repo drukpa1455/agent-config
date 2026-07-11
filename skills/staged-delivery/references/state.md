@@ -13,7 +13,7 @@ Any body edit after launch changes the lease and returns the stage to prepare mo
 Use one machine-readable marker per transition:
 
 ```markdown
-<!-- epic-loop:launch v1 -->
+<!-- staged-delivery:launch v1 -->
 
 lease-id: <sha256>
 base-commit: <sha>
@@ -23,7 +23,7 @@ stack: <ordered child issue numbers>
 ```
 
 ```markdown
-<!-- epic-loop:base-refreshed v1 -->
+<!-- staged-delivery:base-refreshed v1 -->
 
 lease-id: <sha256>
 old-base-commit: <sha>
@@ -33,7 +33,7 @@ equivalence: <range-diff and check summary>
 ```
 
 ```markdown
-<!-- epic-loop:stack-checkpoint v1 -->
+<!-- staged-delivery:stack-checkpoint v1 -->
 
 lease-id: <sha256>
 issue: <number>
@@ -45,7 +45,7 @@ checks: <fresh result summary>
 ```
 
 ```markdown
-<!-- epic-loop:reviewed v1 -->
+<!-- staged-delivery:reviewed v1 -->
 
 manifest-id: <sha256>
 lease-id: <sha256>
@@ -58,13 +58,13 @@ checks: <fresh result summary>
 ```
 
 ```markdown
-<!-- epic-loop:merge-approved v1 -->
+<!-- staged-delivery:merge-approved v1 -->
 
 manifest-id: <sha256>
 ```
 
 ```markdown
-<!-- epic-loop:landed v1 -->
+<!-- staged-delivery:landed v1 -->
 
 manifest-id: <sha256>
 trunk-commit: <sha>

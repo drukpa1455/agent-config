@@ -1,12 +1,12 @@
 ---
-name: epic-loop
+name: staged-delivery
 description: Turn an approved plan into a GitHub epic and drive each human-gated stage through preparation, stacked execution, merge, and review.
 disable-model-invocation: true
 license: MIT
 compatibility: Requires Git, an authenticated GitHub CLI with native sub-issue and dependency flags, and a GitHub-hosted target repository.
 ---
 
-# Epic Loop
+# Staged Delivery
 
 The stage is the autonomy boundary. Humans approve the epic, launch each stage, and approve each stage's PR stack. Implementation issues organize agent work inside that boundary; they are not extra human checkpoints.
 
@@ -17,10 +17,10 @@ The target repository's `AGENTS.md` owns issue semantics, branches, worktrees, r
 Use one explicit mode and one canonical artifact:
 
 ```text
-/skill:epic-loop shape <approved-plan>
-/skill:epic-loop prepare <stage-issue>
-/skill:epic-loop run <stage-issue>
-/skill:epic-loop review <epic-issue>
+/skill:staged-delivery shape <approved-plan>
+/skill:staged-delivery prepare <stage-issue>
+/skill:staged-delivery run <stage-issue>
+/skill:staged-delivery review <epic-issue>
 ```
 
 If mode or target is ambiguous, ask once. Follow only that mode; never cross a human gate or begin the next mode automatically.

@@ -8,7 +8,7 @@ compatibility: Requires filesystem read access and the target repository's norma
 
 # Implementation Planning
 
-Turn engineering intent into one approved plan that an unfamiliar implementer can execute without inventing product or architecture decisions. Planning owns `intent -> approved plan`; [`epic-loop`](../epic-loop/SKILL.md) owns publication and delivery.
+Turn engineering intent into one approved plan that an unfamiliar implementer can execute without inventing product or architecture decisions. Planning owns `intent -> approved plan`; [`staged-delivery`](../staged-delivery/SKILL.md) owns publication and delivery.
 
 ## 1. Establish authority
 
@@ -70,4 +70,4 @@ On approval, preserve its exact bytes and obtain a stable source before delivery
 - tracked file: repository path plus blob or commit SHA; or
 - GitHub artifact: URL plus revision context.
 
-If persistence is not already authorized, stop with the exact next action. Do not silently edit the plan after approval. Once stable, hand off explicitly with `/skill:epic-loop shape <plan-source>@<revision>`; do not invoke it automatically.
+If persistence is not already authorized, stop with the exact next action. Do not silently edit the plan after approval. Once stable, hand off explicitly with `/skill:staged-delivery shape <plan-source>@<revision>`; do not invoke it automatically.
