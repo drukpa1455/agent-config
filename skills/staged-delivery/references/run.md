@@ -13,7 +13,7 @@ take a fresh observation before using a hierarchy, blocker, or stack projection.
 It may make an inconsistency visible, but it neither changes the lease nor
 replaces the required live GitHub and Git checks.
 
-If `origin/HEAD` differs from the launch base, follow the lease's base drift policy. A clean refresh before review is allowed only when the changed trunk is compatible, the stack can be rebased without conflict, range-diff and observable behavior remain equivalent, and required checks pass. Record a base-refresh marker. Otherwise return to prepare mode. Never chase moving trunk silently.
+If `origin/HEAD` differs from the launch base, follow the lease's base drift policy. Commit movement or path overlap alone is not material drift. A clean refresh before review is allowed only when the changed trunk is compatible, the stack can be rebased without conflict, range-diff and observable behavior remain equivalent, and required checks pass. Record a base-refresh marker. Otherwise return to prepare mode. Never chase moving trunk silently.
 
 ## 2. Build the stack
 

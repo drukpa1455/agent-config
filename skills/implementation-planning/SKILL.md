@@ -69,6 +69,13 @@ Never write `Open decisions: None` alongside “unknown,” “unverified,” �
 
 ## 6. Present the plan gate
 
+A plan's source revision pins its evidence and semantics, not its future
+execution base. A moved trunk or same-file edit is not itself a plan change.
+Before implementation, use current trunk and absorb compatible changes without
+asking. Reopen planning only when fresh evidence changes the destination,
+architecture, contracts, invariants, controlled-resource exposure, observable
+behavior, or required verification.
+
 Show the exact plan, evidence gaps, residual reversible choices, proposed canonical path, visibility, and required persistence action. Ask once whether to approve that exact plan.
 
 On approval, preserve its exact bytes and obtain a stable source before delivery:

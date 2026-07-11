@@ -80,7 +80,12 @@ Before any GitHub write, show the exact repository, source revision, proposed is
 
 A stage launch approves only its hashed execution lease: child issue set, base revision and drift policy, stack order, verification and repair contracts, allowed external actions, resource cap, and stop conditions. The stage body becomes immutable until landing or renewed preparation. Routine reversible choices inside that lease do not return to the user.
 
-Stop the stage when new evidence changes epic scope, architecture, contracts, stage order, controlled-resource exposure, or the reviewed effective diff; when verification cannot establish correctness; or when an external write has unknown success.
+A moved commit or overlapping path is evidence to inspect, not an escape
+condition. Before integrated review, follow the lease's drift policy, absorb
+compatible trunk changes, and rerun affected checks without asking. After
+review, any effective-diff change invalidates the reviewed manifest.
+
+Stop the stage when new evidence changes epic scope, architecture, contracts, stage order, controlled-resource exposure, observable behavior, required verification, or the reviewed effective diff; when verification cannot establish correctness; or when an external write has unknown success.
 
 ## Non-Goals
 
