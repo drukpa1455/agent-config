@@ -94,8 +94,9 @@ npx skills add drukpa1455/agent-config --skill terminal-diagrams
 ```
 
 Use `/skill:terminal-diagrams <source>@<revision> [question-or-scope]`. For
-live GitHub state, `@live` requests a fresh observation that the skill hashes
-before rendering. See [`skills/terminal-diagrams/SKILL.md`](skills/terminal-diagrams/SKILL.md).
+live GitHub state, `@live` requests a bounded non-atomic observation identified
+by its exact queries and fetch times. See
+[`skills/terminal-diagrams/SKILL.md`](skills/terminal-diagrams/SKILL.md).
 
 ## Staged delivery
 

@@ -67,9 +67,9 @@ does not also encode status and blockers on the same lines.
 ### Delivery pipeline
 
 ```text
-+--------------+     +----------------+     +--------------+
-| output guard | --> | truth contract | --> | Stage 1 gate |
-+--------------+     +----------------+     +--------------+
++-------------+     +-----------------+     +---------------+
+| input guard | --> | domain compiler | --> | consumer gate |
++-------------+     +-----------------+     +---------------+
 ```
 
 Use for ordered plan units. Put a short relation above or below a connector
@@ -78,10 +78,10 @@ only when the default direction does not explain it.
 ### Fan-in pipeline
 
 ```text
-[full-network graph]  --+
-[node attributes]     --+
-[failure association] --+-->[truth builder]-->[truth artifact]
-[node-state timeline] --+
+[source records] --+
+[attributes]     --+
+[events]         --+-->[compiler]-->[evidence artifact]
+[timeline]       --+
 ```
 
 Use for a named transformation. Use the containment view separately when the
@@ -91,16 +91,16 @@ the audit layer.
 ### Containment and boundary
 
 ```text
-+-----------------------------+
-| temporal truth artifact     |
-| - current-corridor mask     |
-| - availability contracts    |
-| - rowless audit packet      |
-+-----------------------------+
-               |
-          consumed by
-               v
-       [future stage boundary]
++-------------------------+
+| evidence artifact       |
+| - identity map          |
+| - availability contract |
+| - audit receipt         |
++-------------------------+
+             |
+        consumed by
+             v
+         [next owner]
 ```
 
 Use for what a contract exposes and what a later owner may consume. Do not draw
@@ -109,11 +109,11 @@ future implementation internals unless the question asks for them.
 ### Owned contract and operation
 
 ```text
-[temporal-truth contract] --applied by--> +-----------------------------+
-                                          | SignalDataset               |
-                                          | with_temporal_truth(...)    |
-                                          | mains_current_corridor()    |
-                                          +-----------------------------+
+[evidence contract] --applied by--> +----------------------+
+                                     | DomainDataset        |
+                                     | attach_contract(...) |
+                                     | current_scope()      |
+                                     +----------------------+
 ```
 
 Use when a later owner applies a contract and exposes a scoping operation. The
@@ -126,11 +126,11 @@ order.
 Outside the visual core, report only what the reader needs to verify it:
 
 ```text
-Source: plan@<blob> (intended design)
-Evidence: delivery=Delivery/U1-U2; artifact=Architecture;
-          boundary=Migration and operations.
+Source: repository@<commit>:path (current implementation)
+Evidence: flow=compiler symbols; artifact=contract section;
+          boundary=consumer interface.
 Node map: only abbreviated or ambiguous labels.
-Unknowns: current implementation and live delivery state are out of scope.
+Unknowns: runtime state is out of scope.
 ```
 
 Group citations when one source section establishes multiple visible edges.
