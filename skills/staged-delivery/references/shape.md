@@ -1,6 +1,6 @@
-# Shape the Epic
+# Shape Delivery
 
-Convert an approved plan into the smallest useful GitHub hierarchy. This mode publishes structure; it does not deepen or execute a stage.
+Convert an approved plan into the smallest useful GitHub hierarchy. This mode publishes structure; it does not deepen a stage or execute implementation.
 
 ## 1. Validate the source
 
@@ -22,6 +22,8 @@ Use no more hierarchy than the work earns:
 
 Stages are outcome-shaped, not architecture layers. Implementation issues are one-purpose PR units. For wide mechanical refactors, use expand, bounded migrations, then contract rather than forcing false vertical slices.
 
+Normalization may change tracker structure, not plan semantics. Preserve the approved outcomes, architecture, stage order, interfaces, and invariants. If any must change, stop and return to `implementation-planning` for a new approved revision.
+
 For every node draft:
 
 - title and observable outcome;
@@ -31,7 +33,7 @@ For every node draft:
 - acceptance criteria and out of scope;
 - focused interface or file surface when stable enough to help ownership.
 
-The epic also names cross-stage invariants. Each stage names what evidence it must produce before launch and after landing.
+For an epic, name cross-stage invariants. Each stage names what evidence it must produce before launch and after landing.
 
 ## 3. Present one publication plan
 
@@ -57,8 +59,16 @@ Use native sub-issues and dependencies, not duplicated checklist relationships. 
 
 Record every returned URL immediately. On partial failure, stop and report the exact created graph, failed operation, observed remote state, and next idempotent repair action. Never rerun the creation batch blindly. Repair by inspecting and attaching existing issues, not recreating them.
 
-## 6. Finish at the epic gate
+## 6. Finish at the publication boundary
 
-Verify parent and dependency fields with `gh issue view --json parent,subIssues,blockedBy,blocking`. Report the epic URL, stage order, provisional children, and recommended first stage. Do not prepare it until the user selects that stage.
+Verify parent and dependency fields with `gh issue view --json parent,subIssues,blockedBy,blocking`.
 
-Shape is complete only when every approved issue URL is recorded, every native relationship matches the proposed graph, and no unapproved issue or taxonomy was created.
+For one implementation issue:
+
+- report its URL and native blockers;
+- hand it to the target repository's ordinary issue → branch → worktree → PR workflow;
+- stop staged delivery without invoking `prepare`, `run`, or `review`.
+
+For an epic hierarchy, report the epic URL, stage order, provisional children, and recommended first stage. Do not prepare it until the user selects that stage.
+
+Shape is complete only when every approved issue URL is recorded, every native relationship matches the proposed graph, no unapproved issue or taxonomy was created, and the correct terminal branch was reported.

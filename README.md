@@ -65,7 +65,7 @@ Use `/skill:implementation-planning <intent-or-spec>`. See [`skills/implementati
 
 ## Staged delivery
 
-`staged-delivery` turns an approved plan into a native GitHub epic, stage, and implementation sub-issue hierarchy. It prepares each stage against repository and upstream evidence, executes it as an unmerged PR stack, pauses once for the stage merge gate, then verifies the landed stage before the next begins.
+`staged-delivery` turns an approved plan into the smallest valid GitHub delivery graph. A one-issue result exits to the repository's ordinary workflow; staged work continues through native epic, stage, and implementation sub-issues, unmerged PR stacks, human merge gates, and landed verification.
 
 The target repository's `AGENTS.md` remains authoritative. The skill adds no labels, tracker setup, database, telemetry, or background service.
 
