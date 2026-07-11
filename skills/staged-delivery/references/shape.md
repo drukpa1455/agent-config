@@ -11,6 +11,11 @@ Read the plan completely. Require a stable source:
 
 Stop if the plan is unapproved, contains unresolved consequential choices, contradicts repository policy, or cannot name an observable destination. Resolve repository visibility before drafting issue bodies.
 
+When the user invokes [`terminal-diagrams`](../../terminal-diagrams/SKILL.md), it
+may project the approved plan revision's outcome dependencies before
+normalization. Do not represent the proposed hierarchy as live GitHub state
+until it exists; the projection neither publishes nor changes the graph.
+
 ## 2. Normalize the hierarchy
 
 Use no more hierarchy than the work earns:

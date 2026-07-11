@@ -14,6 +14,11 @@ Read:
 - `.gitmodules`, pinned submodule SHAs, referenced SDKs/specifications, and upstream primary sources;
 - current behavior at the highest observable seam.
 
+When the user invokes [`terminal-diagrams`](../../terminal-diagrams/SKILL.md),
+take a fresh GitHub observation and project only the stage's relevant hierarchy,
+blockers, stack, or source-backed architecture question. It supports this
+existing launch-readiness evidence; it does not freeze or amend the lease.
+
 Name the assumption most likely to invalidate this stage. Obtain fresh evidence for it now through source inspection, a bounded research task, characterization, or a disposable prototype. If false, reshape the stage before asking for launch.
 
 ## 2. Refine the work graph

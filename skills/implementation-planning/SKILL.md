@@ -32,6 +32,12 @@ Resolve and record:
 - chosen approach, material alternatives, and rejection rationale;
 - dataflow, state transitions, interfaces, failure behavior, and repair.
 
+When the user explicitly asks to falsify an architecture, protocol, state, or
+dependency claim visually, use [`terminal-diagrams`](../terminal-diagrams/SKILL.md)
+as a read-only, source-bound projection. It may expose `SOURCE_GAP`, but it
+does not become plan authority, change this workflow's approval gate, or infer
+missing plan semantics.
+
 Prefer the complete smallest coherent solution. Include exact code only when syntax or bytes are themselves a fragile contract; routine implementation belongs in implementation.
 
 ## 4. Decompose by landed outcomes
