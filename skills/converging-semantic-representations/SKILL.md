@@ -1,58 +1,63 @@
 ---
 name: converging-semantic-representations
-description: Use when a compiler, runtime, workflow, or data pipeline has multiple graph, plan, operation, step, instruction, or DTO forms that may duplicate semantic facts, especially during IR convergence, compatibility migration, or executor redesign.
+description: Use only when the user explicitly asks to converge duplicated graph, plan, operation, instruction, or DTO semantics in a compiler, runtime, workflow, or data pipeline.
+disable-model-invocation: true
+license: MIT
 ---
 
 # Converging Semantic Representations
 
-## Overview
+Converge ownership, not every shape. Each semantic fact has one canonical
+owner; another representation earns its existence only by introducing a real
+target, authority, durability, effect, or consumer boundary.
 
-Converge ownership, not every shape. Each semantic fact has one canonical owner; another representation earns its existence only by adding a real target, authority, durability, or consumer boundary.
+## 1. Find the duplicated fact
 
-## Boundary Test
+Trace each candidate representation through its producer, validators,
+identity, serialization, consumers, and mutations.
 
-| Evidence | Classification | Action |
-| --- | --- | --- |
-| Same facts, mirror validators, independent mutation, or lossless rebuild | Duplicate carrier | Delete it or make it a one-way edge projection |
-| New target semantics, authority, durability, or consumer contract | Distinct phase | Keep a small required-field type and an explicit transition |
+| Evidence                                                                  | Classification    | Action                                           |
+| ------------------------------------------------------------------------- | ----------------- | ------------------------------------------------ |
+| Same facts, mirror validators, independent mutation, or lossless rebuild  | Duplicate carrier | Delete it or make it a one-way projection        |
+| New target semantics, authority, durability, effect, or consumer contract | Distinct phase    | Keep only the fields introduced at that boundary |
 
-Rendered packets are projections. Durable receipts are new facts. Neither becomes the semantic input to the core.
+Rendered packets are projections. Durable receipts are new facts. Neither
+becomes semantic input to the stable core.
 
-## Canonical Contract
+## 2. Choose the owner from the domain
 
-Use the smallest honest pipeline:
+Do not assume the canonical form is a graph or instruction stream. It may be a
+document, event log, relational fact set, immutable observation set, state
+machine, or compiler IR. Choose the form that already owns the complete stable
+semantics and can rebuild the others one way.
+
+For a compiler-shaped system, one possible flow is:
 
 ```text
-Graph(nodes, symbols, inputs)
-  -> lower(graph, requested_outputs, target)
-  -> Program(graph_id, requested_outputs, order, lowering_version)
-  -> execute(graph, program, bindings, operations)
-  -> Result
+IR -> lower(IR, target) -> Program(order, target facts)
+   -> execute(Program, bindings) -> Result or Receipt
 ```
 
-- `Graph` owns complete semantics: literals, types, ordered operands, anonymous nodes, and public aliases.
-- `Program` owns only facts introduced by lowering. Prefer graph-node references when execution semantics are unchanged; introduce instructions only when the target transformation is real.
-- Requested outputs belong in Program identity whenever they select its closure or order. An intentionally all-output Program may leave result selection to the run, but its body must already be complete and closed.
-- `Bindings` own typed runtime values. A value, shape, or option consulted during graph construction is specialization input and therefore changes Graph identity.
-- `Run` identity adds bindings and every execution determinant.
-- Compatibility preserves the documented boundary—often serialized bytes or schema—not undocumented internal class identity.
+This is an example, not a universal architecture. `Program` owns only facts
+introduced by lowering. Runtime values belong in bindings; values consulted
+during construction belong in semantic identity.
 
-## Migration Recipe
+## 3. Migrate one direction
 
-1. Characterize current outputs, failures, identities, serialized contracts, and execution shape.
-2. Establish the complete canonical Graph and deterministic identity.
-3. Lower one closed Program and make execution consume its order literally. Reject unknown, duplicate, dangling, cyclic, dependency-inverted, or unmet entries.
-4. Switch the principal runtime. Keep compatibility as outbound edge projections only—never aliases, reverse adapters, dual execution, or fallback evaluation.
-5. Migrate consumers, then delete duplicate producers, carriers, validators, hashes, imports, and tests.
+1. Characterize current outputs, failures, identities, and stable serialized contracts.
+2. Establish one complete canonical owner and deterministic identity.
+3. Make downstream phases reference that owner instead of copying its facts.
+4. Keep compatibility at the documented boundary. Temporary dual paths require an explicit migration invariant, bounded lifetime, and deletion condition.
+5. Migrate consumers, then delete duplicate producers, validators, hashes, imports, and tests.
 
-## Exit Gate
+## 4. Verify convergence
 
-- Canonical identities are stable across fresh processes and hash seeds.
-- Operand, literal, specialization, target, and requested-output identity tests match their ownership rules.
-- Replay executes the Program it validates; malformed order cannot be repaired recursively.
-- Edge fixtures preserve approved contracts.
-- Repository search finds no legacy semantic producer, consumer, reader, writer, alias, re-export, or fallback outside an explicitly retained projection.
+- Canonical identity is stable across fresh processes.
+- Each retained phase introduces named semantics of its own.
+- Execution consumes validated order rather than reconstructing hidden dependencies.
+- Edge fixtures preserve approved external contracts.
+- Repository search finds no legacy semantic producer, reverse adapter, fallback, or independently mutable mirror outside an explicitly bounded migration.
 
-## Common Mistakes
-
-Treating renamed aliases as convergence; copying graph fields into instructions with no target transformation; preserving Python DTO classes when only JSON is stable; discovering closure during execution; or collapsing graphs, programs, receipts, and views into one optional-field type.
+Do not mistake renaming for convergence, collapse distinct authority or receipt
+boundaries, or preserve a carrier merely because tests reference its class
+name.

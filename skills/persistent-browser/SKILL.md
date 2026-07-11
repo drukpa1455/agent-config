@@ -1,6 +1,7 @@
 ---
 name: persistent-browser
 description: Controls isolated visible Playwright and Patchright browser profiles for web navigation, research, social-media work, screenshots, and live user collaboration. Routes fidelity-sensitive work to official Playwright and authorized social-media work to Patchright.
+disable-model-invocation: true
 license: MIT
 compatibility: Requires Node.js 20+, npm, stable Google Chrome, a POSIX shell, and one approved setup download.
 ---
@@ -30,7 +31,12 @@ SKILL_DIR=/absolute/path/to/persistent-browser
 "$SKILL_DIR/scripts/dashboard"
 ```
 
-Both engines are headed and persistent. The dashboard lets the user watch or take control. Use `scripts/browser show --annotate` when visual intent or feedback is ambiguous.
+Both engines are headed and persistent. Their fixed sessions and profiles are
+single-owner resources. Run the selected engine's `list` command before opening
+or navigating it. If its session already exists and ownership is not established
+in the current task, stop rather than reusing it. The dashboard lets the user
+watch or take control. Use `scripts/browser show --annotate` when visual intent
+or feedback is ambiguous.
 
 ## Operate
 

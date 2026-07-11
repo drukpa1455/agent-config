@@ -36,10 +36,21 @@ fi
 
 mkdir -p "$skills_dir"
 
-legacy_epic_loop="$skills_dir/epic-loop"
-if [ -L "$legacy_epic_loop" ] && [ "$(readlink "$legacy_epic_loop")" = "$root/skills/epic-loop" ]; then
-  rm "$legacy_epic_loop"
-fi
+for destination in "$skills_dir"/*; do
+  [ -e "$destination" ] || [ -L "$destination" ] || continue
+  source="$root/skills/$(basename "$destination")"
+
+  if [ -L "$destination" ] && [ "$(readlink "$destination")" = "$source" ]; then
+    if [ -f "$source/SKILL.md" ]; then
+      continue
+    fi
+    rm "$destination"
+    continue
+  fi
+
+  echo "refusing unmanaged skill entry $destination" >&2
+  exit 1
+done
 
 for source in "$root"/skills/*; do
   [ -f "$source/SKILL.md" ] || continue

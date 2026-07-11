@@ -8,6 +8,7 @@ Shared global policy and portable skills for coding agents.
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
+skills/converging-semantic-representations/ explicit architecture lens
 skills/staged-delivery/      stage-gated change delivery
 skills/implementation-planning/ repository-grounded planning
 skills/terminal-diagrams/    source-bound terminal projections
@@ -26,7 +27,11 @@ git clone https://github.com/drukpa1455/agent-config.git ~/src/agent-config
 ~/src/agent-config/scripts/link
 ```
 
-The linker creates a real `~/.agents/skills/` aggregation directory and links each owned skill into it. Existing foreign skill entries are preserved, so reviewed third-party skills can be installed without writing them into this repository. The linker migrates the legacy whole-directory symlink only when it points to this checkout and otherwise refuses conflicting paths.
+The linker creates a real `~/.agents/skills/` directory and links every owned
+skill into it. It removes stale links to skills deleted from this checkout and
+refuses unmanaged entries, so globally active prompt content remains versioned
+and reviewable. Install project-specific or third-party skills in their owning
+repository instead of the global directory.
 
 Pi and Codex both read the same skills and global policy. Run `/reload` in Pi after changes; start a new Codex session to reload them.
 
@@ -51,6 +56,14 @@ npx skills add drukpa1455/agent-config --skill curated-wiki
 ```
 
 See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
+
+## Semantic convergence
+
+`converging-semantic-representations` is an explicit architecture lens for
+finding duplicated semantic ownership across compiler and workflow phases. It
+does not impose a graph or instruction-stream core on every domain.
+
+Use `/skill:converging-semantic-representations <question>`.
 
 ## Implementation planning
 
@@ -104,12 +117,15 @@ See [`skills/systematic-debugging/SKILL.md`](skills/systematic-debugging/SKILL.m
 
 ## Persistent browser
 
-`persistent-browser` controls two isolated, visible browser profiles through one local dashboard:
+`persistent-browser` explicitly controls two visible browser profiles through one local dashboard:
 
 - official Playwright for compatibility, diagnostics, and security-sensitive work
 - Patchright for authorized social-media workflows
 
-The skill preserves native browser identity. It does not rotate fingerprints, proxies, profiles, or accounts, and must not be used to bypass CAPTCHA, access controls, account limits, or site policy.
+The skill preserves native browser identity. Its fixed profiles are
+single-owner resources and may not be driven by concurrent agents. It does not
+rotate fingerprints, proxies, profiles, or accounts, and must not be used to
+bypass CAPTCHA, access controls, account limits, or site policy.
 
 Install only this skill through the cross-harness Skills CLI:
 
