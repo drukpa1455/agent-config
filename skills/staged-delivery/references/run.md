@@ -8,6 +8,11 @@ Derive the latest stage transition from the markers in `state.md`. Recompute the
 
 Confirm that every stack child is open, ordered, and still matches the lease; referenced plans, submodules, and controlled-resource caps have not materially drifted; and existing branches, worktrees, PRs, and unrelated dirty state are understood.
 
+When the user invokes [`terminal-diagrams`](../../terminal-diagrams/SKILL.md),
+take a fresh observation before using a hierarchy, blocker, or stack projection.
+It may make an inconsistency visible, but it neither changes the lease nor
+replaces the required live GitHub and Git checks.
+
 If `origin/HEAD` differs from the launch base, follow the lease's base drift policy. A clean refresh before review is allowed only when the changed trunk is compatible, the stack can be rebased without conflict, range-diff and observable behavior remain equivalent, and required checks pass. Record a base-refresh marker. Otherwise return to prepare mode. Never chase moving trunk silently.
 
 ## 2. Build the stack

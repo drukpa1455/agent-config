@@ -10,6 +10,7 @@ scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
 skills/staged-delivery/      stage-gated change delivery
 skills/implementation-planning/ repository-grounded planning
+skills/terminal-diagrams/    source-bound terminal projections
 skills/persistent-browser/   on-demand browser capability
 skills/systematic-debugging/  evidence-first root-cause diagnosis
 ```
@@ -62,6 +63,22 @@ npx skills add drukpa1455/agent-config --skill implementation-planning
 ```
 
 Use `/skill:implementation-planning <intent-or-spec>`. See [`skills/implementation-planning/SKILL.md`](skills/implementation-planning/SKILL.md).
+
+## Terminal diagrams
+
+`terminal-diagrams` projects pinned plans, repository architecture, protocols,
+state machines, and live GitHub delivery graphs into concise plain-ASCII views.
+It is user-invoked and read-only: source prose, code, GitHub state, and
+manifests remain authoritative. The skill returns `SOURCE_GAP` instead of
+inventing a relationship or silently resolving a contradiction.
+
+```sh
+npx skills add drukpa1455/agent-config --skill terminal-diagrams
+```
+
+Use `/skill:terminal-diagrams <source>@<revision> [question-or-scope]`. For
+live GitHub state, `@live` requests a fresh observation that the skill hashes
+before rendering. See [`skills/terminal-diagrams/SKILL.md`](skills/terminal-diagrams/SKILL.md).
 
 ## Staged delivery
 

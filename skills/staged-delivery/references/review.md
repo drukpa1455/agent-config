@@ -6,6 +6,11 @@ Review the integrated result after all stages have landed. This is not a summary
 
 Verify every stage is closed, every implementation PR is merged into `origin/HEAD`, all native blockers are clear, and no stage branch or worktree remains. Recompute every stage's landed marker from live Git/GitHub state. Resolve the original plan and epic revision that defined the destination.
 
+When the user invokes [`terminal-diagrams`](../../terminal-diagrams/SKILL.md),
+take a fresh observation for any delivery graph or a pinned `diff` for any
+architecture comparison. Treat the view as supporting evidence for this
+existing epic-acceptance gate, never as acceptance itself.
+
 ## 2. Test the composition
 
 Use fresh evidence and report these axes separately:
