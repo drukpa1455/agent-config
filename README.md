@@ -5,6 +5,7 @@ Shared global policy and portable skills for coding agents.
 ## Layout
 
 ```text
+AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
