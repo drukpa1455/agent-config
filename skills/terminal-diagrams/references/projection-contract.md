@@ -7,7 +7,10 @@ it does not create semantic facts.
 ## 1. Identify sources before modeling
 
 Every result names each source, revision, authority, and scope. A pinned
-source is usable only when another reader can retrieve the same evidence.
+source is usable only when another reader can retrieve the same evidence. Ask
+once when the user's intended question or source is ambiguous; reserve
+`SOURCE_GAP` for evidence a clear question requires but the source does not
+establish.
 
 ### Pinned repository and document sources
 
@@ -33,33 +36,29 @@ selecting a winner.
 
 GitHub issues, blockers, sub-issues, PR bases, PR heads, and PR states are
 mutable. `@live` requests a fresh read; it is not a revision. Before rendering,
-create one bounded observation record with:
+create one bounded observation descriptor with:
 
 - repository and every query endpoint or command;
-- all pagination required for the stated scope;
-- normalized response payloads;
+- complete pagination for the stated scope;
 - UTC fetch time for each query;
-- `consistency: non-atomic`;
-- a SHA-256 observation digest.
+- relevant entity IDs, states, and `updatedAt` values;
+- `consistency: non-atomic`.
 
 Read the root relationship summary before and after dependent queries. If its
 relevant parent, child, blocker, stack, state, or `updatedAt` fields differ,
 return `SOURCE_GAP`; do not combine the two reads. This detects observed drift
-without claiming that the non-atomic GitHub API is a point-in-time snapshot.
+without pretending the GitHub API supplied a point-in-time snapshot.
 
-Normalize by making a JSON object whose query records are sorted by canonical
-query key, recursively sorting object keys, preserving source-defined ordering
-such as sub-issue priority and stack order, and sorting unordered collections
-by canonical entity ID. Serialize compact UTF-8 JSON with one trailing LF and
-hash those exact bytes. The output source identity is the observation digest,
-not the mutable URL. The digest identifies what was observed but does not make
-GitHub historical state immutable or retrievable. Another reader can verify it
-only when the raw query payloads were retained by their authoritative owner.
+A descriptor states what was read; it does not make live state immutable or
+replayable. Emit an observation digest only when the authoritative owner
+retains the complete raw query payloads durably, and name that retained source.
+Otherwise report the descriptor directly and do not manufacture a hash that
+another reader cannot verify.
 
 If the source changes during the read, pagination is incomplete, required
 relationships are inaccessible, or two results disagree, return `SOURCE_GAP`.
 A later planning or delivery gate needs a new observation; do not describe an
-old digest as live state.
+old descriptor as live state.
 
 ### Unverified input
 
@@ -100,7 +99,7 @@ If no source-native identifier exists, derive
 evidence map. Never assign `N1`, `N2`, or another traversal-order ID.
 
 Keep canonical IDs in the evidence model. The visual core uses a short,
-readable display label such as `truth builder` or `current-corridor mask`.
+readable display label such as `domain compiler` or `availability contract`.
 Print a canonical ID only when a trace, diff, repeated label, or audit question
 needs it; otherwise a legend must not be necessary to understand the topology.
 
@@ -232,7 +231,7 @@ Completeness: <complete within scope|partial with listed unknowns>
 
 <one topology-first ASCII visual core>
 
-Source: <identity, authority, and revision or observation digest>
+Source: <identity, authority, and revision or live observation descriptor>
 Evidence: <compact citation groups>
 Node map: <only ambiguous labels or audit-requested IDs>
 Unknowns: <none or explicit list>

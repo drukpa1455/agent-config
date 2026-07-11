@@ -34,9 +34,9 @@ content, an immutable document revision, or a content digest. Do not accept a
 branch, `HEAD`, a mutable hosted URL, or remembered chat state as a revision.
 
 A live GitHub source may use `@live` only to request a fresh bounded
-observation. It remains mutable; the output is bound to the observation's
-normalized digest and fetch time, not to a durable GitHub revision. A `diff`
-needs two pinned source identities; for one source use
+observation. It remains mutable; identify the output by repository, exact
+queries, fetch time, and `consistency: non-atomic`. A `diff` needs two pinned
+source identities; for one source use
 `<source>@<before>..<after>`, and otherwise name both inputs in the question.
 
 ## 1. Establish the question and authority
@@ -55,16 +55,19 @@ that question before modeling:
 - protocol or state machine: pinned normative source;
 - comparison: the two named revisions without silently choosing a winner.
 
-If the question, authority, source scope, or required revision is unclear,
-return `SOURCE_GAP`. Do not blend intended and current behavior into one claim.
+If the user's question, authority choice, source scope, or requested revision
+is ambiguous, ask once. After the input is clear, use `SOURCE_GAP` only when
+required source evidence is missing or contradictory. Do not blend intended and
+current behavior into one claim.
 
 ## 2. Freeze the input
 
 Record every source identity, revision, authority, and scope before drawing.
 For a live GitHub graph, read only the required native hierarchy, dependency,
-and PR fields; normalize the complete query set and report its SHA-256
-observation digest, fetch time, and non-atomic nature. Re-fetch for every
-workflow gate that requires current state.
+and PR fields. Record every query, complete pagination, UTC fetch time, and its
+non-atomic nature. Re-fetch for every workflow gate that requires current
+state. Emit a digest only when the authoritative owner durably retains the raw
+payloads needed to reproduce it.
 
 Do not create a diagram file, install a renderer, call a write endpoint, alter
 GitHub, or write plans, code, manifests, or source documents. Return the result
