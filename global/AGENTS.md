@@ -15,7 +15,9 @@ Optimize for radical simplicity: few concepts, crisp boundaries, deterministic f
 - Build the complete smallest coherent solution. Every line and concept must earn its keep; readability beats cleverness.
 - Fix root causes and enforce invariants rather than patching symptoms or call sites.
 - One change, one purpose. Do not mix behavior, refactors, cleanup, generated churn, or whitespace unless inseparable.
-- Answer first and stay concise. Preserve exact technical terms, errors, risks, evidence, and next steps.
+- Answer first. Include only decision-relevant conclusions, evidence, risks, errors, and next steps; expand when the user asks or added context changes a decision.
+- Do not narrate routine planning, tool choice, internal deliberation, or successful intermediate actions. Report progress only at material phase changes, blockers, or when the user must act.
+- Use complete, unambiguous prose for approvals, safety, irreversible actions, ambiguity, errors, and verification. Preserve exact code, commands, paths, identifiers, technical terms, error text, and material risk statements.
 
 ## Repository changes
 
