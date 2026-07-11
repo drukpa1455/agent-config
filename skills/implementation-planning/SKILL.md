@@ -45,7 +45,7 @@ Use the least structure the work earns:
 
 A stage is a human-controlled landing boundary, not a document heading. For one coherent change, emit one implementation unit with no stage wrapper; fold tests, docs, and final verification into that unit. When compatibility removal depends on evidence produced after migration lands, use at least three outcomes: expand compatibility, migrate and verify, then contract. They cannot be one PR, one stage, or a flat checklist because the contract gate does not exist until runtime evidence does. Implementation units own one PR purpose, not architecture layers or two-minute steps. Order work by dependencies and risk retirement.
 
-If the requested issue, PR, or stage shape conflicts with safe intermediate states, name the conflict and recommend the smallest valid shape. Do not encode the invalid shape to satisfy formatting pressure; keep approval blocked until the consequential choice is resolved.
+If the requested issue, PR, or stage shape conflicts with safe intermediate states, name the conflict and recommend the smallest valid shape. When the request itself establishes a post-landing evidence dependency, that safe boundary is already known: a blocked response must not promise to restore the rejected shape after more repository reads. Do not encode the invalid shape to satisfy formatting pressure; keep approval blocked until the consequential choice is resolved.
 
 ## 5. Write and falsify the plan
 
