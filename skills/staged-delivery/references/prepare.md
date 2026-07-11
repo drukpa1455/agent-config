@@ -89,11 +89,11 @@ Show:
 - evidence gathered and unresolved risks;
 - execution authority and stop conditions.
 
-Ask once whether to publish the refinements and launch this exact lease. On approval:
+Ask once whether to publish the refinements and authorize execution of this exact lease. On approval:
 
 1. Apply the bounded GitHub edits and verify native relationships.
 2. Normalize and hash the final stage body as defined in `state.md`.
 3. Post exactly one launch marker with the lease ID, frozen base commit and tree, source revision, child issue numbers, and stack order.
 4. Re-fetch the body and comment, recompute the lease ID, and verify the transition.
 
-Stop. Do not create a worktree or begin implementation in prepare mode. Prepare is complete only when all launch-readiness checks pass and another session can reconstruct the exact lease from GitHub alone.
+The launch marker authorizes `run` mode without another semantic approval. Stop prepare mode without creating a worktree so a fresh execution context can reconstruct the lease; the operator or harness may invoke `run` immediately. Prepare is complete only when all launch-readiness checks pass and another session can reconstruct the exact lease from GitHub alone.

@@ -8,7 +8,7 @@ compatibility: Requires filesystem read access and the target repository's norma
 
 # Implementation Planning
 
-Turn engineering intent into one approved plan that an unfamiliar implementer can execute without inventing product or architecture decisions. Planning owns `intent -> approved plan`; [`staged-delivery`](../staged-delivery/SKILL.md) owns publication and delivery.
+Turn engineering intent into one approved plan that an unfamiliar implementer can execute without inventing product or architecture decisions. Planning owns `intent -> approved plan`. The target repository's ordinary issue/worktree/PR workflow owns one-unit delivery; [`staged-delivery`](../staged-delivery/SKILL.md) owns only genuinely staged publication and delivery.
 
 ## 1. Establish authority
 
@@ -64,8 +64,9 @@ Use one honest status:
 - `BLOCKED`: required repository or external evidence is unavailable; return only the gap and reads needed, not a provisional implementation checklist.
 - `Draft`: evidence permits planning but consequential choices remain; list every one under `Open decisions`.
 - `Ready for approval`: all load-bearing evidence is verified and `Open decisions` is exactly `None`.
+- `Approved`: the user approved the exact `Ready for approval` plan and only its status line changed afterward.
 
-Never write `Open decisions: None` alongside “unknown,” “unverified,” “to be confirmed,” “if needed,” or another unresolved branch.
+Never write `Open decisions: None` alongside “unknown,” “unverified,” “to be confirmed,” “if needed,” or another unresolved branch. Never infer `Approved` from a PR title, invocation, or remembered chat state.
 
 ## 6. Present the plan gate
 
@@ -76,11 +77,12 @@ asking. Reopen planning only when fresh evidence changes the destination,
 architecture, contracts, invariants, controlled-resource exposure, observable
 behavior, or required verification.
 
-Show the exact plan, evidence gaps, residual reversible choices, proposed canonical path, visibility, and required persistence action. Ask once whether to approve that exact plan.
+Show the exact `Ready for approval` plan, evidence gaps, residual reversible choices, proposed canonical path, visibility, persistence action, and one-unit or staged delivery path. Ask once whether to approve that exact plan, publish its status-only `Approved` form, and begin the named delivery path.
 
-On approval, preserve its exact bytes and obtain a stable source before delivery:
+On approval:
 
-- tracked file: repository path plus blob or commit SHA; or
-- GitHub artifact: URL plus revision context.
+1. Change only `Status: Ready for approval` to `Status: Approved`; any other byte change requires renewed approval.
+2. Persist that form as a tracked file with blob or commit SHA, or as a GitHub artifact with revision context.
+3. Re-read the durable source and verify the transition was status-only.
 
-If persistence is not already authorized, stop with the exact next action. Do not silently edit the plan after approval. Once stable, hand off explicitly with `/skill:staged-delivery shape <plan-source>@<revision>`; do not invoke it automatically.
+The approved revision is the canonical delivery source. For one implementation unit, hand it to the target repository's ordinary issue/worktree/PR workflow and continue within the approved scope. For genuinely staged work, stop with the explicit handoff `/skill:staged-delivery shape <approved-plan-source>@<revision>`; do not invoke it automatically.

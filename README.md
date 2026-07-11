@@ -69,7 +69,10 @@ Use `/skill:converging-semantic-representations <question>`.
 
 `implementation-planning` turns consequential engineering intent into an approved, repository-grounded plan. It verifies current behavior, resolves load-bearing decisions, scales delivery from one issue to genuinely staged work, and names interfaces, evidence, rollback, repair, and resource bounds without pre-writing routine implementation.
 
-The skill is read-only until the exact plan is approved. It does not publish issues or execute work; a stable approved plan hands off explicitly to `staged-delivery`.
+The skill is read-only until the exact plan is approved. Approval changes only
+the status line to `Approved` and publishes the named delivery path. One-unit
+plans enter the repository's ordinary workflow; only genuinely staged plans
+hand off explicitly to `staged-delivery`.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill implementation-planning
@@ -95,7 +98,9 @@ before rendering. See [`skills/terminal-diagrams/SKILL.md`](skills/terminal-diag
 
 ## Staged delivery
 
-`staged-delivery` turns an approved plan into the smallest valid GitHub delivery graph. A one-issue result exits to the repository's ordinary workflow; staged work continues through native epic, stage, and implementation sub-issues, unmerged PR stacks, human merge gates, and landed verification.
+`staged-delivery` turns an approved multi-stage plan into a native epic, stage,
+and implementation hierarchy with unmerged PR stacks, human merge gates, and
+landed verification. One-unit plans never enter this workflow.
 
 The target repository's `AGENTS.md` remains authoritative. The skill adds no labels, tracker setup, database, telemetry, or background service.
 

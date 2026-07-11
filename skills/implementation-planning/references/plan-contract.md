@@ -5,7 +5,7 @@ Scale sections to the work. Omit empty optional sections; never fill them with p
 ```markdown
 # <Observable outcome> Implementation Plan
 
-Status: Draft | Ready for approval
+Status: Draft | Ready for approval | Approved
 Repository: <owner/repo>
 Source inputs: <paths or URLs with revisions>
 
@@ -77,7 +77,7 @@ For genuinely staged work, repeat:
 
 ## Open decisions
 
-For `Draft`, list each consequential unresolved choice and the evidence or decision needed. For `Ready for approval`, write exactly `None`.
+For `Draft`, list each consequential unresolved choice and the evidence or decision needed. For `Ready for approval` or `Approved`, write exactly `None`. `Approved` is valid only after exact user approval and a status-only transition from the reviewed `Ready for approval` form.
 ```
 
 ## Review gate
@@ -95,6 +95,7 @@ The plan is approvable only when all answers are yes:
 - **Operations:** Are migration, rollback, observability, cleanup, resources, and production actions bounded?
 - **References:** Are load-bearing external contracts pinned and verified?
 - **Drift:** Does the plan separate its evidence revision from the future execution base and stop only for semantic invalidation rather than a moved commit or overlapping path?
+- **Approval:** Is `Approved` used only for the canonical status-only result of exact user approval?
 - **Decisions:** Are all remaining choices reversible implementation details?
 
 If any answer is no, revise or return `BLOCKED` with the exact missing evidence. A blocked response contains no provisional implementation checklist. Never convert the gap into a placeholder implementation task.
