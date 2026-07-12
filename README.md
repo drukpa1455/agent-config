@@ -10,6 +10,7 @@ global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
 skills/converging-semantic-representations/ explicit architecture lens
+skills/tinygrad-design/      source-backed Tinygrad design lens
 skills/staged-delivery/      stage-gated change delivery
 skills/implementation-planning/ repository-grounded planning
 skills/terminal-diagrams/    source-bound terminal projections
@@ -65,6 +66,18 @@ finding duplicated semantic ownership across compiler and workflow phases. It
 does not impose a graph or instruction-stream core on every domain.
 
 Use `/skill:converging-semantic-representations <question>`.
+
+## Tinygrad design
+
+`tinygrad-design` studies a relevant end-to-end path in a current Tinygrad
+checkout, then translates the observed mechanic into the target domain without
+copying compiler nouns, dense syntax, global state, or hardware-specific
+tradeoffs. Its source map covers public sugar, UOps and specs, scheduling,
+lowering, realization, adapters, introspection, replay, and clarifying deletion
+history.
+
+The skill is an explicit architecture lens. Use
+`/skill:tinygrad-design <problem-or-design-question>`.
 
 ## Implementation planning
 
