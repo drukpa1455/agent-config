@@ -27,10 +27,10 @@ Apply the lens through six questions:
    add a fact?
 3. **Purpose-specific identity:** are semantic structure, runtime bindings,
    diagnostics, and effect state separated before caching or comparison?
-4. **Planned effects:** does planning own causal order, and does every
-   optimization preserve it across the effect boundary?
-5. **Capability edges:** does target variability live at the narrow edge that
-   owns the capability and lifecycle?
+4. **Planned effects:** does planning own causal order, with each plan-to-plan
+   optimization preserving it across the effect boundary?
+5. **Capability edges:** are target facts introduced only by the phase or edge
+   that owns the capability and lifecycle?
 6. **Proof and deletion:** can each transformation be inspected, replayed,
    measured at its owning phase, and deleted when it owns no distinct fact?
 
@@ -45,11 +45,13 @@ These mechanics are available without reading a reference.
 ### Semantic closure, not universal state
 
 Tensor methods converge through `Tensor._apply_uop`; autodiff produces UOps that
-re-enter scheduling and lowering. UOps own semantic structure, while realized
-buffers and diagnostic metadata live in separate weak mappings.
+re-enter scheduling and lowering. UOp transformations rebuild replace-oriented
+semantic values. Tensor handles can be redirected to rewritten roots, while
+realized buffers and diagnostic metadata live in mutable weak mappings.
 
-**Transfer:** converge meaning, not every kind of state. Keep runtime effects and
-diagnostics outside canonical semantic identity unless they change meaning.
+**Transfer:** converge meaning, not every kind of state. Keep mutation in the
+handles and effect owners that need it; keep diagnostics and runtime effects out
+of canonical semantic identity unless they change meaning.
 
 ### Legal phases that gain information
 
@@ -79,32 +81,38 @@ Process-local object identity is not durable identity.
 The scheduler derives read-after-write and write-after-read hazards from buffer
 states, rejects cycles, and emits ordered `LINEAR(CALL, ...)`. The memory planner
 derives lifetimes from that order and separates copy from compute arenas so
-reuse does not create false dependencies. Execution consumes the order directly.
+reuse does not create false dependencies. JIT can parameterize, memory-plan,
+compile, and group calls, but each step returns another explicit `LINEAR`; replay
+consumes the transformed plan.
 
 Scheduling creates descriptors but does not allocate underlying device memory or
 launch calls. `Tensor.realize` enters `run_linear`, which compiles and dispatches
 the plan. Compilation is not guaranteed pure: local-size search can allocate
 temporary buffers and benchmark candidates.
 
-**Transfer:** planning owns causal order as data; execution does not replan.
-Derived optimization must preserve independence. Name the real effect boundary,
-including any benchmark or compilation work hidden inside it.
+**Transfer:** planning owns causal order as data. Plans may be transformed, but
+execution must not rediscover dependencies from partial side state. Every
+optimization preserves independence. Name the real effect boundary, including
+benchmark or compilation work hidden inside it.
 
-### Put variability at capability edges
+### Introduce target facts at capability edges
 
-`Compiled` composes an allocator, candidate renderers, runtime program
-constructor, and optional graph support. Renderers expose target capabilities and
-turn lowered UOps into source or assembly without forking the Tensor surface.
+High-level Tensor operations do not fork by backend. Later UOps can carry device
+and instruction facts; `Compiled` composes an allocator, candidate renderers,
+runtime program constructor, and optional graph support. Renderers turn lowered
+UOps into target source or assembly.
 
-**Transfer:** keep the semantic core target-neutral and adapters capability-
-bearing. Do not invent a universal interface before repeated targets expose a
-real seam.
+**Transfer:** keep high-level meaning independent of target details, then add
+target facts only in the phase or adapter that owns them. Do not invent a
+universal interface before repeated targets expose a real seam.
 
 ### Proof, performance, and deletion follow phases
 
 Rewrite tracking records named transformations, matches, source locations, and
-timing. Debug output spans schedules, optimized UOps, source, assembly, and
-runtime. Process replay compares generated programs across revisions.
+timing. Within a matcher, the first successful rule wins; matcher composition
+and pass order are therefore behavior. Debug output spans schedules, optimized
+UOps, source, assembly, and runtime. Process replay compares generated programs
+across revisions.
 Tinygrad separately names compile, execution, model, and kernel speed. Use that
 decomposition to locate the measured bottleneck instead of optimizing
 “performance” in general; the phases can still interact.
