@@ -9,7 +9,16 @@ Read the plan completely. Require a stable source:
 - tracked file: repository path plus blob or commit SHA;
 - GitHub artifact: issue or discussion URL plus current revision context.
 
-Require canonical `Status: Approved`; do not reconstruct approval from chat, a PR title, or invocation wording. Stop if that status is absent, the plan contains unresolved consequential choices, contradicts repository policy, or cannot name an observable destination. Resolve repository visibility before drafting issue bodies.
+A defect list, review report, or raw findings block is not a plan. Reconcile it
+against active stages first, then return uncovered work to
+[`implementation-planning`](../../implementation-planning/SKILL.md); do not
+manufacture an `Approved` plan or issue graph inside shape mode.
+
+Require canonical `Status: Approved`; do not reconstruct approval from chat, a
+PR title, or invocation wording. Stop if that status is absent, the plan
+contains unresolved consequential choices, contradicts repository policy, or
+cannot name an observable destination. Resolve repository visibility before
+drafting issue bodies.
 
 When the user invokes [`terminal-diagrams`](../../terminal-diagrams/SKILL.md), it
 may project the approved plan revision's outcome dependencies before

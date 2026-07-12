@@ -27,7 +27,7 @@ Do not accept “each stage passed” as proof that the epic passes. Run the nar
 
 Classify findings:
 
-- **inside an existing stage contract** — reopen that stage and add the smallest corrective implementation child;
+- **inside an existing stage contract** — invalidate its accepted lease or manifest, reopen that stage, and return it to preparation for the smallest corrective child set;
 - **newly discovered epic requirement** — propose a new stage and explain why the original plan could not contain it;
 - **out of scope** — record it without silently expanding the epic;
 - **invalidated destination** — stop and return to epic shaping.

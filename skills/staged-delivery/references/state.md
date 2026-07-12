@@ -64,6 +64,18 @@ manifest-id: <sha256>
 ```
 
 ```markdown
+<!-- staged-delivery:invalidated v1 -->
+
+lease-id: <sha256>
+manifest-id: <sha256 or none>
+prior-state: <launched | reviewed | merge-approved | landed>
+evidence: <canonical path or URL at revision, or sha256 of exact report bytes>
+reason: <scope | architecture | contract | invariant | controlled-resource | behavior | verification>: <safe concise summary>
+landed-commit: <sha or none>
+next-mode: prepare
+```
+
+```markdown
 <!-- staged-delivery:landed v1 -->
 
 manifest-id: <sha256>
@@ -74,6 +86,20 @@ checks: <fresh result summary>
 
 Canonicalize the reviewed manifest as recursively sorted-key, compact UTF-8 JSON with LF endings and one trailing newline, then hash those bytes with SHA-256 to produce `manifest-id`. Record that exact JSON in the reviewed comment so another session can recompute it.
 
+## Invalidation semantics
+
+An invalidation marker with the current `lease-id` supersedes launch authority
+and any named reviewed, merge-approved, or landed manifest. It blocks merges,
+stage closure, and later-stage launch. Only a newly prepared stage body and its
+new verified launch marker can restore execution authority.
+
+For pre-merge invalidation, `landed-commit` is `none`. For post-landing
+invalidation, record the actual trunk commit and reopen the stage; the marker
+revokes semantic acceptance without claiming that landed commits disappeared.
+Keep the summary safe for the repository's visibility. When the evidence cannot
+be copied safely, record an immutable private reference or the SHA-256 digest of
+the exact report bytes and retain the report at its approved private source.
+
 ## Ownership
 
 - Launch comment freezes authority.
@@ -83,5 +109,9 @@ Canonicalize the reviewed manifest as recursively sorted-key, compact UTF-8 JSON
 - Reviewed comment freezes the exact stack the human sees.
 - Merge approval authorizes only that manifest.
 - Landed comment records fresh trunk evidence.
+- Invalidation revokes semantic authority while preserving delivered-history facts.
 
-Before acting, derive the latest valid transition from issue comments and recompute its hash. Stop on a missing marker, mismatch, duplicate transition, or unknown-success write.
+Before acting, derive the latest valid transition from issue comments and
+recompute its hash. Reconcile evidence from the current invocation before using
+that transition. Stop on an invalidation, missing marker, mismatch, duplicate
+transition, or unknown-success write.

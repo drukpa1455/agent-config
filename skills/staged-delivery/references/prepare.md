@@ -4,11 +4,16 @@ Turn one provisional stage into a frozen execution contract. This is where uncer
 
 ## 1. Establish current truth
 
-Verify that the stage is open, belongs to the intended epic, and is unblocked. Fetch `origin/HEAD` and record the candidate stage base without changing code.
+Verify that the stage is open, belongs to the intended epic, and is unblocked.
+Fetch `origin/HEAD` and record the candidate stage base without changing code.
+If preparation follows invalidation, verify the marker and issue reopen first.
+Treat any already-landed layers as immutable trunk history, not as an unmerged
+stack to replay.
 
 Read:
 
 - the epic, approved plan, stage, and current sub-issues;
+- the invalidating evidence and affected lease or manifest when present;
 - prior landed stage reports and decisions;
 - relevant repository modules, tests, migrations, and operational docs;
 - `.gitmodules`, pinned submodule SHAs, referenced SDKs/specifications, and upstream primary sources;
@@ -42,7 +47,9 @@ Keep unresolved load-bearing work in investigation or prototype children. Close 
 
 ## 4. Draft the execution lease
 
-Update the stage body with:
+Update the stage body with a new lease. For invalidated work, distinguish the
+landed baseline, the acceptance failure, and the corrective child set; never
+silently reuse the invalidated stack or manifest.
 
 ```markdown
 ## Outcome
@@ -76,7 +83,14 @@ Update the stage body with:
 ## Out of scope
 ```
 
-The lease should authorize routine implementation, commits, pushes, PR creation, debugging, fresh-context child execution, checkpoint comments, and review for the named children. Its base drift policy may allow one clean pre-review stack rebase only when range-diff, layer behavior, and checks remain equivalent; conflicts or semantic drift stop the stage. The post-review stack merge is authorized only after the human merge gate; production remains separately revision-bounded.
+The lease should authorize routine implementation, commits, pushes, PR
+creation, debugging, fresh-context child execution, checkpoint comments, and
+review for the named children. Its base drift policy may allow one clean
+pre-review stack rebase only when range-diff, layer behavior, and checks remain
+equivalent; conflicts or semantic drift stop the stage. A corrective lease must
+name whether each prior landed layer remains, is reverted, or is superseded and
+how that choice is verified. The post-review stack merge is authorized only
+after the human merge gate; production remains separately revision-bounded.
 
 ## 5. Present the launch gate
 

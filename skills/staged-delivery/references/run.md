@@ -2,11 +2,22 @@
 
 Execute one launched stage as an unmerged PR stack, review it as one integrated change, pause once for the human merge gate, then land it base-to-tip.
 
-## 1. Verify the lease
+## 1. Reconcile evidence and verify the lease
 
-Derive the latest stage transition from the markers in `state.md`. Recompute the stage-body hash and require one valid launch marker with the same `lease-id`.
+First apply the fresh-evidence reconciliation in `SKILL.md`. Map every finding
+supplied with this invocation to the stage contract before deriving authority
+from prior comments. If the latest valid transition is an invalidation, or new
+evidence requires one, stop and return to `prepare`; never continue because an
+older merge approval still exists.
 
-Confirm that every stack child is open, ordered, and still matches the lease; referenced plans, submodules, and controlled-resource caps have not materially drifted; and existing branches, worktrees, PRs, and unrelated dirty state are understood.
+Then derive the latest stage transition from the markers in `state.md`.
+Recompute the stage-body hash and require one valid launch marker with the same
+`lease-id`.
+
+Confirm that every stack child is open, ordered, and still matches the lease;
+referenced plans, submodules, and controlled-resource caps have not materially
+drifted; and existing branches, worktrees, PRs, and unrelated dirty state are
+understood.
 
 When the user invokes [`terminal-diagrams`](../../terminal-diagrams/SKILL.md),
 take a fresh observation before using a hierarchy, blocker, or stack projection.
@@ -51,7 +62,11 @@ Use independent fresh-context reviewers when available. Fix findings inside the 
 
 Create canonical sorted-key JSON containing the lease ID, reviewed base commit and tree, every ordered issue/PR/head commit/head tree/check result, and reviewed tip commit and tree. Hash it as `manifest-id` and post one reviewed marker with the full JSON.
 
-Present the five-axis report, manifest ID, ordered PRs, deviations, and residual risk. Ask once whether to merge this exact manifest. On approval, post and verify one merge-approved marker.
+Present the five-axis report, manifest ID, ordered PRs, deviations, residual
+risk, and the disposition of every fresh finding supplied in the current
+invocation. Ask once whether to merge this exact manifest. A mode-selection or
+continue response is not merge approval. On exact approval, post and verify one
+merge-approved marker.
 
 ## 5. Merge base-to-tip
 
@@ -79,4 +94,9 @@ From fresh `origin/HEAD`:
 - report proposed amendments to future stages without editing them;
 - close the stage issue when its native children and acceptance criteria are complete.
 
-Run is complete only when the landed marker is reproducible from live Git/GitHub state, cleanup is complete, and no future stage was launched or mutated.
+If post-merge verification or newly reconciled evidence contradicts the stage
+contract, record the physical landed revision, then present the exact
+invalidation marker and issue reopen. Do not close the stage or launch later
+work. Run is complete only when the landed marker is reproducible from live
+Git/GitHub state, semantic acceptance remains valid, cleanup is complete, and no
+future stage was launched or mutated.
