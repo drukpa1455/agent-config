@@ -1,49 +1,42 @@
 # Plan Contract
 
-Scale the plan to the work. Omit empty sections and routine implementation
-detail.
+Scale this shape to the work. Omit empty sections and anything an implementer can
+read directly from the repository.
 
 ```markdown
 # <Observable outcome> Implementation Plan
 
-Repository: <owner/repo>
-Source inputs: <paths or URLs with revisions>
+Repository: <owner/repo at revision>
+Source inputs: <paths or external contracts at revisions>
 
 ## Destination
 
 - Current behavior and evidence
-- Observable outcome and success evidence
+- Observable outcome and proof
 
-## Invariants and exclusions
+## Constraints
 
-- Preserved behavior and ownership
-- Explicitly out of scope
-- Controlled resources and hard limits
+- Invariants and preserved behavior
+- Explicit exclusions
+- High-impact resources and hard limits
 
-## Decision
+## Design
 
-- Chosen approach and why
-- Material alternatives rejected and why
-
-## Architecture
-
-- Owning components and dependency direction
-- Dataflow, state transitions, and interfaces
-- Failure, consistency, idempotency, concurrency, and repair where relevant
+- Chosen primitives, owners, and source of truth
+- Dataflow, state transitions, interfaces, and dependency direction
+- Failure, consistency, idempotency, replay, and repair where relevant
+- Material alternative rejected and why
 
 ## Delivery
 
-### Unit or stage: <landed outcome>
+### <Unit or stage>: <coherent landed outcome>
 
-- Entry evidence:
-- Plan-invalidating assumption:
-- Owns:
-- Files and symbols:
-- Consumes and produces:
-- Acceptance evidence:
-- Verification commands and expected results:
-- Rollback and repair:
-- Out of scope:
+- Entry evidence or plan-invalidating assumption
+- Why this boundary exists
+- Owned behavior, paths, and symbols
+- Inputs, outputs, and transition
+- Acceptance evidence and verification commands
+- Rollback, repair, and cleanup
 
 ## Migration and operations
 
@@ -51,29 +44,25 @@ Source inputs: <paths or URLs with revisions>
 - Partial-failure recovery
 - Observability, capacity, cost, and production bounds
 
-## References
-
-- Repository and external contract revisions
-
 ## Open decisions
 
-- Include only unresolved consequential choices; omit this section when none.
+- Only unresolved consequential choices; omit when none
 ```
 
-## Quality check
+## Falsify the plan
 
-Before implementation, verify that:
+Before implementation, ask:
 
-- the outcome is observable rather than a task list;
-- scope is the smallest complete change;
-- each fact, effect, and repair path has one owner;
-- interfaces and dependency direction are explicit;
-- invalid states and failures are handled;
-- each PR and stage earns its boundary;
-- behavior changes have executable evidence;
-- waits, retries, memory, concurrency, spend, and production are bounded;
-- external contracts are pinned where load-bearing;
-- no unresolved consequential decision is hidden as an implementation detail.
+- Does the plan lead from current evidence to an observable outcome?
+- Is there one owner and canonical path for each fact and effect?
+- Do abstractions, wrappers, PRs, and stages each own a real boundary?
+- Can every intermediate trunk state operate coherently and be repaired?
+- Are failure, replay, migration, rollback, and derived-data semantics explicit
+  where they matter?
+- Do executable checks prove behavior rather than task completion?
+- Are time, retries, memory, concurrency, spend, and production bounded?
+- Are load-bearing external contracts pinned?
+- Is any unresolved product or architecture decision disguised as a task?
 
-If a check fails, revise the plan or return `BLOCKED`. Otherwise proceed without
-an approval ceremony when implementation is already in scope.
+Revise any weak point. If evidence cannot resolve a load-bearing decision, return
+`BLOCKED`; otherwise proceed directly.

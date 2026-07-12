@@ -11,7 +11,7 @@ scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
 skills/converging-semantic-representations/ explicit architecture lens
 skills/tinygrad-design/      source-backed Tinygrad design lens
-skills/staged-delivery/      stage-gated change delivery
+skills/staged-delivery/      evidence-ordered staged delivery
 skills/implementation-planning/ repository-grounded planning
 skills/terminal-diagrams/    source-bound terminal projections
 skills/persistent-browser/   on-demand browser capability
@@ -89,7 +89,7 @@ turning the plan into an approval artifact.
 
 When implementation is already requested, planning continues directly into
 ordinary or staged delivery. It pauses only for unresolved consequential
-choices or controlled actions.
+tradeoffs or the global high-impact boundary.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill implementation-planning
@@ -117,9 +117,8 @@ by its exact queries and fetch times. See
 ## Staged delivery
 
 `staged-delivery` autonomously turns a multi-stage goal, plan, findings block,
-or existing epic into the smallest useful issue hierarchy, then implements,
-reviews, merges, verifies, and cleans each stage. Stages are evidence boundaries,
-not recurring human gates.
+or existing epic into coherent landed outcomes and only the issue structure they
+need, then implements, reviews, merges, verifies, and cleans each stage.
 
 The target repository's `AGENTS.md` remains authoritative. The skill adds no
 tracker setup, database, telemetry, or background service.
