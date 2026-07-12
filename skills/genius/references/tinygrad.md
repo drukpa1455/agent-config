@@ -54,6 +54,14 @@ universal: realized buffers and metadata are attached through weak side mappings
 instead of becoming part of every node's structural fields
 ([`tinygrad/uop/ops.py::buffers,all_metadata`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L166-L240)).
 
+The architecture is not purely functional. Rewrites normally construct
+replacement UOps, while `_apply_map_to_tensors` mutates live `Tensor.uop` handles
+to point at rewritten roots
+([`tinygrad/tensor.py::_apply_map_to_tensors`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/tensor.py#L14-L31),
+[`tinygrad/uop/ops.py::UOp.replace`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L213-L233)).
+The useful boundary is replace-oriented semantic values inside a mutable shell of
+handles, caches, diagnostics, and effects—not immutability everywhere.
+
 ### Shared representation still has phase contracts
 
 `Ops` spans tensor, movement, call, schedule, program, source, and binary forms,
@@ -116,8 +124,13 @@ into it. Copy and compute buffers use separate arenas so reuse cannot introduce
 false copy-to-compute-to-copy dependencies
 ([`tinygrad/schedule/memory.py::memory_plan_rewrite`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/schedule/memory.py#L20-L64),
 [`test/null/test_memory_planner.py`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/test/null/test_memory_planner.py#L172-L218)).
-The transferable invariant is one owner for causal order, including state
-hazards, and no derived optimization that silently changes it.
+JIT demonstrates that planner ownership does not mean a frozen plan. `jit_lower`
+parameterizes inputs, reruns memory planning, compiles calls, and may group them
+into device graph calls, while still returning `LINEAR`
+([`tinygrad/engine/jit.py::graph_split_rewrite,jit_lower`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/engine/jit.py#L31-L80)).
+Replay consumes that transformed linear rather than rediscovering the Tensor
+graph's dependencies. The transferable invariant is explicit plan-to-plan
+transformation that preserves causal meaning, not an immutable initial schedule.
 
 ### Introspection follows transformations
 
@@ -132,21 +145,32 @@ revisions, so refactors can preserve intermediate behavior rather than only fina
 numerical output
 ([`test/external/process_replay/README.md`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/test/external/process_replay/README.md#L1-L14)).
 
-The rewrite machinery itself contains fixed-point loop detection, a stack bound,
+Within `PatternMatcher`, rules are indexed by operation and the first successful
+match wins. Adding matchers concatenates their rules, so rule order and pass order
+are both semantic
+([`tinygrad/uop/ops.py::PatternMatcher`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L1388-L1414)).
+The rewrite machinery also contains fixed-point loop detection, a stack bound,
 and explicit call-entry behavior
 ([`tinygrad/uop/ops.py::RewriteContext`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L1568-L1680)).
-Tinygrad concentrates transformation complexity; specs, tracing, and replay pay
-for it.
+Tinygrad concentrates transformation complexity; specs, ordered-rule tests,
+tracing, and replay pay for it.
 
 ### Target variability stays at capability edges
+
+High-level Tensor operations do not fork by backend, but the full UOp graph is
+not universally target-neutral: buffer parameters carry devices and later UOps
+can contain target instruction facts such as WMMA details
+([`tinygrad/uop/ops.py::UOp.wmma`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L580-L591),
+[`tinygrad/uop/ops.py::UOp.device`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L806-L836)).
 
 A compiled device combines allocation, candidate renderers, a runtime program
 constructor, and optional graph support. Renderers expose target capabilities
 and lower program UOps into source or assembly
 ([`tinygrad/device.py::Compiled`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/device.py#L289-L338),
 [`tinygrad/renderer/__init__.py::Renderer`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/renderer/__init__.py#L58-L84)).
-Target adapters add capabilities and effects without forking the tensor surface
-or core language.
+The pattern is progressive target commitment: preserve high-level meaning, then
+introduce device, instruction, source, binary, and effect facts in the phases
+that own them.
 
 After scheduling, execution ownership is explicit:
 
@@ -208,7 +232,7 @@ small architecture.
 | ------------------------------ | ---------------------------------------------- | --------------------------------------------------- |
 | Public sugar and core language | `tinygrad/tensor.py`, `tinygrad/mixin/`        | `_apply_uop`, broad operations converging on UOps   |
 | Identity and legal states      | `tinygrad/uop/ops.py`, `tinygrad/uop/spec.py`  | interning, structural keys, side state, phase specs |
-| Transform machinery            | `PatternMatcher`, `RewriteContext`             | rule indexing, fixed points, traversal, tracing     |
+| Transform machinery            | `PatternMatcher`, `RewriteContext`             | first-match order, fixed points, traversal, tracing |
 | Early normalization            | `tinygrad/callify.py`                          | buffer parameterization and cache boundary          |
 | Planning and order             | `tinygrad/schedule/__init__.py`, `rangeify.py` | state hazards, kernel splitting, and `LINEAR`       |
 | Resource lifetime              | `tinygrad/schedule/memory.py`                  | lifetimes, arena lanes, and plan-preserving reuse   |
