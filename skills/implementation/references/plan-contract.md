@@ -27,6 +27,10 @@ Source inputs: <paths or external contracts at revisions>
 - Failure, consistency, idempotency, replay, and repair where relevant
 - Material alternative rejected and why
 
+## Map
+
+    <one compact ASCII architecture, hierarchy, or delivery view when useful>
+
 ## Delivery
 
 ### <Unit or stage>: <coherent landed outcome>
@@ -56,6 +60,8 @@ Before implementation, ask:
 - Does the plan lead from current evidence to an observable outcome?
 - Is there one owner and canonical path for each fact and effect?
 - Do abstractions, wrappers, PRs, and stages each own a real boundary?
+- When present, does the map clarify real topology without becoming a second
+  source of truth?
 - Can every intermediate trunk state operate coherently and be repaired?
 - Are failure, replay, migration, rollback, and derived-data semantics explicit
   where they matter?
