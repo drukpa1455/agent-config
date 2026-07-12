@@ -21,24 +21,21 @@ Optimize for radical simplicity: few concepts, crisp boundaries, deterministic f
 
 ## Repository changes
 
-- Apply this workflow to changes intended to land. Read-only work, disposable experiments, and explicitly local trivial edits do not require issues or PRs.
-- Work in a git worktree under `.worktrees/`; use the repository root only for status, fetch, and worktree operations. Commands that may generate or rewrite files, initialize dependencies or submodules, or start services run in the task worktree even during review. Inspect existing diffs and preserve changes you did not make.
-- Canonical trunk is `origin/HEAD`. Keep the root clean and synced; never commit from its checked-out branch.
-- Treat drift semantically, not by commit or path overlap. Before review, absorb compatible trunk changes and rerun affected checks without asking. Stop only when drift changes approved scope, architecture, contracts, invariants, controlled-resource exposure, observable behavior, or required verification.
-- After a specific merge diff or manifest is approved, any change to it or its reviewed base invalidates that approval; production remains revision-bounded below.
-- One landing change gets one branch, worktree, and PR. Use a scoped issue when work is nontrivial, already tracked, or part of a larger plan; the PR closes it.
-- For issue-backed work, use `agent/aNN/issue-<id>-<slug>` and `.worktrees/aNN-issue-<id>-<slug>`.
-- Use epics and ordered stages only for genuinely multi-stage work; implementation stays in scoped issues.
+- A request to implement, fix, proceed, work through, or land a change in a user-owned repository authorizes one autonomous delivery loop for that stated scope: inspect, branch/worktree, implement, verify, commit, push, open or update the PR, address valid review findings, merge, and clean up. Do not ask for approval at each routine step.
+- Use a task worktree under `.worktrees/` for nontrivial work or whenever concurrent state may exist. Use the repository root only for status, fetch, and worktree operations; never commit from its checked-out branch. Inspect existing diffs and preserve changes you did not make.
+- Canonical trunk is `origin/HEAD`. Treat drift semantically: absorb compatible changes and rerun affected checks without asking. Stop only when drift moves beyond the user's stated goal, requires a product tradeoff evidence cannot resolve, or crosses a controlled-action boundary below.
+- Use one branch and PR per landing change. Issues, epics, and PR stacks are optional coordination tools: create only the structure that materially improves ownership, review, or sequencing. Follow repository-required naming; otherwise prefer short descriptive names.
+- A user-requested exact-revision review is revision-bound. Routine fixes before autonomous merge do not need renewed approval unless they cross a stop condition below.
 - Use lowercase conventional commits. Never use `git stash` as storage; preserve work in a branch, patch, archive, or canonical tracked path.
-- Keep temporary artifacts under `tmp/<scope>/`. Move durable outputs to canonical paths, delete disposable outputs, and clean branches and worktrees after merge.
+- Keep temporary artifacts under `tmp/<scope>/`. Move durable outputs to canonical paths, delete disposable outputs, and clean task branches and worktrees after merge.
 
 ## Controlled actions
 
-- Treat destructive local actions, external writes, money, subscriptions, credits, tokens, cloud jobs, paid APIs, broker/data feeds, and production as controlled resources.
-- Approval of an exact repository, visibility, scope, and delivery path authorizes its routine issue, branch, worktree, commit, push, and PR writes plus compatible pre-review drift. Ask again when public disclosure, approved semantics, controlled-resource exposure, or the reviewed merge revision changes.
-- For all other controlled actions, default to plan-only: state scope, risk, hard cap, output, and stop condition. Act only after explicit approval of the exact targets or revision.
+- Reserve approval for genuinely high-impact actions: trades or money movement, new subscriptions, material or unbounded paid API/cloud spend, production, destructive or irreversible loss, and disclosure of credentials or private/customer data.
+- Routine Git and GitHub delivery in a user-owned repository is covered by the autonomous delivery loop above, including issues, stages, sub-issues, comments, dependencies, PRs, and merge. Ask again only when work leaves the stated goal, requires an unresolved user tradeoff, or crosses one of the high-impact boundaries above.
+- For those controlled actions, state the exact target, risk, hard cap, output, and stop condition, then act only after explicit approval. Stop on unknown success and inspect before retrying.
 - Keep credentials, profiles, cookies, tokens, private data, and paid payloads out of git unless sharing is explicit.
-- Production approval is revision-bounded: build, promote, verify, or cancel only the approved revision; report drift instead of chasing trunk.
+- Production approval remains revision-bounded: build, promote, verify, or cancel only the approved revision; report drift instead of chasing trunk.
 
 ## Design
 
