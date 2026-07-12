@@ -49,7 +49,10 @@ The phases stay distinct but reuse one graph machinery.
 without creating another persistent semantic model
 ([`tinygrad/tensor.py::Tensor._apply_uop`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/tensor.py#L108-L116)).
 The leverage comes from a wide ergonomic surface sharing one semantic center,
-not from making the public API small.
+not from making the public API small. The center is semantic rather than
+universal: realized buffers and metadata are attached through weak side mappings
+instead of becoming part of every node's structural fields
+([`tinygrad/uop/ops.py::buffers,all_metadata`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L166-L240)).
 
 ### Shared representation still has phase contracts
 
@@ -58,26 +61,47 @@ while `spec_tensor`, `spec_program`, and `spec_full` define different legal
 states
 ([`tinygrad/uop/spec.py`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/spec.py#L130-L246)).
 A common representation removes translators only when legality remains explicit.
+At the default `SPEC=1`, validation runs at scheduling and code-generation
+boundaries; higher modes additionally validate UOps as they are constructed
+([`tinygrad/helpers.py::SPEC`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/helpers.py#L248-L259),
+[`tinygrad/schedule/__init__.py::lower_sink_to_linear`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/schedule/__init__.py#L108-L124),
+[`tinygrad/codegen/__init__.py::full_rewrite_to_sink`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/codegen/__init__.py#L260-L358)).
+The transferable choice is proportional validation at semantic transitions, not
+checking every object at maximum cost.
 
 ### Variability is normalized before identity and caching
 
-`transform_to_call` replaces concrete global buffers and slices with parameters,
-strips values from symbolic bindings, and returns the mapping from original
-values to final storage before scheduling
+Tinygrad uses different identities for different jobs. Live UOps are
+weak-interned by `(op, dtype, src, arg, tag)`. Their recursive `key` hashes
+operation, dtype, argument, and source keys while excluding tags, metadata, and
+realized-buffer state
+([`tinygrad/uop/ops.py::UOpMetaClass,UOp.key`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L166-L240)).
+
+Before schedule caching, `transform_to_call` replaces concrete global buffers
+and slices with parameters, strips values from symbolic bindings, and returns the
+mapping from original values to final storage
 ([`tinygrad/callify.py::transform_to_call`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/callify.py#L207-L226)).
-The schedule cache therefore keys structural meaning separately from runtime
-buffers and variable values. This is early normalization serving identity, not a
-generic argument for caching.
+Structural cache identity is therefore normalized separately from live object
+identity, diagnostics, runtime bindings, and storage. This is purpose-specific
+identity, not a generic argument for caching.
 
 ### Realization is a named effect boundary
 
 `Tensor.realize` selects unrealized work, creates a linear schedule, and passes
-it to `run_linear`; schedule tests prove planning does not allocate while
-execution does
+it to `run_linear`; schedule tests prove planning does not allocate underlying
+device memory while execution does
 ([`tinygrad/tensor.py::Tensor.realize`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/tensor.py#L178-L197),
 [`test/null/test_schedule.py::test_buffer_has_buffer`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/test/null/test_schedule.py#L37-L47)).
 Laziness earns its cost by making global validation, ordering, fusion, memory
 planning, and target selection possible before effects.
+
+The boundary includes more than the final dispatch loop. `run_linear` compiles
+before execution, and local-size optimization can allocate temporary buffers and
+benchmark candidate launches
+([`tinygrad/engine/realize.py::optimize_local_size`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/engine/realize.py#L87-L105),
+[`tinygrad/engine/realize.py::run_linear`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/engine/realize.py#L262-L281)).
+Compilation is therefore not guaranteed pure; a transferred design must name any
+benchmarking, allocation, or probing inside its effect boundary.
 
 ### Planning owns order as data
 
@@ -138,6 +162,17 @@ After scheduling, execution ownership is explicit:
 wrapper reconstructs those facts
 ([`tinygrad/engine/realize.py`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/engine/realize.py#L131-L281)).
 
+### Performance ownership follows phase ownership
+
+Tinygrad separates compile speed, execution speed, model speed, and kernel speed.
+Its guide associates their primary pressure with Python graph rewrites,
+driver/runtime dispatch, scheduling and materialization, or code generation
+([`docs/developer/speed.md`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/docs/developer/speed.md#L1-L49)).
+This is a diagnostic decomposition, not exclusive causality: phases interact. A
+benchmark is useful only when it names the constrained phase, workload, baseline,
+and complexity tradeoff. Optimizing the renderer cannot repair a poor
+materialization schedule.
+
 ### Simplification culminates in deletion, not code golf
 
 Tinygrad's contribution policy calls low line count a guiding light but rejects
@@ -172,7 +207,7 @@ small architecture.
 | Pressure                       | Start here                                     | Inspect                                             |
 | ------------------------------ | ---------------------------------------------- | --------------------------------------------------- |
 | Public sugar and core language | `tinygrad/tensor.py`, `tinygrad/mixin/`        | `_apply_uop`, broad operations converging on UOps   |
-| Identity and legal states      | `tinygrad/uop/ops.py`, `tinygrad/uop/spec.py`  | structural identity, interning, phase specs         |
+| Identity and legal states      | `tinygrad/uop/ops.py`, `tinygrad/uop/spec.py`  | interning, structural keys, side state, phase specs |
 | Transform machinery            | `PatternMatcher`, `RewriteContext`             | rule indexing, fixed points, traversal, tracing     |
 | Early normalization            | `tinygrad/callify.py`                          | buffer parameterization and cache boundary          |
 | Planning and order             | `tinygrad/schedule/__init__.py`, `rangeify.py` | state hazards, kernel splitting, and `LINEAR`       |

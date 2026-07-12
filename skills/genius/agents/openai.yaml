@@ -1,6 +1,6 @@
 interface:
   display_name: "Genius"
   short_description: "Apply a revision-bound Tinygrad engineering lens"
-  default_prompt: "Apply the loaded Tinygrad principles to this problem, cite pinned project mechanics when decisive, and transfer invariants without simulating personalities or copying compiler machinery."
+  default_prompt: "Apply the Tinygrad decision card to this problem, cite pinned mechanics when decisive, and transfer invariants without simulating personalities or copying compiler machinery."
 policy:
   allow_implicit_invocation: false
