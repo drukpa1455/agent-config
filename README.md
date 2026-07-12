@@ -81,12 +81,15 @@ The skill is an explicit architecture lens. Use
 
 ## Implementation planning
 
-`implementation-planning` turns consequential engineering intent into an approved, repository-grounded plan. It verifies current behavior, resolves load-bearing decisions, scales delivery from one issue to genuinely staged work, and names interfaces, evidence, rollback, repair, and resource bounds without pre-writing routine implementation.
+`implementation-planning` turns consequential engineering intent into a
+repository-grounded working plan. It verifies current behavior, resolves
+load-bearing decisions, scales delivery from one PR to genuinely staged work,
+and names interfaces, evidence, rollback, repair, and resource bounds without
+turning the plan into an approval artifact.
 
-The skill is read-only until the exact plan is approved. Approval changes only
-the status line to `Approved` and publishes the named delivery path. One-unit
-plans enter the repository's ordinary workflow; only genuinely staged plans
-hand off explicitly to `staged-delivery`.
+When implementation is already requested, planning continues directly into
+ordinary or staged delivery. It pauses only for unresolved consequential
+choices or controlled actions.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill implementation-planning
@@ -113,17 +116,20 @@ by its exact queries and fetch times. See
 
 ## Staged delivery
 
-`staged-delivery` turns an approved multi-stage plan into a native epic, stage,
-and implementation hierarchy with unmerged PR stacks, human merge gates, and
-landed verification. One-unit plans never enter this workflow.
+`staged-delivery` autonomously turns a multi-stage goal, plan, findings block,
+or existing epic into the smallest useful issue hierarchy, then implements,
+reviews, merges, verifies, and cleans each stage. Stages are evidence boundaries,
+not recurring human gates.
 
-The target repository's `AGENTS.md` remains authoritative. The skill adds no labels, tracker setup, database, telemetry, or background service.
+The target repository's `AGENTS.md` remains authoritative. The skill adds no
+tracker setup, database, telemetry, or background service.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill staged-delivery
 ```
 
-Use `/skill:staged-delivery shape <plan>`, `prepare <stage-issue>`, `run <stage-issue>`, or `review <epic-issue>`. See [`skills/staged-delivery/SKILL.md`](skills/staged-delivery/SKILL.md).
+Use `/skill:staged-delivery <goal-or-artifact>`. See
+[`skills/staged-delivery/SKILL.md`](skills/staged-delivery/SKILL.md).
 
 ## Systematic debugging
 

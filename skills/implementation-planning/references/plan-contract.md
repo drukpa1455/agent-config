@@ -1,20 +1,18 @@
 # Plan Contract
 
-Scale sections to the work. Omit empty optional sections; never fill them with placeholders.
+Scale the plan to the work. Omit empty sections and routine implementation
+detail.
 
 ```markdown
 # <Observable outcome> Implementation Plan
 
-Status: Draft | Ready for approval | Approved
 Repository: <owner/repo>
 Source inputs: <paths or URLs with revisions>
 
 ## Destination
 
 - Current behavior and evidence
-- Affected user or system
-- Observable outcome
-- Success evidence
+- Observable outcome and success evidence
 
 ## Invariants and exclusions
 
@@ -26,76 +24,56 @@ Source inputs: <paths or URLs with revisions>
 
 - Chosen approach and why
 - Material alternatives rejected and why
-- Existing code or infrastructure reused
 
 ## Architecture
 
 - Owning components and dependency direction
-- Dataflow and state transitions
-- Public interfaces and compatibility
-- Consistency, idempotency, concurrency, and failure behavior where relevant
+- Dataflow, state transitions, and interfaces
+- Failure, consistency, idempotency, concurrency, and repair where relevant
 
 ## Delivery
 
-For one coherent change, use only:
-
-### Implementation unit: <one PR purpose>
+### Unit or stage: <landed outcome>
 
 - Entry evidence:
 - Plan-invalidating assumption:
 - Owns:
 - Files and symbols:
-- Consumes:
-- Produces:
+- Consumes and produces:
 - Acceptance evidence:
 - Verification commands and expected results:
 - Rollback and repair:
 - Out of scope:
 
-For genuinely staged work, repeat:
-
-### Stage N: <coherent landed outcome>
-
-- Entry evidence:
-- Plan-invalidating assumption:
-- Ordered implementation units: <one PR purpose each>
-- Stage-wide acceptance and verification:
-- Stage exit evidence:
-- Rollback and repair:
-
 ## Migration and operations
 
-- Expand, migrate, verify, and contract sequence
-- Rollback point and partial-failure recovery
-- Observability and operator evidence
-- Performance, security, capacity, cost, and production bounds
+- Safe transition and rollback point
+- Partial-failure recovery
+- Observability, capacity, cost, and production bounds
 
 ## References
 
-- Repository revision
-- Dependency, SDK, submodule, protocol, and external specification revisions
+- Repository and external contract revisions
 
 ## Open decisions
 
-For `Draft`, list each consequential unresolved choice and the evidence or decision needed. For `Ready for approval` or `Approved`, write exactly `None`. `Approved` is valid only after exact user approval and a status-only transition from the reviewed `Ready for approval` form.
+- Include only unresolved consequential choices; omit this section when none.
 ```
 
-## Review gate
+## Quality check
 
-The plan is approvable only when all answers are yes:
+Before implementation, verify that:
 
-- **Destination:** Can fresh evidence prove the outcome rather than only task completion?
-- **Scope:** Is this the smallest complete change, with exclusions explicit?
-- **Ownership:** Does every fact, state transition, write path, and repair path have one owner?
-- **Architecture:** Are dependency direction and interfaces explicit without speculative machinery?
-- **State:** Are source, durability, visibility, consistency, staleness, rebuild, and repair named where relevant?
-- **Failure:** Are retries bounded and limited to idempotent or transactional work? Is unknown success handled?
-- **Decomposition:** Does each unit earn one PR, and each stage earn a human gate and coherent landed state? Is a single change free of ceremonial stages? Does compatibility removal wait for landed migration evidence?
-- **Verification:** Does every behavior change have fresh, executable acceptance evidence?
-- **Operations:** Are migration, rollback, observability, cleanup, resources, and production actions bounded?
-- **References:** Are load-bearing external contracts pinned and verified?
-- **Drift:** Does the plan separate its evidence revision from the future execution base and stop only for semantic invalidation rather than a moved commit or overlapping path?
-- **Approval:** Is `Approved` used only for the canonical status-only result of exact user approval?
-- **Decisions:** Are all remaining choices reversible implementation details?
+- the outcome is observable rather than a task list;
+- scope is the smallest complete change;
+- each fact, effect, and repair path has one owner;
+- interfaces and dependency direction are explicit;
+- invalid states and failures are handled;
+- each PR and stage earns its boundary;
+- behavior changes have executable evidence;
+- waits, retries, memory, concurrency, spend, and production are bounded;
+- external contracts are pinned where load-bearing;
+- no unresolved consequential decision is hidden as an implementation detail.
 
-If any answer is no, revise or return `BLOCKED` with the exact missing evidence. A blocked response contains no provisional implementation checklist. Never convert the gap into a placeholder implementation task.
+If a check fails, revise the plan or return `BLOCKED`. Otherwise proceed without
+an approval ceremony when implementation is already in scope.
