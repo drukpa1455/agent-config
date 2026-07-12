@@ -19,7 +19,9 @@ Sources: <paths or external contracts at revisions>
 
 - Chosen primitives, owners, and source of truth
 - Interfaces, dataflow, state transitions, and dependency direction
-- Failure, migration, rollback, repair, and resource bounds where material
+- Straight-line implementation shape, visible dependencies, and invalid-state model
+- State, write, and derived-data lifetimes and repair where material
+- Failure, migration, rollback, and resource bounds where material
 - Material alternative rejected and why
 
 ## Map
@@ -42,11 +44,14 @@ Sources: <paths or external contracts at revisions>
 ## Falsify the plan
 
 - Does current evidence support the destination and decisions?
-- Does each fact and effect have one owner and canonical path?
-- Does every abstraction, PR, and stage own a real boundary?
+- Is this the fewest-concept design that fully solves the outcome?
+- Does each fact and effect have one visible owner and canonical path?
+- Are dependencies explicit, the happy path straight, and invalid states difficult?
+- Does every wrapper, abstraction, PR, and stage own a real boundary?
 - Can each intermediate trunk state operate coherently and be repaired?
 - Do checks prove behavior rather than task completion?
-- Are external contracts and resource bounds explicit where load-bearing?
+- Are nondeterminism, external contracts, and resource bounds explicit where
+  load-bearing?
 - Is any unresolved product or architecture decision disguised as a task?
 
 Revise any weak point. If evidence cannot resolve a load-bearing decision, return

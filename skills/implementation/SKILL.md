@@ -14,6 +14,12 @@ Carry repository work through one flow:
 facts -> decisions -> order -> work -> proof
 ```
 
+Build with radical simplicity and maximum elegance. Plan and code should read
+like the same system at different resolutions: few concepts, straight-line flow,
+explicit boundaries, and obvious ownership. Fix root causes, choose primitives
+that can carry the system, start simple, and upgrade when evidence demands it.
+Avoid band-aids, clever golf, and speculative architecture.
+
 Plans retain design decisions; diagrams project them. GitHub records delivery
 order. Code, plans, Git, GitHub, and retained evidence remain authoritative for
 the facts they own.
@@ -40,17 +46,26 @@ guarantees. Ask only when evidence cannot resolve a consequential tradeoff.
 ## Decide the design
 
 Start from the observable outcome and choose the few primitives and ownership
-boundaries needed to make it natural. Resolve only change-specific decisions:
+boundaries needed to make it natural:
 
-- source of truth, owners, interfaces, dataflow, and state transitions;
-- dependency direction and the boundary between semantic logic and I/O;
-- writes, failures, consistency, replay, migration, rollback, repair, external
-  limits, and proof.
+- **Tiny core, wide reach:** make everything else composition.
+- **One source of truth:** change owning sources, not generated outputs.
+- **Truth is visible:** call or import the real owner; avoid magic surfaces.
+- **Wrappers pay rent:** add an invariant, cache, retry, instrumentation, or
+  another real seam—or call directly.
+- **Core is pure:** keep semantic logic explicit and orchestration pragmatic;
+  contain I/O and workflow translation at the edges.
+- **Variability ends at boundaries:** normalize optional, environment-dependent,
+  sync, and async paths; make nondeterminism explicit and controllable.
+- **Paths and ownership are canonical:** keep dependency direction acyclic and
+  give state, caches, locks, and clients clear owners and lifetimes.
+- **Writes and projections are repairable:** name durability, visibility,
+  consistency, replay, staleness, rebuild, and repair behavior.
+- **External work is bounded:** cap waits, retries, capacity, memory, and
+  concurrency; expose failure, observability, and cleanup ownership.
 
-Extend an existing owner before introducing a parallel representation. Every
-wrapper, abstraction, and compatibility path must own a real boundary. Start
-simple and upgrade only where current evidence requires it. Record the chosen
-design and only alternatives whose tradeoffs matter.
+Extend an existing owner before introducing a parallel representation. Record
+the chosen design and only alternatives whose tradeoffs matter.
 
 Treat an existing plan as evidence, not timeless authority: preserve sound
 decisions, revise contradicted assumptions, and avoid replanning what remains
@@ -102,12 +117,15 @@ For each change or stage:
 1. Test the assumption most likely to invalidate it.
 2. Refine only work current evidence supports and isolate it according to
    repository workflow.
-3. Implement in dependency order, keeping behavior, tests, migration,
-   documentation, and cleanup together in each coherent PR.
+3. Implement in dependency order. Organize files top-down around a straight-line
+   happy path. Use purpose-first names and visible dependencies; reserve comments
+   for necessary why or contract value. Prefer models that make invalid states
+   difficult. Keep behavior, tests, migration, documentation, and cleanup
+   together in each coherent PR.
 4. Run focused checks, then broader checks justified by affected contracts.
-5. Review the effective diff against applicable instructions and contracts,
-   including ownership, interfaces, failure and repair, migration, operations,
-   and unintended scope.
+5. Review the effective diff for conceptual weight, ownership, interfaces,
+   dependency direction, invalid states, failure and repair, migration,
+   operations, and unintended scope.
 6. Fix valid findings, absorb compatible drift, merge in safe order, verify fresh
    trunk, record decisive evidence, clean task state, and continue.
 
