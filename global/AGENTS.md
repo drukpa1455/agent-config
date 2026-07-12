@@ -4,9 +4,9 @@ This workspace values **radical simplicity** and **maximum elegance**. Write cod
 that reads like pseudocode: few concepts, crisp boundaries, deterministic flows,
 and obvious ownership.
 
-Small means low cognitive load, not the smallest patch. Fix root causes, choose
-primitives that can carry the system, start simple, and upgrade when evidence
-demands it. Avoid band-aids, clever golf, and speculative architecture.
+Design for low cognitive load. Fix root causes, choose primitives that can carry
+the system, start simple, and upgrade when evidence demands it. Avoid band-aids,
+clever golf, and speculative architecture.
 
 ## Defaults
 
