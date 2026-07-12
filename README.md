@@ -58,15 +58,15 @@ See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
 
 ## Genius
 
-`genius` selects one primary and, when useful, one counter-lens from
-revision-bound studies of exceptional software. Its initial roster covers George
-Hotz and Tinygrad, D. Richard Hipp and SQLite, Fabrice Bellard and QuickJS, and
-Evan Wallace and esbuild.
+`genius` currently carries one deeply studied, revision-bound lens: George Hotz,
+contributors, and Tinygrad. Its main skill file directly includes the
+highest-value Tinygrad principles; the reference profile retains detailed source
+paths, limitations, history, and a reproducible worked trace.
 
 The skill studies project mechanics rather than simulating personalities. It
 pins source evidence, preserves collaborators, separates observation from
-inference, translates invariants into the target domain, and states where each
-analogy breaks.
+inference, translates invariants into the target domain, and states where the
+analogy breaks. Future profiles are added one source study at a time.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill genius
