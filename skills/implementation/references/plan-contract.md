@@ -1,54 +1,38 @@
 # Plan Contract
 
-Scale this shape to the work. Omit empty sections and anything an implementer can
-read directly from the repository.
+Scale this shape to the work. Omit empty sections and facts readable directly
+from the repository.
 
 ```markdown
 # <Observable outcome> Implementation Plan
 
 Repository: <owner/repo at revision>
-Source inputs: <paths or external contracts at revisions>
+Sources: <paths or external contracts at revisions>
 
 ## Destination
 
 - Current behavior and evidence
 - Observable outcome and proof
+- Invariants and exclusions
 
-## Constraints
-
-- Invariants and preserved behavior
-- Explicit exclusions
-- High-impact resources and hard limits
-
-## Design
+## Decisions
 
 - Chosen primitives, owners, and source of truth
-- Dataflow, state transitions, interfaces, and dependency direction
-- State lifetimes, boundary normalization, and derived-data rebuild where relevant
-- Straight-line implementation shape, visible dependencies, and invalid-state model
-- Failure, consistency, idempotency, replay, and repair where relevant
+- Interfaces, dataflow, state transitions, and dependency direction
+- Failure, migration, rollback, repair, and resource bounds where material
 - Material alternative rejected and why
 
 ## Map
 
     <one compact ASCII architecture, hierarchy, or delivery view when useful>
 
-## Delivery
+## Order
 
-### <Unit or stage>: <coherent landed outcome>
+### <Coherent landed outcome>
 
-- Entry evidence or plan-invalidating assumption
-- Why this boundary exists
-- Owned behavior, paths, and symbols
-- Inputs, outputs, and transition
-- Acceptance evidence and verification commands
-- Rollback, repair, and cleanup
-
-## Migration and operations
-
-- Safe transition and rollback point
-- Partial-failure recovery
-- Observability, capacity, cost, and production bounds
+- Invalidating assumption
+- Decisive evidence and verification commands
+- Dependencies, rollback, or repair when material
 
 ## Open decisions
 
@@ -57,21 +41,12 @@ Source inputs: <paths or external contracts at revisions>
 
 ## Falsify the plan
 
-Before implementation, ask:
-
-- Does the plan lead from current evidence to an observable outcome?
-- Is there one owner and canonical path for each fact and effect?
-- Does the design admit a straight-line implementation with visible dependencies
-  and invalid states made difficult?
-- Do abstractions, wrappers, PRs, and stages each own a real boundary?
-- When present, does the map clarify real topology without becoming a second
-  source of truth?
-- Can every intermediate trunk state operate coherently and be repaired?
-- Are failure, replay, migration, rollback, and derived-data semantics explicit
-  where they matter?
-- Do executable checks prove behavior rather than task completion?
-- Are time, retries, memory, concurrency, spend, and production bounded?
-- Are load-bearing external contracts pinned?
+- Does current evidence support the destination and decisions?
+- Does each fact and effect have one owner and canonical path?
+- Does every abstraction, PR, and stage own a real boundary?
+- Can each intermediate trunk state operate coherently and be repaired?
+- Do checks prove behavior rather than task completion?
+- Are external contracts and resource bounds explicit where load-bearing?
 - Is any unresolved product or architecture decision disguised as a task?
 
 Revise any weak point. If evidence cannot resolve a load-bearing decision, return
