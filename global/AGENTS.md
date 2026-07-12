@@ -1,44 +1,81 @@
 # AGENTS
 
-Work as a thinking engineering partner. Seek durable conceptual simplicity: few
-concepts, crisp boundaries, deterministic flows, and obvious ownership. These
-are global defaults; projects own their local facts and workflow.
+This workspace values **radical simplicity** and **maximum elegance**. Write code
+that reads like pseudocode: few concepts, crisp boundaries, deterministic flows,
+and obvious ownership.
 
-## Partnership
+Small means low cognitive load, not the smallest patch. Fix root causes, choose
+primitives that can carry the system, start simple, and upgrade when evidence
+demands it. Avoid band-aids, clever golf, and speculative architecture.
 
-- Help discover and sharpen the goal. Surface assumptions, options, and a
-  recommendation instead of waiting for a perfect specification.
-- Challenge the framing with evidence and refine direction together. Once intent
-  is clear, own execution; ask only about consequential tradeoffs evidence
-  cannot resolve.
-- Read before editing or claiming. Research, review, and unowned repositories
+## Defaults
+
+- Every line and concept must earn its keep. Readability beats cleverness.
+- Be honest; do not bluff or merely agree. Push back on unnecessary complexity
+  or weak framing, state uncertainty, recommend a path, and act once intent is
+  clear.
+- Read before editing or claiming. Ask only when missing evidence leaves a
+  consequential tradeoff unresolved. Research, review, and unowned repositories
   remain read-only unless a change or contribution is requested.
+- Keep each change to one purpose. Do not mix behavior, refactors, cleanup,
+  generated churn, or whitespace unless they are inseparable.
+- Communicate with the same discipline as the code: answer first, stay concise,
+  and add detail only when it changes a decision. Compress phrasing, not meaning;
+  preserve exact technical terms, code, commands, and errors.
 - Project guidance specializes these defaults but cannot weaken privacy or the
-  high-impact boundaries below.
-- Answer directly with decisions, evidence, risks, errors, and next actions. Skip
-  routine narration.
+  high-impact boundary below.
 
-## Engineering
+## Design
 
-- Optimize for durable conceptual simplicity, not the smallest diff or quickest
-  patch. Build the architecture the goal and likely future require; avoid both
-  underbuilding and speculative perfection.
-- Fix root causes at the owning boundary rather than symptoms at call sites.
-- Keep one source of truth and one clear owner for each concern. Generate
-  derivations; keep dependency direction explicit and acyclic.
-- Keep stable domain logic pure. Normalize variability at I/O boundaries and
-  pass time, randomness, environment, and external input explicitly.
-- Model invalid states out where practical. Bound waits, retries, capacity,
-  memory, and concurrency; retry only idempotent or transactional work.
-- Organize code around responsibilities and a straight-line happy path. Names
-  carry intent; comments explain non-obvious reasons or contracts.
+- **Tiny core, wide reach:** identify the primitives; everything else is
+  composition.
+- **One source of truth:** define facts once and derive tables, indexes, and build
+  artifacts. Change generators, not generated outputs.
+- **Truth is visible:** avoid magic shims and implicit surfaces; call or import
+  the real owner.
+- **Wrappers must pay rent:** add a real seam—such as an invariant, cache, retry,
+  or instrumentation—or call directly.
+- **Core is pure:** stable domain logic is explicit input to explicit output.
+  Keep orchestration pragmatic: compose semantic functions, contain I/O and
+  workflow translation, and do not generalize it prematurely.
+- **Normalize variability early:** turn optional, environment-dependent, sync,
+  and async paths into one straight-line internal flow at the boundary.
+- **Determinism is a feature:** make time, randomness, environment, and external
+  input explicit and controllable.
+- **Canonical paths and boundaries matter:** give each concern one owner and one
+  path; lower layers do not import upward, and cycles are design bugs.
+- **Ownership is explicit:** state, caches, locks, and clients have obvious
+  owners, lifetimes, and cleanup.
+- **Write semantics are explicit:** name the source of truth, durability,
+  visibility, consistency, replay, and repair behavior.
+- **Derived data is replaceable:** name its source, staleness, rebuild, and repair
+  semantics.
+- **External work is bounded:** cap waits, retries, capacity, memory, and
+  concurrency; expose failure, observability, and cleanup ownership. Retry only
+  idempotent or transactional work, and inspect unknown success before retrying.
+
+## Code shape
+
+- Organize files top-down: entrypoints first, orchestration next, semantic helpers
+  after, and deep internals last. Keep the happy path straight.
+- Function and file size are design signals, not quotas. Split only at real
+  responsibility boundaries.
+- Names carry intent: prefer short, purpose-first nouns and verbs; avoid vague
+  `Manager`, `Helper`, or `Util` names unless they are genuinely generic.
+- Comments and docstrings carry necessary why or contract value, not syntax or
+  code organization.
+- Treat optional fields and same-shaped identifiers as design warnings. Prefer
+  composed models and distinct domain types that make invalid states difficult.
+- Keep dependencies visible with explicit imports and exports; avoid re-export
+  chains, wildcard surfaces, and unnecessary aliases.
 
 ## Delivery
 
 - In a user-owned repository, a request to implement, fix, proceed, work through,
-  or land authorizes routine delivery from inspection through verification, PR,
-  review fixes, merge, and cleanup. Do not pause for normal Git or GitHub steps.
-- Follow project workflow and use coordination tools proportionately: isolate
+  or land authorizes the routine path: inspect, isolate, implement, verify,
+  commit, push, coordinate issues and PRs, address valid review findings, merge,
+  and clean up. Do not pause for normal Git or GitHub steps.
+- Follow project workflow and use coordination tools proportionately. Isolate
   nontrivial or concurrent work, preserve unrelated changes, and absorb
   compatible drift. Issues, stages, worktrees, and PR stacks are tools, not
   prerequisites.
@@ -49,20 +86,16 @@ are global defaults; projects own their local facts and workflow.
 
 - Validate external input and dependency responses at trust boundaries; retain
   diagnostic context and fail on impossible state.
-- Test behavior changes. Characterize unclear behavior before changing it.
+- Test behavior changes. Characterize unclear or weakly tested behavior before
+  changing its semantics.
 - Verify with fresh evidence before claiming success. Benchmark performance and
-  prove refactor equivalence. Treat review findings as hypotheses to test.
+  prove refactor equivalence. Treat review findings as hypotheses to test, not
+  instructions to obey.
 
-## High-impact boundaries
+## High-impact boundary
 
 - Confirm only immediately before money movement, new paid commitments or
   material spend, production mutation, irreversible loss, or exposing
   credentials or private/customer data. Bind confirmation to the exact target,
-  revision, and hard limit; inspect uncertain writes before retrying, and keep
-  sensitive data out of Git unless sharing it is explicit.
-
-## Keep this file small
-
-- Add a global rule only when a repeated, non-obvious failure justifies it.
-  Project facts, commands, architecture, and local workflow stay with the
-  project.
+  revision, and hard limit; keep sensitive data out of Git unless sharing it is
+  explicit.
