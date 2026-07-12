@@ -54,11 +54,22 @@ boundaries needed to make it natural:
 - **One source of truth:** change owning sources, not generated outputs.
 - **Truth is visible:** call or import the real owner; avoid magic surfaces.
 - **Wrappers pay rent:** add an invariant, cache, retry, instrumentation, or
-  another real seam—or call directly.
-- **Core is pure:** keep semantic logic explicit and orchestration pragmatic;
-  contain I/O and workflow translation at the edges.
+  another real seam—or call directly. Direct code wins without repeated
+  transformation pressure.
+- **Core is pure:** keep semantic logic explicit, transformations named and
+  deterministic, and orchestration pragmatic; contain I/O and workflow
+  translation at the edges.
+- **Phases are explicit:** define legal states and transformations at each
+  boundary; transitional forms have a deletion direction.
+- **Effects cross a realization boundary:** describe, validate, and order work
+  before causing effects; execution consumes validated order without
+  rediscovering it.
+- **Identity and observability are structural:** include construction facts that
+  affect behavior, caching, or replay in identity; expose intermediate states for
+  inspection and replay.
 - **Variability ends at boundaries:** normalize optional, environment-dependent,
-  sync, and async paths; make nondeterminism explicit and controllable.
+  sync, and async paths; keep target adapters thin and capability-based; make
+  nondeterminism explicit and controllable.
 - **Paths and ownership are canonical:** keep dependency direction acyclic and
   give state, caches, locks, and clients clear owners and lifetimes.
 - **Writes are explicit:** name source of truth, durability, visibility,
@@ -153,10 +164,12 @@ For each change or stage:
    for necessary why or contract value. Prefer models that make invalid states
    difficult. Keep behavior, tests, migration, documentation, and cleanup
    together in each coherent PR.
-4. Run focused checks, then broader checks justified by affected contracts.
-5. Review the effective diff for conceptual weight, ownership, interfaces,
-   dependency direction, invalid states, failure and repair, migration,
-   operations, and unintended scope.
+4. Run focused checks, then broader checks justified by affected contracts. For
+   a transformation or refactor, compare a representative intermediate or
+   replay artifact, not only final output.
+5. Review the effective diff for conceptual weight, ownership, phase legality,
+   identity, interfaces, dependency direction, invalid states, effect boundaries,
+   failure and repair, migration, operations, and unintended scope.
 6. Fix valid findings, absorb compatible drift, and rerun affected checks.
 7. Merge in safe order, verify fresh trunk, record decisive evidence, clean task
    state, and continue.

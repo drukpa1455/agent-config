@@ -19,6 +19,8 @@ Sources: <paths or external contracts at revisions>
 
 - Chosen primitives, owners, and source of truth
 - Interfaces, dataflow, state transitions, and dependency direction
+- Phase legality, realization boundary, and planned order where material
+- Identity and intermediate or replay evidence where behavior depends on them
 - Straight-line implementation shape, visible dependencies, and invalid-state model
 - State, write, and derived-data lifetimes and repair where material
 - Failure, migration, rollback, and resource bounds where material
@@ -50,7 +52,11 @@ Sources: <paths or external contracts at revisions>
 - Does every retained representation introduce target, authority, durability,
   effect, or consumer semantics of its own?
 - Are dependencies explicit, the happy path straight, and invalid states difficult?
-- Does every wrapper, abstraction, PR, and stage own a real boundary?
+- Are phase legality, transitional deletion direction, the effect boundary, and
+  planned order explicit?
+- Can identity and intermediate or replay evidence prove each transformation?
+- Does every adapter, wrapper, abstraction, PR, and stage own a real capability
+  or boundary?
 - Can each intermediate trunk state operate coherently and be repaired?
 - Do checks prove behavior rather than task completion?
 - Are nondeterminism, external contracts, and resource bounds explicit where
