@@ -1,0 +1,6 @@
+interface:
+  display_name: "Tinygrad Design"
+  short_description: "Derive design lessons from current Tinygrad source"
+  default_prompt: "Apply a source-backed Tinygrad design lens to this problem and translate mechanics without cargo culting domain details."
+policy:
+  allow_implicit_invocation: false
