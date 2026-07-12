@@ -81,6 +81,9 @@ one coherent outcome stays one change, while real dependency or evidence
 boundaries become stages. A bounded polish pass converges duplicated semantics in
 the touched surface without expanding into unrelated cleanup.
 
+Review the public [skills.sh listing](https://skills.sh/drukpa1455/agent-config/implementation)
+or install directly:
+
 ```sh
 npx skills add drukpa1455/agent-config --skill implementation
 ```
