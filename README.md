@@ -11,8 +11,7 @@ scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
 skills/converging-semantic-representations/ explicit architecture lens
 skills/tinygrad-design/      source-backed Tinygrad design lens
-skills/staged-delivery/      evidence-ordered staged delivery
-skills/implementation-planning/ repository-grounded planning
+skills/implementation/      grounded planning and delivery
 skills/terminal-diagrams/    source-bound terminal projections
 skills/persistent-browser/   on-demand browser capability
 skills/systematic-debugging/  evidence-first root-cause diagnosis
@@ -79,23 +78,23 @@ history.
 The skill is an explicit architecture lens. Use
 `/skill:tinygrad-design <problem-or-design-question>`.
 
-## Implementation planning
+## Implementation
 
-`implementation-planning` turns consequential engineering intent into a
-repository-grounded working plan. It verifies current behavior, resolves
-load-bearing decisions, scales delivery from one PR to genuinely staged work,
-and names interfaces, evidence, rollback, repair, and resource bounds without
-turning the plan into an approval artifact.
+`implementation` grounds, plans, and delivers consequential repository work in
+one flow: truth, architecture, coherent landed outcomes, a plan when useful,
+delivery, and evidence. It accepts an intent, specification, existing plan,
+issue, findings block, epic, or stage.
 
-When implementation is already requested, planning continues directly into
-ordinary or staged delivery. It pauses only for unresolved consequential
-tradeoffs or the global high-impact boundary.
+A plan-only request stops after the plan. Otherwise one coherent change uses
+ordinary delivery, while real dependency or evidence boundaries become stages.
+Git, GitHub, and repository evidence remain canonical throughout.
 
 ```sh
-npx skills add drukpa1455/agent-config --skill implementation-planning
+npx skills add drukpa1455/agent-config --skill implementation
 ```
 
-Use `/skill:implementation-planning <intent-or-spec>`. See [`skills/implementation-planning/SKILL.md`](skills/implementation-planning/SKILL.md).
+Use `/skill:implementation <goal-or-artifact>`. See
+[`skills/implementation/SKILL.md`](skills/implementation/SKILL.md).
 
 ## Terminal diagrams
 
@@ -113,22 +112,6 @@ Use `/skill:terminal-diagrams <source>@<revision> [question-or-scope]`. For
 live GitHub state, `@live` requests a bounded non-atomic observation identified
 by its exact queries and fetch times. See
 [`skills/terminal-diagrams/SKILL.md`](skills/terminal-diagrams/SKILL.md).
-
-## Staged delivery
-
-`staged-delivery` autonomously turns a multi-stage goal, plan, findings block,
-or existing epic into coherent landed outcomes and only the issue structure they
-need, then implements, reviews, merges, verifies, and cleans each stage.
-
-The target repository's `AGENTS.md` remains authoritative. The skill adds no
-tracker setup, database, telemetry, or background service.
-
-```sh
-npx skills add drukpa1455/agent-config --skill staged-delivery
-```
-
-Use `/skill:staged-delivery <goal-or-artifact>`. See
-[`skills/staged-delivery/SKILL.md`](skills/staged-delivery/SKILL.md).
 
 ## Systematic debugging
 
