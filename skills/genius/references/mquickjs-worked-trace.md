@@ -120,13 +120,96 @@ set -e
 
 test "$without_gate" -ne 0
 "$BUILD/mqjs" -b "$BUILD/a.bin"
+
+"$BUILD/mqjs" -m32 -o "$BUILD/a32.bin" "$BUILD/tests/test_closure.js"
+set +e
+"$BUILD/mqjs" -b "$BUILD/a32.bin" >"$BUILD/a32.log" 2>&1
+wrong_width=$?
+set -e
+test "$wrong_width" -ne 0
+grep -q 'Could not relocate bytecode' "$BUILD/a32.log"
 ```
 
 The repeated bytecode matches for this same source, build, path, target, and
 revision; base-zero relocation removes the original pointer address from the
 file. This does not establish reproducibility across environments. The format is
 still word-size, endian, and version dependent, and its internal graph is not
-validated. Only trusted bytecode belongs on the `-b` path.
+validated. The 64-bit host can create an offset-zero 32-bit image, but its own
+64-bit loader rejects that target-specific artifact. Only trusted bytecode
+belongs on the `-b` path.
+
+## Reproduce allocation-triggered finalization
+
+Because allocation can trigger GC, it can also invoke a user C finalizer. Build a
+minimal generated standard library with one user class:
+
+```sh
+cat >"$BUILD/finalizer_stdlib.c" <<'C'
+#include "mquickjs_build.h"
+static const JSClassDef probe_class =
+  JS_CLASS_DEF("Probe", 0, js_probe_constructor, JS_CLASS_PROBE,
+               NULL, NULL, NULL, js_probe_finalizer);
+static const JSPropDef global[] = {
+  JS_PROP_CLASS_DEF("Probe", &probe_class), JS_PROP_END
+};
+int main(int argc, char **argv) {
+  return build_atoms("js_probe_stdlib", global, 0, argc, argv);
+}
+C
+
+gcc -Wall -O2 -D_GNU_SOURCE -I"$BUILD" \
+  -o "$BUILD/finalizer_stdlib" \
+  "$BUILD/finalizer_stdlib.c" "$BUILD/mquickjs_build.c" "$BUILD/cutils.c"
+"$BUILD/finalizer_stdlib" >"$BUILD/finalizer_stdlib.h"
+
+cat >"$BUILD/finalizer_probe.c" <<'C'
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "mquickjs.h"
+#define JS_CLASS_PROBE (JS_CLASS_USER + 0)
+#define JS_CLASS_COUNT (JS_CLASS_USER + 1)
+static int finalized, token;
+static JSValue js_probe_constructor(JSContext *ctx, JSValue *this_val,
+                                    int argc, JSValue *argv) {
+  (void)this_val; (void)argc; (void)argv;
+  return JS_NewObjectClassUser(ctx, JS_CLASS_PROBE);
+}
+static void js_probe_finalizer(JSContext *ctx, void *opaque) {
+  (void)ctx; assert(opaque == &token); finalized++;
+}
+#include "finalizer_stdlib.h"
+int main(void) {
+  uint64_t memory[1024];
+  JSContext *ctx = JS_NewContext(memory, sizeof(memory), &js_probe_stdlib);
+  JSValue object = JS_NewObjectClassUser(ctx, JS_CLASS_PROBE);
+  assert(!JS_IsException(object));
+  JS_SetOpaque(ctx, object, &token);
+  object = JS_UNDEFINED;
+  for (int i = 0; i < 1000 && finalized == 0; i++)
+    (void)JS_NewArray(ctx, 64);
+  assert(finalized == 1);
+  JS_FreeContext(ctx);
+  assert(finalized == 1);
+  puts("allocation-triggered host finalizer: passed");
+}
+C
+
+gcc -Wall -Os -D_GNU_SOURCE -I"$BUILD" \
+  -o "$BUILD/finalizer_probe" \
+  "$BUILD/finalizer_probe.c" "$BUILD/mquickjs.c" "$BUILD/dtoa.c" \
+  "$BUILD/libm.c" "$BUILD/cutils.c" -lm
+"$BUILD/finalizer_probe"
+```
+
+Expected output:
+
+```text
+allocation-triggered host finalizer: passed
+```
+
+An allocation that appears local can therefore cross into host cleanup effects.
+Finalizers may not call back into JavaScript.
 
 ## Reproduce cooperative interruption
 
@@ -161,7 +244,7 @@ static int stop(JSContext *ctx, void *opaque) {
 }
 
 int main(void) {
-  uint8_t memory[65536];
+  uint64_t memory[8192];
   JSContext *ctx = JS_NewContext(memory, sizeof(memory), &js_probe_stdlib);
   JS_SetInterruptHandler(ctx, stop);
   const char source[] = "while (1) {}";
@@ -194,15 +277,20 @@ wall-clock deadline or process sandbox.
 
 1. Context construction divides the caller's arena between heap and stack:
    [`mquickjs.c::JS_NewContext2`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L3536-L3657).
-2. Allocation and stack checks compact before reporting exhaustion:
-   [`mquickjs.c::check_free_mem,JS_StackCheck,js_malloc`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L499-L555).
-3. Registered roots are included in marking and rewritten by compaction:
+2. Allocation and stack checks compact before reporting exhaustion, while the
+   OOM path temporarily releases reserved capacity to construct the error:
+   [`mquickjs.c::check_free_mem,JS_StackCheck,js_malloc`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L499-L555),
+   [`mquickjs.c::JS_ThrowOutOfMemory`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L941-L952).
+3. Registered roots are included in marking and rewritten by compaction. The
+   free gap supplies mark scratch, and collection can run host finalizers:
    [`mquickjs.c::gc_mark_all,gc_compact_heap`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L12047-L12420).
-4. Bytecode preparation compacts the retained program, while the CLI normalizes
-   its base address before writing:
-   [`mquickjs.c::JS_PrepareBytecode`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L12461-L12505),
+4. Bytecode preparation compacts the retained program, can convert a 64-bit
+   graph into a 32-bit image, and normalizes its base before writing:
+   [`mquickjs.c::JS_PrepareBytecode64to32`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L12695-L12844),
    [`mqjs.c::compile_file`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mqjs.c#L359-L430).
-5. Loading checks header facts but explicitly requires trusted input:
+5. Loading checks header facts but explicitly requires trusted, long-lived input
+   storage:
+   [`mquickjs.h::JS_LoadBytecode`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.h#L356-L364),
    [`mquickjs.c::JS_LoadBytecode`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L12846-L12990).
 6. The VM polls host-owned interruption during long-running operations:
    [`mquickjs.c::POLL_INTERRUPT`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L5044-L5115).

@@ -14,9 +14,9 @@ studied lenses:
 
 - **Tinygrad:** semantic convergence, legal phases, purpose-specific identity,
   planned effects, capability edges, replay, and deletion.
-- **MQuickJS:** hard budgets, designed subsets, compact representations,
-  relocation-safe handles, static facts, bounded memory and stack, host-owned
-  interruption, and artifact trust.
+- **MQuickJS:** hard budgets and failure reserves, designed subsets, compact
+  representations, relocation-safe handles, static facts, effect boundaries,
+  bounded memory and stack, host-owned interruption, and artifact trust.
 
 The Tinygrad lens was observed at
 `e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b` on 2026-07-11. The MQuickJS lens
@@ -61,7 +61,7 @@ lens.
 ## MQuickJS decision card
 
 1. **Hard budget:** is the real resource ceiling explicit at construction, with
-   one owner and a defined exhaustion path?
+   one owner, a failure reserve, and known cleanup effects?
 2. **Designed subset:** which semantics justify permanent runtime cost, and
    which unsupported states are rejected visibly?
 3. **Purpose-built representation:** do storage and identity follow measured
@@ -69,7 +69,7 @@ lens.
 4. **Relocatable state:** which references survive movement, rebuilding, or
    compaction, and can tests force that change?
 5. **Static facts:** which facts can become generated read-only artifacts, and
-   how do mutation and versioning re-enter runtime ownership?
+   how do location, lifetime, mutation, and versioning re-enter ownership?
 6. **Execution bounds and trust:** are stack, arguments, time, artifacts, and
    hostile inputs bounded and validated at their actual boundaries?
 
@@ -173,14 +173,20 @@ These mechanics are also available without reading a reference.
 ### Put the budget in the constructor
 
 `JS_NewContext` receives a caller-owned memory buffer. The context and heap grow
-from one end while the value stack grows from the other. Allocation and stack
-checks share the remaining gap, compact once under pressure, then return an
-engine error when the arena is exhausted. The engine core does not use libc
-allocation, but host file buffers and user-class payloads can.
+from one end while the value stack grows from the other. The free gap also
+serves as GC mark scratch; overflow falls back to heap rescans. Allocation and
+stack checks compact under pressure, then return an engine error when the arena
+is exhausted.
+
+The runtime keeps a reserve for constructing that error. GC can invoke user C
+finalizers, so allocation and stack reservation may cross into host effects.
+The engine core does not use libc allocation, but host file buffers and
+user-class payloads can.
 
 **Transfer:** construction names the resource owner, hard limit, lifetime, and
-exhaustion behavior. Audit adapters before claiming the whole process is
-bounded.
+exhaustion behavior. Reserve capacity to report failure, include cleanup
+callbacks in the effect boundary, and audit adapters before calling the whole
+process bounded.
 
 ### Subtract semantics openly
 
@@ -209,10 +215,12 @@ movement in tests. Use durable IDs and versions across processes or time.
 A host generator turns standard-library atoms, properties, functions, classes,
 and finalizers into aligned constant C tables. Runtime contexts point into those
 ROM tables; modifying one copies that object's property table into the arena
-first.
+first. Address location distinguishes outside-arena ROM from movable arena
+state, and loaded bytecode storage must outlive its context.
 
 **Transfer:** generate genuinely static facts from one source of truth, keep them
-read-only at runtime, and make the transition to mutable ownership explicit.
+read-only at runtime, and make the transition to mutable ownership explicit. If
+location carries authority or lifetime, state that invariant at the boundary.
 
 ### Delete intermediates without deleting checks
 
@@ -228,10 +236,11 @@ implementation stack are not time limits; cancellation still needs policy.
 
 ### Separate repeatability from trust
 
-Persistent-bytecode preparation compacts the retained program graph. The CLI
-relocates pointers to base zero before writing, then requires `-b` to load
-bytecode. The format remains endian-, word-size-, and version-dependent and its
-internal graph is not fully validated.
+Persistent-bytecode preparation compacts the retained program graph. A 64-bit
+host can convert it into a 32-bit offset-zero image. The CLI relocates pointers
+to base zero before writing, then requires `-b` to load bytecode. The format
+remains endian-, word-size-, and version-dependent and its internal graph is not
+fully validated.
 
 `make test`, a forced-moving `DEBUG_GC` build, 10 KiB execution, visible subset
 failures, bounded-arena exhaustion, matching same-environment bytecode replay,
