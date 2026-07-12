@@ -1,7 +1,8 @@
-# George Hotz, Contributors, and Tinygrad
+# Tinygrad: George Hotz and Contributors
 
 Tinygrad is the lens for semantic convergence, explicit transformation phases,
-realization, structural introspection, and deletion pressure.
+planner-owned order, realization, structural introspection, and deletion
+pressure.
 
 This profile studies `tinygrad/tinygrad` at
 [`e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b`](https://github.com/tinygrad/tinygrad/tree/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b),
@@ -58,6 +59,16 @@ states
 ([`tinygrad/uop/spec.py`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/spec.py#L130-L246)).
 A common representation removes translators only when legality remains explicit.
 
+### Variability is normalized before identity and caching
+
+`transform_to_call` replaces concrete global buffers and slices with parameters,
+strips values from symbolic bindings, and returns the mapping from original
+values to final storage before scheduling
+([`tinygrad/callify.py::transform_to_call`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/callify.py#L207-L226)).
+The schedule cache therefore keys structural meaning separately from runtime
+buffers and variable values. This is early normalization serving identity, not a
+generic argument for caching.
+
 ### Realization is a named effect boundary
 
 `Tensor.realize` selects unrealized work, creates a linear schedule, and passes
@@ -70,11 +81,19 @@ planning, and target selection possible before effects.
 
 ### Planning owns order as data
 
-The scheduler constructs dependencies and returns one `LINEAR` whose sources are
+The scheduler derives both read-after-write and write-after-read hazards from
+`AFTER` buffer states, rejects cycles, and returns one `LINEAR` whose sources are
 ordered calls. `run_linear` walks that order instead of reconstructing the graph
 ([`tinygrad/schedule/__init__.py::create_schedule`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/schedule/__init__.py#L29-L99),
 [`tinygrad/engine/realize.py::run_linear`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/engine/realize.py#L252-L281)).
-The transferable invariant is one owner for dependency order.
+
+The memory planner derives lifetimes from `LINEAR` and substitutes arena slices
+into it. Copy and compute buffers use separate arenas so reuse cannot introduce
+false copy-to-compute-to-copy dependencies
+([`tinygrad/schedule/memory.py::memory_plan_rewrite`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/schedule/memory.py#L20-L64),
+[`test/null/test_memory_planner.py`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/test/null/test_memory_planner.py#L172-L218)).
+The transferable invariant is one owner for causal order, including state
+hazards, and no derived optimization that silently changes it.
 
 ### Introspection follows transformations
 
@@ -84,6 +103,16 @@ matched nodes, source locations, and timing
 ([`docs/env_vars.md`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/docs/env_vars.md#L63-L73),
 [`tinygrad/uop/ops.py::graph_rewrite`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L1416-L1542)).
 Observability attached to canonical transitions explains where meaning changed.
+Process replay retains lowering inputs and compares generated source across
+revisions, so refactors can preserve intermediate behavior rather than only final
+numerical output
+([`test/external/process_replay/README.md`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/test/external/process_replay/README.md#L1-L14)).
+
+The rewrite machinery itself contains fixed-point loop detection, a stack bound,
+and explicit call-entry behavior
+([`tinygrad/uop/ops.py::RewriteContext`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/uop/ops.py#L1568-L1680)).
+Tinygrad concentrates transformation complexity; specs, tracing, and replay pay
+for it.
 
 ### Target variability stays at capability edges
 
@@ -94,6 +123,20 @@ and lower program UOps into source or assembly
 [`tinygrad/renderer/__init__.py::Renderer`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/renderer/__init__.py#L58-L84)).
 Target adapters add capabilities and effects without forking the tensor surface
 or core language.
+
+After scheduling, execution ownership is explicit:
+
+| Owner                       | Fact or effect                                                     |
+| --------------------------- | ------------------------------------------------------------------ |
+| `CALL`                      | Executable payload and ordered arguments                           |
+| `LINEAR`                    | Cross-call order                                                   |
+| `ExecContext`               | Runtime bindings, statistics, JIT, wait, timeout, and cache policy |
+| `pm_exec`                   | Dispatch by payload kind                                           |
+| `Buffer` and device runtime | Allocation, views, transfer, loading, launch, and synchronization  |
+
+`run_linear` constructs the context and dispatches each call; no execution-item
+wrapper reconstructs those facts
+([`tinygrad/engine/realize.py`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/tinygrad/engine/realize.py#L131-L281)).
 
 ### Simplification culminates in deletion, not code golf
 
@@ -114,16 +157,28 @@ linear representation, introduced direct `run_linear`, and then deleted
 The lesson is re-ownership before deletion: remove a carrier only after its facts,
 invariants, and consumers have moved to canonical owners.
 
+## Known limits are part of the evidence
+
+Tinygrad's speed guide says the scheduler still lacks a systematic answer for
+recomputation versus materialization
+([`docs/developer/speed.md`](https://github.com/tinygrad/tinygrad/blob/e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b/docs/developer/speed.md#L24-L47)).
+Schedule tests preserve many current kernel counts beside TODOs for better fusion.
+The visible semantic center makes these gaps inspectable; it does not make the
+heuristics complete. Do not infer perfection or a universal design law from a
+small architecture.
+
 ## Source map
 
 | Pressure                       | Start here                                     | Inspect                                             |
 | ------------------------------ | ---------------------------------------------- | --------------------------------------------------- |
 | Public sugar and core language | `tinygrad/tensor.py`, `tinygrad/mixin/`        | `_apply_uop`, broad operations converging on UOps   |
 | Identity and legal states      | `tinygrad/uop/ops.py`, `tinygrad/uop/spec.py`  | structural identity, interning, phase specs         |
+| Transform machinery            | `PatternMatcher`, `RewriteContext`             | rule indexing, fixed points, traversal, tracing     |
 | Early normalization            | `tinygrad/callify.py`                          | buffer parameterization and cache boundary          |
-| Planning and order             | `tinygrad/schedule/__init__.py`, `rangeify.py` | dependency construction and `LINEAR`                |
-| Resource lifetime              | `tinygrad/schedule/memory.py`                  | lifetimes rewritten into arena slices               |
-| Realization                    | `tinygrad/engine/realize.py`                   | compile rules, execution context, `run_linear`      |
+| Planning and order             | `tinygrad/schedule/__init__.py`, `rangeify.py` | state hazards, kernel splitting, and `LINEAR`       |
+| Resource lifetime              | `tinygrad/schedule/memory.py`                  | lifetimes, arena lanes, and plan-preserving reuse   |
+| Realization                    | `tinygrad/engine/realize.py`                   | compile rules, execution context, dispatch          |
+| Repeated execution             | `tinygrad/engine/jit.py`                       | captured linears, parameterization, replay          |
 | Target edges                   | `tinygrad/device.py`, `renderer/`, `runtime/`  | allocator, renderer, compiler, runtime capabilities |
 | Replay and proof               | `test/external/process_replay/`, `test/null/`  | intermediate equivalence and structural contracts   |
 
@@ -136,7 +191,6 @@ Tinygrad is a fast-moving local compiler/runtime. Its process-global caches,
 environment controls, weak-reference interning, compact style, pragmatic import
 cycles, and device assumptions are not templates for durable multi-user systems.
 Such targets still need stable identity, permissions, idempotency,
-transactionality, bounded retries, receipts, and repair.
-
-Use SQLite as a counter-lens when compatibility, corruption resistance, or
-long-lived external state makes aggressive deletion unsafe.
+transactionality, bounded retries, receipts, and repair. When compatibility,
+corruption resistance, or long-lived external state dominates, Tinygrad may be
+the wrong lens; do not force it.
