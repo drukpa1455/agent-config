@@ -63,15 +63,29 @@ out-of-memory exception when the gap remains insufficient
 [`mquickjs.c::JSContext`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L204-L256),
 [`mquickjs.c::check_free_mem,JS_StackCheck,js_malloc`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L499-L555)).
 
-The engine core does not call libc allocation, but the host still owns the arena,
-input buffers, and any user-class opaque payloads. `JS_FreeContext` calls user
-finalizers; it does not free the arena
-([`example.c`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/example.c#L43-L151),
-[`mquickjs.c::JS_FreeContext`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L3653-L3681)).
+The free gap is also the collector's mark stack. If it overflows, the collector
+rescans marked heap blocks rather than allocating separate work memory
+([`mquickjs.c::gc_mark_all`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L12047-L12127)).
+Normal operation preserves 512 bytes of free space. While constructing an OOM
+error, `JS_ThrowOutOfMemory` temporarily releases half that reserve; recursive
+OOM falls back to a null exception
+([`mquickjs.c::failure reserve`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L58-L70),
+[`mquickjs.c::JS_ThrowOutOfMemory`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L941-L952)).
 
-**Transfer:** make the real budget, owner, lifetime, and exhaustion path explicit
-at construction. Do not call a bounded core a bounded process when adapters can
-still allocate elsewhere.
+The engine core does not call libc allocation, but the host still owns the arena,
+input buffers, and any user-class opaque payloads. GC and `JS_FreeContext` invoke
+user C finalizers; those callbacks may perform host effects but may not call back
+into JavaScript
+([`mquickjs.h::JSCFinalizer`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.h#L205-L218),
+[`mquickjs.c::GC finalization`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L12161-L12190),
+[`mquickjs.c::JS_FreeContext`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L3653-L3681),
+[`example.c`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/example.c#L43-L151)).
+Because allocation and stack checks may trigger GC, they are potential host-effect
+boundaries.
+
+**Transfer:** make the real budget, owner, lifetime, exhaustion path, and cleanup
+effects explicit at construction. Reserve capacity to report failure. Do not call
+a bounded core a bounded process when adapters can still allocate elsewhere.
 
 ### The supported semantics are deliberately smaller
 
@@ -140,14 +154,20 @@ and finalizers, builds lookup tables, and emits aligned constant C data
 ([`mquickjs_build.h`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs_build.h#L25-L97),
 [`mquickjs_build.c::add_atom,dump_atoms`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs_build.c#L200-L338),
 [`mquickjs_build.c::build_atoms`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs_build.c#L828-L932)).
-Runtime contexts point at those ROM tables. Mutation copies ROM-backed property
+Runtime contexts point at those ROM tables. `JS_IS_ROM_PTR` classifies any
+pointer outside the context arena as ROM; mutation copies ROM-backed property
 tables into the arena first
-([`mquickjs.c::stdlib_init`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L3500-L3657),
+([`mquickjs_priv.h::JS_IS_ROM_PTR`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs_priv.h#L20-L24),
+[`mquickjs.c::stdlib_init`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L3500-L3657),
 [`mquickjs.c::js_update_props`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L2748-L2831)).
+Persistent bytecode loaded from a host buffer uses the same outside-arena rule,
+so that buffer must remain allocated for the context's lifetime
+([`mquickjs.h::JS_LoadBytecode`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.h#L356-L364)).
 
 **Transfer:** move genuinely static facts to generated read-only artifacts, keep
 the generator authoritative, and define how mutation crosses into runtime-owned
-storage.
+storage. If physical location encodes mutability or authority, make its lifetime
+contract explicit.
 
 ### Direct bytecode still receives semantic checks
 
@@ -163,14 +183,24 @@ invalid opcodes, inconsistent heights, underflow, overflow, and bad branches
 The iterative VM polls an optional interrupt callback. The embedding host owns
 whether to install it and what cancellation means
 ([`mquickjs.c::POLL_INTERRUPT,JS_Call`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L5044-L5115)).
+Internal `call`, `apply`, and bound-function helpers avoid recursive C entry by
+returning a tail-call value in the exception-tag namespace; the VM distinguishes
+that control result, moves arguments, pops the frame, and resumes its call loop
+([`mquickjs.h::JS_EX_CALL`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.h#L82-L90),
+[`mquickjs.c::tail-call dispatch`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L5448-L5474),
+[`mquickjs.c::call helpers`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L13104-L13192)).
 
 **Transfer:** delete an intermediate only when no transformation, validation,
 diagnostic, or consumer fact needs it. Bounded implementation stack use is not a
-time limit; cancellation still needs an owner.
+time limit; cancellation still needs an owner. Reusing a control channel can
+save machinery, but only while every state remains explicit and testable.
 
 ### Repeatable bytecode remains trusted internal data
 
 Bytecode preparation removes unrelated objects and compacts the compiled graph.
+On a 64-bit host, `JS_PrepareBytecode64to32` expands short floats, converts live
+blocks in place, and emits an offset-zero 32-bit image
+([`mquickjs.c::JS_PrepareBytecode64to32`](https://github.com/bellard/mquickjs/blob/ee50431eac9b14b99f722b537ec4cac0c8dd75ab/mquickjs.c#L12695-L12844)).
 The CLI relocates pointers to base zero before writing; two runs with the same
 source, build, path, target, and revision matched byte for byte in the pinned
 reproduction
@@ -196,7 +226,9 @@ At the pinned revision, isolated builds reproduced:
 - the same suite with forced-moving `DEBUG_GC`;
 - Mandelbrot in a 10 KiB arena;
 - visible strict-subset rejection and bounded-arena exhaustion;
+- allocation-triggered execution of a host finalizer;
 - byte-for-byte matching repeated bytecode generation and trusted replay;
+- host generation of a 32-bit image rejected by the 64-bit loader;
 - cooperative interruption of an infinite loop.
 
 The external Octane pack and target-specific ARM ROM size were not reproduced.
@@ -213,13 +245,13 @@ perfection.
 | -------------------- | ------------------------------------------------------- | ---------------------------------------------------------- |
 | Budget and subset    | `README.md`                                             | RAM/ROM scope, stricter semantics, bytecode warning        |
 | Public API           | `mquickjs.h`                                            | word values, roots, arena, interrupt, bytecode             |
-| Arena ownership      | `mquickjs.c`                                            | `JSContext`, allocation gap, stack checks, OOM             |
+| Arena ownership      | `mquickjs.c`                                            | allocation gap, GC scratch, failure reserve, finalizers    |
 | Moving state         | `mquickjs.c`                                            | mark roots, pointer threading, compaction, debug movement  |
 | Static facts         | `mquickjs_build.*`, `mqjs_stdlib.c`                     | generated atoms, properties, classes, functions            |
 | Parsing              | `mquickjs.c`                                            | explicit parse states, direct emission, closure resolution |
 | Program checks       | `mquickjs_opcode.h`, `compute_stack_size`               | widths, stack effects, control-flow validation             |
 | Runtime              | `JS_Call`, `POLL_INTERRUPT`                             | iterative frames, bounded recursive entries, cancellation  |
-| Persistent artifacts | `JS_PrepareBytecode`, `compile_file`, `JS_LoadBytecode` | compaction, relocation, compatibility, trust               |
+| Persistent artifacts | `JS_PrepareBytecode`, `compile_file`, `JS_LoadBytecode` | 64-to-32 conversion, relocation, lifetime, compatibility   |
 | Embedding            | `example.c`, `example_stdlib.c`                         | host memory, roots, opaque payloads, finalizers            |
 | Proof                | `Makefile`, `tests/`, pinned commits                    | normal/forced-GC behavior and historical failures          |
 
