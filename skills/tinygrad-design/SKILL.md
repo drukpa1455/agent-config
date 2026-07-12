@@ -13,7 +13,8 @@ actual target first, trace the relevant current Tinygrad path, then transfer an
 invariant only when it reduces the target's real complexity.
 
 Read [the source map](references/source-map.md) when selecting upstream paths or
-applying the design principles below.
+applying the design principles below. Read [the worked trace](references/worked-trace.md)
+when a concrete source-navigation, citation, or transfer example would help.
 
 ## Orient
 
@@ -32,16 +33,24 @@ Resolve Tinygrad from the first available location:
 2. the target repository's `submodules/ai/tinygrad`
 3. `~/src/tinygrad`
 
-Read Tinygrad's `AGENTS.md`, record `git rev-parse HEAD`, and keep the checkout
-read-only. Do not fetch, initialize a submodule, install dependencies, or clone
-without explicit approval. If no checkout is available, report the source gap
-instead of substituting memory.
+Read Tinygrad's `AGENTS.md`; record `git remote get-url origin`,
+`git rev-parse HEAD`, and `git status --short`; and keep the checkout read-only.
+If relevant files have local changes, identify them rather than citing the
+commit alone. Identify a fork as a fork instead of reporting it as upstream. Do
+not fetch, initialize a submodule, install dependencies, or clone without
+explicit approval. If no checkout is available, report the source gap instead
+of substituting memory.
 
 Select only the source paths relevant to the pressure. Trace one complete path
 from public entrypoint through representation, transformations, realization,
 and target adapter. Then inspect the tests and use history when it can explain
 the suspicious seam. Tinygrad moves quickly; verify symbols and paths rather
 than trusting a stale summary.
+
+Identify decisive evidence as `<repository>@<full-sha> <path>::<symbol>`. When
+the origin supports stable links, cite a commit-pinned blob or commit URL. Treat
+line numbers as navigation within that revision, not as source identity. Include
+the command and relevant environment for reproduced behavior.
 
 ## Translate mechanics, not nouns
 
