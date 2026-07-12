@@ -58,15 +58,16 @@ See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
 
 ## Genius
 
-`genius` currently carries one deeply studied, revision-bound lens: George Hotz,
-contributors, and Tinygrad. Its main skill file directly includes the
-highest-value Tinygrad principles; the reference profile retains detailed source
-paths, limitations, history, and a reproducible worked trace.
+`genius` carries two deeply studied, revision-bound lenses: Tinygrad with George
+Hotz and contributors, and MQuickJS with Fabrice Bellard, Charlie Gordon, and
+contributors. Its main skill file directly includes both decision cards and
+their highest-value principles; reference profiles retain detailed source paths,
+limitations, history, and reproducible worked traces.
 
 The skill studies project mechanics rather than simulating personalities. It
 pins source evidence, preserves collaborators, separates observation from
-inference, translates invariants into the target domain, and states where the
-analogy breaks. Future profiles are added one source study at a time.
+inference, honors a named lens or otherwise chooses from target pressure, and
+states where each analogy breaks. Future profiles are added one primary-source study at a time.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill genius
