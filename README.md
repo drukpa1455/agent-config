@@ -9,7 +9,7 @@ AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
-skills/tinygrad-design/      source-backed Tinygrad design lens
+skills/genius/               source-backed engineering lenses
 skills/implementation/      grounded planning and delivery
 skills/persistent-browser/   on-demand browser capability
 skills/systematic-debugging/  evidence-first root-cause diagnosis
@@ -56,17 +56,24 @@ npx skills add drukpa1455/agent-config --skill curated-wiki
 
 See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
 
-## Tinygrad design
+## Genius
 
-`tinygrad-design` studies a relevant end-to-end path in a current Tinygrad
-checkout, then translates the observed mechanic into the target domain without
-copying compiler nouns, dense syntax, global state, or hardware-specific
-tradeoffs. Its source map covers public sugar, UOps and specs, scheduling,
-lowering, realization, adapters, introspection, replay, and clarifying deletion
-history.
+`genius` selects one primary and, when useful, one counter-lens from
+revision-bound studies of exceptional software. Its initial roster covers George
+Hotz and Tinygrad, D. Richard Hipp and SQLite, Fabrice Bellard and QuickJS, and
+Evan Wallace and esbuild.
 
-The skill is an explicit architecture lens. Use
-`/skill:tinygrad-design <problem-or-design-question>`.
+The skill studies project mechanics rather than simulating personalities. It
+pins source evidence, preserves collaborators, separates observation from
+inference, translates invariants into the target domain, and states where each
+analogy breaks.
+
+```sh
+npx skills add drukpa1455/agent-config --skill genius
+```
+
+The skill is explicit-only. Use `/skill:genius <problem-or-design-question>`.
+See [`skills/genius/SKILL.md`](skills/genius/SKILL.md).
 
 ## Implementation
 
