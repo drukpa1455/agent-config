@@ -9,7 +9,6 @@ AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 skills/curated-wiki/         schema-driven knowledge curation
-skills/converging-semantic-representations/ explicit architecture lens
 skills/tinygrad-design/      source-backed Tinygrad design lens
 skills/implementation/      grounded planning and delivery
 skills/persistent-browser/   on-demand browser capability
@@ -57,14 +56,6 @@ npx skills add drukpa1455/agent-config --skill curated-wiki
 
 See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
 
-## Semantic convergence
-
-`converging-semantic-representations` is an explicit architecture lens for
-finding duplicated semantic ownership across compiler and workflow phases. It
-does not impose a graph or instruction-stream core on every domain.
-
-Use `/skill:converging-semantic-representations <question>`.
-
 ## Tinygrad design
 
 `tinygrad-design` studies a relevant end-to-end path in a current Tinygrad
@@ -87,7 +78,8 @@ Repository sources own current behavior, plans own intended decisions, Git owns
 revisions, GitHub owns delivery state, and retained evidence owns proof. Diagrams
 are projections. A plan- or map-only request stops after that output; otherwise
 one coherent outcome stays one change, while real dependency or evidence
-boundaries become stages.
+boundaries become stages. A bounded polish pass converges duplicated semantics in
+the touched surface without expanding into unrelated cleanup.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill implementation

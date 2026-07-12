@@ -75,6 +75,33 @@ Treat an existing plan as evidence, not timeless authority: preserve sound
 decisions, revise contradicted assumptions, and avoid replanning what remains
 valid.
 
+## Polish the touched surface
+
+Use the requested change to reduce semantic and cognitive weight in its owning
+surface, not to launch unrelated cleanup.
+
+Trace affected facts through producers, validators, identity, serialization,
+consumers, and mutations. Classify each representation:
+
+- same facts, mirror validation, independent mutation, or lossless rebuild:
+  duplicate carrier;
+- new target, authority, durability, effect, or consumer semantics: legitimate
+  boundary.
+
+When convergence supports the outcome:
+
+1. Characterize existing behavior and external contracts.
+2. Choose one canonical owner and deterministic identity where identity matters.
+3. Move consumers toward it.
+4. Keep temporary compatibility only at the edge, with an invariant and deletion
+   condition.
+5. Delete duplicate producers, validators, adapters, hashes, fallbacks, and
+   carrier-specific tests.
+6. Prove no hidden path reconstructs semantics or order.
+
+If the opportunity changes unrelated behavior or needs an independent migration,
+make it another ordered outcome rather than smuggling it into the current change.
+
 ## Order landed outcomes
 
 Order work by coherent trunk states, dependencies, and evidence:

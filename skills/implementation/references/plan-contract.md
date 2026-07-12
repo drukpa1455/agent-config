@@ -47,6 +47,8 @@ Sources: <paths or external contracts at revisions>
 - Does current evidence support the destination and decisions?
 - Is this the fewest-concept design that fully solves the outcome?
 - Does each fact and effect have one visible owner and canonical path?
+- Does every retained representation introduce target, authority, durability,
+  effect, or consumer semantics of its own?
 - Are dependencies explicit, the happy path straight, and invalid states difficult?
 - Does every wrapper, abstraction, PR, and stage own a real boundary?
 - Can each intermediate trunk state operate coherently and be repaired?
