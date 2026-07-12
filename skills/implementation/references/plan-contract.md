@@ -32,6 +32,7 @@ Sources: <paths or external contracts at revisions>
 
 ### <Coherent landed outcome>
 
+- Owned behavior and paths
 - Invalidating assumption
 - Decisive evidence and verification commands
 - Dependencies, rollback, or repair when material

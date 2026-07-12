@@ -79,14 +79,15 @@ The skill is an explicit architecture lens. Use
 
 ## Implementation
 
-`implementation` grounds and delivers repository work in one flow: facts,
-decisions, order, work, and proof. It accepts an intent, specification, existing
-plan, issue, findings block, epic, or stage.
+`implementation` grounds and delivers repository work in one flow: intent and
+live truth, decisions, order, work, and proof. It accepts a specification,
+existing plan, issue, findings block, epic, or stage.
 
-Plans retain design decisions, diagrams project them, and GitHub records
-delivery order. A plan- or map-only request stops after that output. Otherwise
-one coherent outcome
-stays one change, while real dependency or evidence boundaries become stages.
+Repository sources own current behavior, plans own intended decisions, Git owns
+revisions, GitHub owns delivery state, and retained evidence owns proof. Diagrams
+are projections. A plan- or map-only request stops after that output; otherwise
+one coherent outcome stays one change, while real dependency or evidence
+boundaries become stages.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill implementation

@@ -11,7 +11,9 @@ compatibility: Requires filesystem access and the target repository's normal sou
 Carry repository work through one flow:
 
 ```text
-facts -> decisions -> order -> work -> proof
+intent + live truth -> decisions -> order -> work -> proof
+                           ^                           |
+                           +---------------------------+
 ```
 
 Build with radical simplicity and maximum elegance. Plan and code should read
@@ -20,9 +22,9 @@ explicit boundaries, and obvious ownership. Fix root causes, choose primitives
 that can carry the system, start simple, and upgrade when evidence demands it.
 Avoid band-aids, clever golf, and speculative architecture.
 
-Plans retain design decisions; diagrams project them. GitHub records delivery
-order. Code, plans, Git, GitHub, and retained evidence remain authoritative for
-the facts they own.
+Repository sources own current behavior. Persisted plans own intended decisions.
+Git owns revisions. GitHub owns delivery state. Retained evidence owns proof.
+Diagrams own nothing; they are projections.
 
 Enter from an intent, specification, plan, issue, findings block, epic, or stage.
 Stop where the user's intent ends. One coherent outcome stays one change; real
@@ -59,8 +61,10 @@ boundaries needed to make it natural:
   sync, and async paths; make nondeterminism explicit and controllable.
 - **Paths and ownership are canonical:** keep dependency direction acyclic and
   give state, caches, locks, and clients clear owners and lifetimes.
-- **Writes and projections are repairable:** name durability, visibility,
-  consistency, replay, staleness, rebuild, and repair behavior.
+- **Writes are explicit:** name source of truth, durability, visibility,
+  consistency, replay, and repair behavior.
+- **Derived data is replaceable:** name its source, staleness, rebuild, and repair
+  behavior.
 - **External work is bounded:** cap waits, retries, capacity, memory, and
   concurrency; expose failure, observability, and cleanup ownership.
 
@@ -126,8 +130,9 @@ For each change or stage:
 5. Review the effective diff for conceptual weight, ownership, interfaces,
    dependency direction, invalid states, failure and repair, migration,
    operations, and unintended scope.
-6. Fix valid findings, absorb compatible drift, merge in safe order, verify fresh
-   trunk, record decisive evidence, clean task state, and continue.
+6. Fix valid findings, absorb compatible drift, and rerun affected checks.
+7. Merge in safe order, verify fresh trunk, record decisive evidence, clean task
+   state, and continue.
 
 Use stacked PRs only for real dependencies. Never merge a broken intermediate
 state or rediscover order during execution; the delivery graph owns order.
