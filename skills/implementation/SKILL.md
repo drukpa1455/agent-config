@@ -14,6 +14,11 @@ Carry consequential repository work through one flow:
 truth -> architecture -> landed outcomes -> plan when useful -> delivery -> evidence
 ```
 
+The plan and resulting code are two resolutions of one design: few concepts,
+straight-line flow, explicit boundaries, and obvious ownership. Apply the active
+`AGENTS.md` chain throughout; plans and issues record only change-specific
+consequences, not copies of general policy.
+
 Enter from an intent, specification, plan, issue, findings block, epic, or stage.
 Stop where the user's intent ends. A coherent change stays one change; real
 dependencies or evidence boundaries become stages.
@@ -38,11 +43,16 @@ guarantees. Ask only when evidence cannot resolve a consequential tradeoff.
 Start from the observable outcome, then identify the few primitives and ownership
 boundaries that make it natural:
 
-- one source of truth and one canonical path per concern;
+- one source of truth and one canonical path per concern; change owning sources,
+  not generated outputs;
 - explicit dataflow, interfaces, dependency direction, and state transitions;
-- pure semantic logic with I/O and workflow translation at the edges;
+- pure semantic logic with I/O, workflow translation, and normalized variability
+  at the edges;
+- explicit owners and lifetimes for state, plus source, staleness, rebuild, and
+  repair semantics for derived data;
 - visible write, failure, replay, migration, rollback, and repair behavior;
-- bounded external work and deterministic verification.
+- explicit time, randomness, environment, and external input; bounded external
+  work and deterministic verification.
 
 Extend an existing owner before introducing a parallel representation. A wrapper,
 abstraction, stage, or compatibility path must own a real seam. Start simple and
@@ -106,11 +116,14 @@ For each change or stage:
 1. Test the assumption most likely to invalidate it.
 2. Refine only the work current evidence supports and isolate it according to
    project workflow.
-3. Implement in dependency order. Keep behavior, tests, migration,
+3. Implement in dependency order. Organize code top-down around a straight-line
+   happy path, with purpose-first names, visible dependencies, and comments only
+   for necessary why or contract value. Keep behavior, tests, migration,
    documentation, and cleanup together in each coherent PR.
 4. Run focused checks, then the broader checks justified by affected contracts.
-5. Review ownership, interfaces, failure and replay, operations, rollback,
-   repair, and unintended scope.
+5. Review against the active `AGENTS.md` chain, especially ownership, interfaces,
+   invalid states, dependency direction, generated and derived sources, failure
+   and replay, operations, rollback, repair, and unintended scope.
 6. Fix valid findings, absorb compatible drift, merge in safe order, and verify
    fresh trunk.
 7. Record decisive evidence, clean task state, and continue to the next unblocked

@@ -82,7 +82,8 @@ The skill is an explicit architecture lens. Use
 `implementation` grounds, plans, and delivers consequential repository work in
 one flow: truth, architecture, coherent landed outcomes, a plan when useful,
 delivery, and evidence. It accepts an intent, specification, existing plan,
-issue, findings block, epic, or stage.
+issue, findings block, epic, or stage. The active `AGENTS.md` chain supplies its
+design and code-shape principles without being copied into every artifact.
 
 A plan-only request stops after the plan. Otherwise one coherent change uses
 ordinary delivery, while real dependency or evidence boundaries become stages.
