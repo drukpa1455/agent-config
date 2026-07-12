@@ -24,6 +24,8 @@ Source inputs: <paths or external contracts at revisions>
 
 - Chosen primitives, owners, and source of truth
 - Dataflow, state transitions, interfaces, and dependency direction
+- State lifetimes, boundary normalization, and derived-data rebuild where relevant
+- Straight-line implementation shape, visible dependencies, and invalid-state model
 - Failure, consistency, idempotency, replay, and repair where relevant
 - Material alternative rejected and why
 
@@ -59,6 +61,8 @@ Before implementation, ask:
 
 - Does the plan lead from current evidence to an observable outcome?
 - Is there one owner and canonical path for each fact and effect?
+- Does the design admit a straight-line implementation with visible dependencies
+  and invalid states made difficult?
 - Do abstractions, wrappers, PRs, and stages each own a real boundary?
 - When present, does the map clarify real topology without becoming a second
   source of truth?
