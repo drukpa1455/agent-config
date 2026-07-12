@@ -12,7 +12,6 @@ skills/curated-wiki/         schema-driven knowledge curation
 skills/converging-semantic-representations/ explicit architecture lens
 skills/tinygrad-design/      source-backed Tinygrad design lens
 skills/implementation/      grounded planning and delivery
-skills/terminal-diagrams/    source-bound terminal projections
 skills/persistent-browser/   on-demand browser capability
 skills/systematic-debugging/  evidence-first root-cause diagnosis
 ```
@@ -87,7 +86,9 @@ issue, findings block, epic, or stage.
 
 A plan-only request stops after the plan. Otherwise one coherent change uses
 ordinary delivery, while real dependency or evidence boundaries become stages.
-Git, GitHub, and repository evidence remain canonical throughout.
+Compact ASCII diagrams make meaningful architecture, hierarchy, and order
+visible in plans, GitHub artifacts, and final responses without replacing
+canonical Git, GitHub, or repository evidence.
 
 ```sh
 npx skills add drukpa1455/agent-config --skill implementation
@@ -95,23 +96,6 @@ npx skills add drukpa1455/agent-config --skill implementation
 
 Use `/skill:implementation <goal-or-artifact>`. See
 [`skills/implementation/SKILL.md`](skills/implementation/SKILL.md).
-
-## Terminal diagrams
-
-`terminal-diagrams` projects pinned plans, repository architecture, protocols,
-state machines, and live GitHub delivery graphs into concise, topology-first
-plain-ASCII views. It is user-invoked and read-only: source prose, code, GitHub
-state, and manifests remain authoritative. The skill returns `SOURCE_GAP`
-instead of inventing a relationship or silently resolving a contradiction.
-
-```sh
-npx skills add drukpa1455/agent-config --skill terminal-diagrams
-```
-
-Use `/skill:terminal-diagrams <source>@<revision> [question-or-scope]`. For
-live GitHub state, `@live` requests a bounded non-atomic observation identified
-by its exact queries and fetch times. See
-[`skills/terminal-diagrams/SKILL.md`](skills/terminal-diagrams/SKILL.md).
 
 ## Systematic debugging
 

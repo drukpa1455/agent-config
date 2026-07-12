@@ -53,10 +53,6 @@ Treat an existing plan as evidence, not timeless authority: preserve sound
 decisions, revise contradicted assumptions, and avoid replanning what remains
 valid.
 
-When the user explicitly asks to falsify the architecture visually, use
-[`terminal-diagrams`](../terminal-diagrams/SKILL.md) as a read-only projection.
-It supports reasoning but never becomes authority.
-
 ## Shape landed outcomes
 
 Order work by coherent trunk states, dependencies, and evidence:
@@ -80,6 +76,12 @@ evidence owns acceptance; do not create a parallel delivery state.
 A stage contract names its landed outcome, entry evidence, invalidating
 assumption, owned changes, dependencies, acceptance evidence, rollback, and
 repair.
+
+When structure is easier to see than read, include a compact ASCII diagram in
+the plan, relevant epic, stage, or sub-issue, and final response. Show one thing
+clearly—architecture, hierarchy, or order—rather than mixing them. Diagrams
+project the same verified facts; native GitHub links, Git revisions, and
+repository evidence remain authoritative.
 
 ## Write the plan when it carries meaning
 
