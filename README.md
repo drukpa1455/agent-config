@@ -82,12 +82,14 @@ See [`skills/genius/SKILL.md`](skills/genius/SKILL.md).
 live truth, decisions, order, work, and proof. It accepts a specification,
 existing plan, issue, findings block, epic, or stage.
 
-Repository sources own current behavior, plans own intended decisions, Git owns
-revisions, GitHub owns delivery state, and retained evidence owns proof. Diagrams
-are projections. A plan- or map-only request stops after that output; otherwise
-one coherent outcome stays one change, while real dependency or evidence
-boundaries become stages. A bounded polish pass converges duplicated semantics in
-the touched surface without expanding into unrelated cleanup.
+Repository sources own current behavior, active plans own unresolved decisions
+and intended order, Git and merged pull requests own completed delivery history,
+GitHub owns live delivery state, and retained evidence owns proof. Durable plan
+content moves to its canonical owner as work lands; completed execution detail is
+retired. Diagrams are projections. A plan- or map-only request stops after that
+output; otherwise one coherent outcome stays one change, while real dependency
+or evidence boundaries become stages. A bounded polish pass converges duplicated
+semantics in the touched surface without expanding into unrelated cleanup.
 
 Review the public [skills.sh listing](https://skills.sh/drukpa1455/agent-config/implementation)
 or install directly:

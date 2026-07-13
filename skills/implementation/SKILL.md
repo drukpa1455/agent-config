@@ -22,9 +22,10 @@ explicit boundaries, and obvious ownership. Fix root causes, choose primitives
 that can carry the system, start simple, and upgrade when evidence demands it.
 Avoid band-aids, clever golf, and speculative architecture.
 
-Repository sources own current behavior. Persisted plans own intended decisions.
-Git owns revisions. GitHub owns delivery state. Retained evidence owns proof.
-Diagrams own nothing; they are projections.
+Repository sources own current behavior. Active plans own unresolved decisions
+and intended order. Git and merged pull requests own completed delivery history.
+GitHub owns live delivery state. Retained evidence owns proof. Diagrams own
+nothing; they are projections.
 
 Enter from an intent, specification, plan, issue, findings block, epic, or stage.
 Stop where the user's intent ends. One coherent outcome stays one change; real
@@ -89,9 +90,12 @@ boundaries needed to make it natural:
 Extend an existing owner before introducing a parallel representation. Record
 the chosen design and only alternatives whose tradeoffs matter.
 
-Treat an existing plan as evidence, not timeless authority: preserve sound
-decisions, revise contradicted assumptions, and avoid replanning what remains
-valid.
+Treat an existing plan as transitional evidence, not timeless authority:
+preserve sound unresolved decisions, revise contradicted assumptions, and avoid
+replanning valid work. As outcomes land, remove their execution detail and refer
+to Git or the merged pull request for history. Promote durable contracts or
+decisions to their canonical owners; delete the plan when no unresolved outcome
+remains.
 
 ## Polish the touched surface
 
@@ -198,7 +202,8 @@ Return fresh evidence to the decision it challenges:
 A landed revision remains historical fact, not proof of a contradicted
 assumption. Correct the owning source and continue from canonical evidence.
 
-Finally, verify the complete outcome from fresh trunk, update or close owning
+Finally, verify the complete outcome from fresh trunk, promote durable plan
+content to canonical owners, retire landed plan content, update or close owning
 issues, remove task branches and worktrees, and report the landed outcome,
 decisive evidence, environment limitations, and residual risk. Include one
 compact map when it makes the result clearer; omit routine tracker narration.
