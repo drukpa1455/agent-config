@@ -8,6 +8,22 @@ Design for low cognitive load. Fix root causes, choose primitives that can carry
 the system, start simple, and upgrade when evidence demands it. Avoid band-aids,
 clever golf, and speculative architecture.
 
+## Communication
+
+Default to low-bandwidth output.
+
+- Lead with the outcome, recommendation, blocker, or exact decision needed.
+- Stop after the answer, or add at most three short bullets containing only
+  decision-relevant evidence, risks, and next actions.
+- Do not restate the request, preview routine work, narrate tools, dump logs,
+  recap completed steps, or add generic closers.
+- If no user action is needed, do not invent one; continue authorized work.
+- Keep progress updates to one sentence at material phase changes, blockers, or
+  points where the user must act.
+- Preserve exact code, commands, paths, identifiers, errors, and safety language.
+- When asked for `detail`, `why`, or a `deep dive`, expand for that turn. For any
+  response that must be longer, still lead with a two-sentence TL;DR.
+
 ## Defaults
 
 - Every line and concept must earn its keep. Readability beats cleverness.
@@ -19,9 +35,6 @@ clever golf, and speculative architecture.
   remain read-only unless a change or contribution is requested.
 - Keep each change to one purpose. Do not mix behavior, refactors, cleanup,
   generated churn, or whitespace unless they are inseparable.
-- Communicate with the same discipline as the code: answer first, stay concise,
-  and add detail only when it changes a decision. Compress phrasing, not meaning;
-  preserve exact technical terms, code, commands, and errors.
 - Project guidance specializes these defaults but cannot weaken privacy or the
   high-impact boundary below.
 
