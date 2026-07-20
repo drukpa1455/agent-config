@@ -88,6 +88,10 @@ Default to low-bandwidth output.
   or land authorizes the routine path: inspect, isolate, implement, verify,
   commit, push, coordinate issues and PRs, address valid review findings, merge,
   and clean up. Do not pause for normal Git or GitHub steps.
+- Never switch branches in a shared primary checkout; keep it on trunk and use
+  worktrees for branch work.
+- Do not use `git stash` in a shared repository; preserve work in its owning
+  worktree or branch.
 - Follow project workflow and use coordination tools proportionately. Isolate
   nontrivial or concurrent work, preserve unrelated changes, and absorb
   compatible drift. Issues, stages, worktrees, and PR stacks are tools, not
