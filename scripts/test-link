@@ -1,0 +1,91 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+link="$root/scripts/link"
+policy="$root/global/AGENTS.md"
+policy_destinations=".pi/agent/AGENTS.md .codex/AGENTS.md .claude/CLAUDE.md"
+skills_destinations=".agents/skills .claude/skills"
+failures=0
+
+managed_skills=$(
+  for source in "$root"/skills/*; do
+    [ -f "$source/SKILL.md" ] || continue
+    basename "$source"
+  done
+)
+
+isolated_home() {
+  HOME=$(mktemp -d)
+  export HOME
+}
+
+check() {
+  if [ "$2" = "$3" ]; then
+    echo "ok   $1"
+  else
+    echo "FAIL $1: expected [$3], got [$2]" >&2
+    failures=$((failures + 1))
+  fi
+}
+
+exit_status_of_link() {
+  status=0
+  "$link" >/dev/null 2>&1 || status=$?
+  echo "$status"
+}
+
+link_target() {
+  readlink "$HOME/$1" 2>/dev/null || echo missing
+}
+
+path_state() {
+  [ -e "$HOME/$1" ] && echo present || echo missing
+}
+
+assert_every_projection_linked() {
+  label=$1
+
+  for destination in $policy_destinations; do
+    check "$label: $destination links the shared policy" \
+      "$(link_target "$destination")" "$policy"
+  done
+
+  for skills_dir in $skills_destinations; do
+    for skill in $managed_skills; do
+      check "$label: $skills_dir/$skill links its package" \
+        "$(link_target "$skills_dir/$skill")" "$root/skills/$skill"
+    done
+  done
+}
+
+isolated_home
+check "first run succeeds" "$(exit_status_of_link)" "0"
+assert_every_projection_linked "first run"
+check "second run succeeds" "$(exit_status_of_link)" "0"
+assert_every_projection_linked "second run"
+linked_home=$HOME
+
+isolated_home
+mkdir -p "$HOME/.claude"
+printf 'hand written policy\n' >"$HOME/.claude/CLAUDE.md"
+check "refuses a pre-existing CLAUDE.md" "$(exit_status_of_link)" "1"
+check "leaves that file byte-identical" \
+  "$(cat "$HOME/.claude/CLAUDE.md")" "hand written policy"
+
+isolated_home
+mkdir -p "$HOME/.claude/skills/not-ours"
+check "refuses an unmanaged skill entry" "$(exit_status_of_link)" "1"
+check "leaves that entry in place" "$(path_state ".claude/skills/not-ours")" "present"
+
+HOME=$linked_home
+export HOME
+check "relinking an existing tree succeeds" "$(exit_status_of_link)" "0"
+assert_every_projection_linked "after relink"
+
+if [ "$failures" -gt 0 ]; then
+  echo "$failures check(s) failed" >&2
+  exit 1
+fi
+
+echo "all checks passed"

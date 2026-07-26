@@ -2,7 +2,7 @@
 set -eu
 
 root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
-skills_dir="$HOME/.agents/skills"
+policy="$root/global/AGENTS.md"
 
 link_file() {
   source=$1
@@ -26,38 +26,46 @@ link_file() {
   ln -s "$source" "$destination"
 }
 
-if [ -L "$skills_dir" ]; then
-  [ "$(readlink "$skills_dir")" = "$root/skills" ] || {
-    echo "refusing to replace $skills_dir" >&2
-    exit 1
-  }
-  rm "$skills_dir"
-fi
+link_skills() {
+  skills_dir=$1
 
-mkdir -p "$skills_dir"
-
-for destination in "$skills_dir"/*; do
-  [ -e "$destination" ] || [ -L "$destination" ] || continue
-  source="$root/skills/$(basename "$destination")"
-
-  if [ -L "$destination" ] && [ "$(readlink "$destination")" = "$source" ]; then
-    if [ -f "$source/SKILL.md" ]; then
-      continue
-    fi
-    rm "$destination"
-    continue
+  if [ -L "$skills_dir" ]; then
+    [ "$(readlink "$skills_dir")" = "$root/skills" ] || {
+      echo "refusing to replace $skills_dir" >&2
+      exit 1
+    }
+    rm "$skills_dir"
   fi
 
-  echo "refusing unmanaged skill entry $destination" >&2
-  exit 1
-done
+  mkdir -p "$skills_dir"
 
-for source in "$root"/skills/*; do
-  [ -f "$source/SKILL.md" ] || continue
-  link_file "$source" "$skills_dir/$(basename "$source")"
-done
+  for destination in "$skills_dir"/*; do
+    [ -e "$destination" ] || [ -L "$destination" ] || continue
+    source="$root/skills/$(basename "$destination")"
 
-link_file "$root/global/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
-link_file "$root/global/AGENTS.md" "$HOME/.codex/AGENTS.md"
+    if [ -L "$destination" ] && [ "$(readlink "$destination")" = "$source" ]; then
+      if [ -f "$source/SKILL.md" ]; then
+        continue
+      fi
+      rm "$destination"
+      continue
+    fi
+
+    echo "refusing unmanaged skill entry $destination" >&2
+    exit 1
+  done
+
+  for source in "$root"/skills/*; do
+    [ -f "$source/SKILL.md" ] || continue
+    link_file "$source" "$skills_dir/$(basename "$source")"
+  done
+}
+
+link_skills "$HOME/.agents/skills"
+link_skills "$HOME/.claude/skills"
+
+link_file "$policy" "$HOME/.pi/agent/AGENTS.md"
+link_file "$policy" "$HOME/.codex/AGENTS.md"
+link_file "$policy" "$HOME/.claude/CLAUDE.md"
 
 echo "linked agent config from $root"

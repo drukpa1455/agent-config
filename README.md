@@ -8,6 +8,7 @@ Shared global policy and portable skills for coding agents.
 AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
+scripts/test-link            projection proof against a throwaway home
 skills/curated-wiki/         schema-driven knowledge curation
 skills/genius/               source-backed engineering lenses
 skills/implementation/      grounded planning and delivery
@@ -26,13 +27,23 @@ git clone https://github.com/drukpa1455/agent-config.git ~/src/agent-config
 ~/src/agent-config/scripts/link
 ```
 
-The linker creates a real `~/.agents/skills/` directory and links every owned
-skill into it. It removes stale links to skills deleted from this checkout and
+The linker creates a real skills directory per harness and links every owned
+skill into each. It removes stale links to skills deleted from this checkout and
 refuses unmanaged entries, so globally active prompt content remains versioned
 and reviewable. Install project-specific or third-party skills in their owning
 repository instead of the global directory.
 
-Pi and Codex both read the same skills and global policy. Run `/reload` in Pi after changes; start a new Codex session to reload them.
+Pi, Codex, and Claude Code read the same skills and the same global policy. Each
+reads it under the name its own harness loads:
+
+```text
+~/.pi/agent/AGENTS.md    ~/.agents/skills/
+~/.codex/AGENTS.md       ~/.claude/skills/
+~/.claude/CLAUDE.md
+```
+
+Run `/reload` in Pi after changes; start a new Codex or Claude Code session to
+reload them.
 
 Update explicitly after review:
 

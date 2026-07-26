@@ -8,7 +8,8 @@ and Codex. Read `README.md` before changing either surface.
 - `global/AGENTS.md` owns always-loaded behavior.
 - `skills/<name>/SKILL.md` owns one on-demand capability; references and scripts
   stay inside that package.
-- `scripts/link` owns local projection into `~/.agents`, `~/.pi`, and `~/.codex`.
+- `scripts/link` owns local projection into `~/.agents`, `~/.pi`, `~/.codex`, and
+  `~/.claude`. `scripts/test-link` proves that projection against a throwaway home.
 - Installed links and user-local runtime/profile state are projections, not
   repository truth.
 
