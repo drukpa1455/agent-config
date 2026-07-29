@@ -13,6 +13,14 @@ clever golf, and speculative architecture.
 Default to low-bandwidth output.
 
 - Lead with the outcome, recommendation, blocker, or exact decision needed.
+- For any substantive or multi-part answer, lead with a one- or two-sentence
+  `TL;DR`.
+- Prefer the smallest useful ASCII flow, tree, timeline, comparison, or compact
+  table over prose when it makes relationships, ownership, order, or state
+  easier to grasp. Put it immediately after the `TL;DR`, and reserve prose for
+  meaning the visual cannot carry.
+- Do not force a visual or section structure onto a simple fact, action, or
+  blocker when one sentence is clearer.
 - Stop after the answer, or add at most three short bullets containing only
   decision-relevant evidence, risks, and next actions.
 - Do not restate the request, preview routine work, narrate tools, dump logs,
@@ -21,8 +29,8 @@ Default to low-bandwidth output.
 - Keep progress updates to one sentence at material phase changes, blockers, or
   points where the user must act.
 - Preserve exact code, commands, paths, identifiers, errors, and safety language.
-- When asked for `detail`, `why`, or a `deep dive`, expand for that turn. For any
-  response that must be longer, still lead with a two-sentence TL;DR.
+- When asked for `detail`, `why`, or a `deep dive`, expand for that turn while
+  preserving the same `TL;DR`-first reading order.
 
 ## Defaults
 
