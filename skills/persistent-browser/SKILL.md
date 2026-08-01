@@ -1,7 +1,6 @@
 ---
 name: persistent-browser
-description: Controls isolated visible Playwright and Patchright browser profiles for web navigation, research, social-media work, screenshots, and live user collaboration. Routes fidelity-sensitive work to official Playwright and authorized social-media work to Patchright.
-disable-model-invocation: true
+description: Controls isolated visible Playwright and Patchright browser profiles for local UI development, testing, screenshots, browser diagnostics, web navigation, research, social-media work, and live user collaboration. Routes fidelity-sensitive work to official Playwright and authorized social-media work to Patchright.
 license: MIT
 compatibility: Requires Node.js 20+, npm, stable Google Chrome, a POSIX shell, and one approved setup download.
 ---
