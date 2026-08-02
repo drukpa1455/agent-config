@@ -124,3 +124,9 @@ Default to low-bandwidth output.
   credentials or private/customer data. Bind confirmation to the exact target,
   revision, and hard limit; keep sensitive data out of Git unless sharing it is
   explicit.
+
+## Graphify
+
+Graphify is explicit-only. When the user invokes `$graphify` in Codex or
+`/graphify` in Claude Code, OpenCode, or Pi, load the installed Graphify skill
+before doing anything else.
