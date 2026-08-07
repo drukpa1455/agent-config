@@ -1,6 +1,0 @@
-interface:
-  display_name: "Agentic CRM Admin"
-  short_description: "Build a governed operator CRM workflow"
-  default_prompt: "Use $agentic-crm-admin to design or implement a governed internal CRM workflow in this repository."
-policy:
-  allow_implicit_invocation: false

@@ -1,16 +1,19 @@
 ---
-name: agentic-crm-admin
+name: operator-crm
 description: Design, implement, or review a governed internal go-to-market CRM operated through agents and a preview-first CLI. Use only when explicitly invoked for CRM replay, account and contact normalization, touchpoint capture, follow-up projection, enrichment controls, idempotent writes, or separation between private operator evidence, product relationship data, and outreach authority.
 disable-model-invocation: true
 license: MIT
 compatibility: Requires filesystem access and the target repository's normal database, CLI, test, and Git tools.
 ---
 
-# Agentic CRM Admin
+# Operator CRM
 
 Build a small operator system, not a second product. Keep private evidence
 replayable, compile it into deterministic CRM records, preview every effect, and
 grant writes, paid enrichment, product admission, and outreach separately.
+
+Before implementing a new harness or choosing JSON, SQLite, or PostgreSQL, read
+[the harness and storage reference](references/harness-and-storage.md).
 
 ```text
 source evidence -> canonical replay -> normalize -> plan -> preview
@@ -53,15 +56,18 @@ Start with only the records the active workflow needs:
   validation time.
 - **Touchpoint:** firm, channel, direction, time, outcome, source, external
   identity, participants, metadata.
-- **Suppression:** a canonical operator restriction that survives replay.
+- **Suppression:** canonical lifecycle state, or a separate record only when its
+  history and reason need independent ownership.
 
 Derive follow-ups from touchpoints until users need independently edited task
 state. Add enrichment runs and provider-object receipts only when a paid or
 external provider is actually used.
 
-Scope every durable row by tenant. Keep service credentials, raw provider
-payloads, personal email, mobile numbers, and private message bodies out of Git.
-Party or contact data never grants application membership or write authority.
+Scope every durable row by workspace or tenant when the CRM is shared. A truly
+single-user SQLite CRM may use one configured workspace identity. Keep service
+credentials, raw provider payloads, personal email, mobile numbers, and private
+message bodies out of Git. Party or contact data never grants application
+membership or write authority.
 
 ## Build one straight path
 
