@@ -9,7 +9,7 @@ AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
-skills/agentic-crm-admin/    governed operator CRM workflows
+skills/operator-crm/         governed operator CRM workflows
 skills/curated-wiki/         schema-driven knowledge curation
 skills/genius/               source-backed engineering lenses
 skills/implementation/      grounded planning and delivery
@@ -68,21 +68,21 @@ npx skills add drukpa1455/agent-config --skill curated-wiki
 
 See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
 
-## Agentic CRM admin
+## Operator CRM
 
-`agentic-crm-admin` designs and implements a private operator CRM around one
+`operator-crm` designs and implements a private operator CRM around one
 deterministic path: canonical evidence, pure normalization, preview-first plans,
 idempotent tenant-scoped writes, durable receipts, and replaceable reports. It
 keeps paid enrichment, product admission, and external outreach behind separate
 authority boundaries.
 
 ```sh
-npx skills add drukpa1455/agent-config --skill agentic-crm-admin
+npx skills add drukpa1455/agent-config --skill operator-crm
 ```
 
 The skill is explicit-only. Use
-`/skill:agentic-crm-admin <crm-design-or-implementation-task>`. See
-[`skills/agentic-crm-admin/SKILL.md`](skills/agentic-crm-admin/SKILL.md).
+`/skill:operator-crm <crm-design-or-implementation-task>`. See
+[`skills/operator-crm/SKILL.md`](skills/operator-crm/SKILL.md).
 
 ## Genius
 

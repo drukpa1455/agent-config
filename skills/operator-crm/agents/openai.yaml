@@ -1,0 +1,6 @@
+interface:
+  display_name: "Operator CRM"
+  short_description: "Build a governed operator CRM workflow"
+  default_prompt: "Use $operator-crm to design or implement a governed internal CRM workflow in this repository."
+policy:
+  allow_implicit_invocation: false
