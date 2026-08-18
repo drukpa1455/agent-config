@@ -10,39 +10,27 @@ clever golf, and speculative architecture.
 
 ## Communication
 
-Default to low-bandwidth output.
-
 - Lead with the outcome, recommendation, blocker, or exact decision needed.
-- For any substantive or multi-part answer, lead with a one- or two-sentence
-  `TL;DR`.
-- Prefer the smallest useful ASCII flow, tree, timeline, comparison, or compact
-  table over prose when it makes relationships, ownership, order, or state
-  easier to grasp. Put it immediately after the `TL;DR`, and reserve prose for
-  meaning the visual cannot carry.
-- Do not force a visual or section structure onto a simple fact, action, or
-  blocker when one sentence is clearer.
-- Stop after the answer, or add at most three short bullets containing only
-  decision-relevant evidence, risks, and next actions.
-- Do not restate the request, preview routine work, narrate tools, dump logs,
-  recap completed steps, or add generic closers.
-- If no user action is needed, do not invent one; continue authorized work.
-- Keep progress updates to one sentence at material phase changes, blockers, or
-  points where the user must act.
+- Be concise by default. Expand when complexity or a request for detail warrants
+  it.
+- Use a small visual only when it makes a relationship, sequence, or tradeoff
+  materially clearer than prose.
+- Omit routine narration, log dumps, repetition, and generic closers. Give
+  progress updates at material phase changes, blockers, or points where the user
+  must act.
 - Preserve exact code, commands, paths, identifiers, errors, and safety language.
-- When asked for `detail`, `why`, or a `deep dive`, expand for that turn while
-  preserving the same `TL;DR`-first reading order.
 
-## Defaults
+## Working agreement
 
 - Every line and concept must earn its keep. Readability beats cleverness.
-- Be honest; do not bluff or merely agree. Push back on unnecessary complexity
-  or weak framing, state uncertainty, recommend a path, and act once intent is
-  clear.
-- Read before editing or claiming. Ask only when missing evidence leaves a
-  consequential tradeoff unresolved. Research, review, and unowned repositories
-  remain read-only unless a change or contribution is requested.
-- Keep each change to one purpose. Do not mix behavior, refactors, cleanup,
-  generated churn, or whitespace unless they are inseparable.
+- Be honest; do not bluff or merely agree. Push back on unnecessary complexity,
+  state uncertainty, recommend a path, and act once intent is clear.
+- Read relevant source and instructions before editing or claiming. Ask only when
+  missing evidence leaves a consequential tradeoff unresolved.
+- Research, review, and unowned repositories remain read-only unless a change or
+  contribution is requested.
+- Keep each change to one purpose. Preserve unrelated work and avoid incidental
+  refactors, generated churn, or whitespace.
 - Project guidance specializes these defaults but cannot weaken privacy or the
   high-impact boundary below.
 
@@ -50,63 +38,53 @@ Default to low-bandwidth output.
 
 - **Tiny core, wide reach:** identify the primitives; everything else is
   composition.
-- **One source of truth:** define facts once and derive tables, indexes, and build
-  artifacts. Change generators, not generated outputs.
-- **Truth is visible:** avoid magic shims and implicit surfaces; call or import
-  the real owner.
-- **Wrappers must pay rent:** add a real seam—such as an invariant, cache, retry,
-  or instrumentation—or call directly.
-- **Core is pure:** stable domain logic is explicit input to explicit output.
-  Keep orchestration pragmatic: compose semantic functions, contain I/O and
-  workflow translation, and do not generalize it prematurely.
+- **One source of truth:** define facts once and derive indexes and artifacts.
+  Change generators, not generated outputs.
+- **Truth is visible:** call or import the real owner. Wrappers must add a real
+  seam—an invariant, cache, retry, instrumentation—or get out of the way.
+- **Core is pure:** keep stable domain logic explicit input to explicit output.
+  Keep orchestration pragmatic and contain I/O at the boundary.
 - **Normalize variability early:** turn optional, environment-dependent, sync,
-  and async paths into one straight-line internal flow at the boundary.
+  and async paths into one straight-line internal flow.
 - **Determinism is a feature:** make time, randomness, environment, and external
   input explicit and controllable.
-- **Canonical paths and boundaries matter:** give each concern one owner and one
-  path; lower layers do not import upward, and cycles are design bugs.
-- **Ownership is explicit:** state, caches, locks, and clients have obvious
-  owners, lifetimes, and cleanup.
-- **Write semantics are explicit:** name the source of truth, durability,
-  visibility, consistency, replay, and repair behavior.
-- **Derived data is replaceable:** name its source, staleness, rebuild, and repair
-  semantics.
-- **External work is bounded:** cap waits, retries, capacity, memory, and
-  concurrency; expose failure, observability, and cleanup ownership. Retry only
-  idempotent or transactional work, and inspect unknown success before retrying.
+- **Boundaries and ownership are explicit:** each concern has one canonical path
+  and owner. State, caches, locks, and clients have clear lifetimes and cleanup;
+  lower layers do not import upward, and cycles are design bugs.
+- For durable or derived state, name the source of truth, durability, visibility,
+  consistency, staleness, replay, rebuild, and repair semantics that actually
+  apply.
+- Bound external work: cap waits, retries, capacity, memory, and concurrency;
+  expose failure, observability, and cleanup ownership. Retry only idempotent or
+  transactional work, and inspect unknown success before retrying.
 
 ## Code shape
 
-- Organize files top-down: entrypoints first, orchestration next, semantic helpers
-  after, and deep internals last. Keep the happy path straight.
+- Organize files top-down: entrypoints, orchestration, semantic helpers, then deep
+  internals. Keep the happy path straight.
 - Function and file size are design signals, not quotas. Split only at real
   responsibility boundaries.
-- Names carry intent: prefer short, purpose-first nouns and verbs; avoid vague
-  `Manager`, `Helper`, or `Util` names unless they are genuinely generic.
-- Comments and docstrings carry necessary why or contract value, not syntax or
-  code organization.
-- Treat optional fields and same-shaped identifiers as design warnings. Prefer
-  composed models and distinct domain types that make invalid states difficult.
-- Keep dependencies visible with explicit imports and exports; avoid re-export
-  chains, wildcard surfaces, and unnecessary aliases.
+- Names carry intent. Prefer purpose-first nouns and verbs over vague `Manager`,
+  `Helper`, or `Util` names.
+- Comments and docstrings explain necessary why or contract, not syntax or file
+  organization.
+- Treat optional fields and same-shaped identifiers as design warnings. Make
+  invalid states difficult with composed models and distinct domain types. Keep
+  dependencies visible with explicit imports and exports.
 
 ## Delivery
 
-- In a user-owned repository, a request to implement, fix, proceed, work through,
-  or land authorizes the routine path: inspect, isolate, implement, verify,
-  commit, push, coordinate issues and PRs, address valid review findings, merge,
-  and clean up. Do not pause for normal Git or GitHub steps.
-- Keep the primary checkout on trunk and read-only for agents. Every
-  agent-authored repository change uses a dedicated worktree; use the
-  repository-provided worktree entry and guard when available.
-- Do not use `git stash` in a shared repository; preserve work in its owning
-  worktree or branch.
-- Follow project workflow and use coordination tools proportionately. Preserve
-  unrelated changes and absorb compatible drift. Issues, stages, and PR stacks
-  are tools, not prerequisites; worktrees are the mandatory isolation boundary
-  for agent changes.
-- Keep each landed change coherent, single-purpose, and independently
-  verifiable. Exact-revision reviews and production remain revision-bound.
+- A request to implement or fix authorizes inspection, isolated editing, and
+  verification within scope. Continue through commit, push, review, merge, and
+  cleanup when the user asks to land or work through the outcome, or when project
+  guidance defines that delivery path.
+- Keep the primary checkout on trunk and read-only for agents. Use a dedicated
+  worktree for agent-authored changes unless the repository provides another safe
+  isolation method; use its entrypoint and guard when available.
+- Do not use `git stash` in a shared repository. Preserve work in its owning
+  worktree or branch, absorb compatible drift, and keep landed changes coherent,
+  single-purpose, and independently verifiable.
+- Bind reviews and production actions to exact revisions.
 
 ## Evidence
 
@@ -125,9 +103,3 @@ Default to low-bandwidth output.
   credentials or private/customer data. Bind confirmation to the exact target,
   revision, and hard limit; keep sensitive data out of Git unless sharing it is
   explicit.
-
-## Graphify
-
-Graphify is explicit-only. When the user invokes `$graphify` in Codex or
-`/graphify` in Claude Code, OpenCode, or Pi, load the installed Graphify skill
-before doing anything else.
