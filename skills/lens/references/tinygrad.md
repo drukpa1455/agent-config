@@ -23,6 +23,24 @@ do not turn project behavior into a claim about George Hotz's intent.
 Do not use it to justify a graph, compiler vocabulary, rewrite engine, cache,
 scheduler, JIT, dense syntax, or low line count in ordinary application code.
 
+## Decision card
+
+1. **Semantic closure:** do broad surfaces and transformations converge on one
+   owned language?
+2. **Legal, additive phases:** is each phase valid, and does every retained form
+   add a fact?
+3. **Purpose-specific identity:** are semantic structure, runtime bindings,
+   diagnostics, and effect state separated before caching or comparison?
+4. **Planned effects:** does planning own causal order, with each plan-to-plan
+   optimization preserving it across the effect boundary?
+5. **Capability edges:** are target facts introduced only by the phase or edge
+   that owns the capability and lifecycle?
+6. **Proof and deletion:** can each transformation be inspected, replayed,
+   measured at its owning phase, and deleted when it owns no distinct fact?
+
+If durable compatibility, distributed authority, transactional repair, or a
+hard resource budget dominates, Tinygrad may be the wrong lens.
+
 ## Observed path
 
 ```text

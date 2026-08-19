@@ -26,6 +26,25 @@ Do not use it to justify silent compatibility breaks, bit packing, one giant
 arena, a custom VM, generated code, or unvalidated executable artifacts without
 the same measured pressure.
 
+## Decision card
+
+1. **Hard budget:** is the real resource ceiling explicit at construction, with
+   one owner, a failure reserve, and known cleanup effects?
+2. **Designed subset:** which semantics justify permanent runtime cost, and
+   which unsupported states are rejected visibly?
+3. **Purpose-built representation:** do storage and identity follow measured
+   operations rather than aesthetic compactness?
+4. **Relocatable state:** which references survive movement, rebuilding, or
+   compaction, and can tests force that change?
+5. **Static facts:** which facts can become generated read-only artifacts, and
+   how do location, lifetime, mutation, and versioning re-enter ownership?
+6. **Execution bounds and trust:** are stack, arguments, time, artifacts, and
+   hostile inputs bounded and validated at their actual boundaries?
+
+If there is no measured resource pressure, broad compatibility is mandatory, or
+ordinary objects and functions already make ownership obvious, MQuickJS may be
+the wrong lens.
+
 ## Observed path
 
 ```text

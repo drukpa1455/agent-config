@@ -11,7 +11,7 @@ scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
 skills/operator-crm/         governed operator CRM workflows
 skills/wiki/                 owner-controlled knowledge curation
-skills/genius/               source-backed engineering lenses
+skills/lens/                 source-backed engineering lenses
 skills/spec/                 grounded specifications and delivery graphs
 skills/implement/            scoped execution and verification
 skills/browse/               portable headed browser control
@@ -88,13 +88,13 @@ The skill is explicit-only. Use
 `/skill:operator-crm <crm-design-or-implementation-task>`. See
 [`skills/operator-crm/SKILL.md`](skills/operator-crm/SKILL.md).
 
-## Genius
+## Lens
 
-`genius` carries two deeply studied, revision-bound lenses: Tinygrad with George
+`lens` carries two deeply studied, revision-bound lenses: Tinygrad with George
 Hotz and contributors, and MQuickJS with Fabrice Bellard, Charlie Gordon, and
-contributors. Its main skill file directly includes both decision cards and
-their highest-value principles; reference profiles retain detailed source paths,
-limitations, history, and reproducible worked traces.
+contributors. Its small entrypoint selects one lens from target pressure, then
+loads only that profile. The profiles retain decision criteria, mechanics,
+source paths, limitations, and optional reproducible worked traces.
 
 The skill studies project mechanics rather than simulating personalities. It
 pins source evidence, preserves collaborators, separates observation from
@@ -102,11 +102,11 @@ inference, honors a named lens or otherwise chooses from target pressure, and
 states where each analogy breaks. Future profiles are added one primary-source study at a time.
 
 ```sh
-npx skills add drukpa1455/agent-config --skill genius
+npx skills add drukpa1455/agent-config --skill lens
 ```
 
-The skill is explicit-only. Use `/skill:genius <problem-or-design-question>`.
-See [`skills/genius/SKILL.md`](skills/genius/SKILL.md).
+The skill is explicit-only. Use `/skill:lens <problem-or-design-question>`.
+See [`skills/lens/SKILL.md`](skills/lens/SKILL.md).
 
 ## Specification and implementation
 

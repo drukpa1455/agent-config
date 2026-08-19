@@ -1,6 +1,0 @@
-interface:
-  display_name: "Genius"
-  short_description: "Apply revision-bound exemplary software lenses"
-  default_prompt: "Honor an explicitly named Tinygrad or MQuickJS lens; otherwise choose from target pressure. Cite pinned mechanics when decisive, and transfer invariants without simulating personalities or copying project machinery."
-policy:
-  allow_implicit_invocation: false
