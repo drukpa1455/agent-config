@@ -10,7 +10,7 @@ global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
 skills/operator-crm/         governed operator CRM workflows
-skills/curated-wiki/         schema-driven knowledge curation
+skills/wiki/                 owner-controlled knowledge curation
 skills/genius/               source-backed engineering lenses
 skills/spec/                 grounded specifications and delivery graphs
 skills/implement/            scoped execution and verification
@@ -55,19 +55,22 @@ git -C ~/src/agent-config pull --ff-only
 
 Unattended pulls are intentionally excluded because skills and global instructions can execute policy and code.
 
-## Curated wiki
+## Wiki
 
-`curated-wiki` queries and maintains a user-owned Markdown wiki without imposing a storage layout or note format. The target repository's `AGENTS.md` remains its schema; the skill supplies cross-context discovery, side-effect boundaries, and query, curation, and lint flows.
+`wiki` enters a user-owned Markdown knowledge repository without imposing a
+storage layout or note format. It activates for explicit wiki work and questions
+about the owner's accumulated knowledge, not merely because an ordinary task
+overlaps a wiki topic. The target repository's `AGENTS.md` remains its schema.
 
 The design follows the persistent, compounding [LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) while keeping each wiki's operating contract local.
 
 Set `KNOWLEDGE_BASE_PATH` when the wiki should be available outside its own checkout, or provide its path in the request.
 
 ```sh
-npx skills add drukpa1455/agent-config --skill curated-wiki
+npx skills add drukpa1455/agent-config --skill wiki
 ```
 
-See [`skills/curated-wiki/SKILL.md`](skills/curated-wiki/SKILL.md).
+See [`skills/wiki/SKILL.md`](skills/wiki/SKILL.md).
 
 ## Operator CRM
 
