@@ -155,7 +155,7 @@ function setup(paths, setupArgs) {
   if (!setupArgs.includes('--no-browser-download'))
     run(paths.officialCli, ['install-browser', 'chrome-for-testing', '--no-shell'], paths.workspace);
 
-  console.log('persistent-browser: setup complete');
+  console.log('browse: setup complete');
 }
 
 function hasStableChrome() {
@@ -179,7 +179,7 @@ function run(command, commandArgs, cwd) {
 
 function launch(command, commandArgs, paths, additions) {
   if (!fs.existsSync(command))
-    fail(`Runtime missing: ${command}\nRun scripts/setup after explicit download approval.`);
+    fail(`Runtime missing: ${command}\nRead references/setup.md, disclose its downloads, then run scripts/setup.`);
 
   const env = { ...process.env, NO_UPDATE_NOTIFIER: '1' };
   for (const [key, value] of Object.entries(additions)) {
@@ -202,6 +202,6 @@ function launch(command, commandArgs, paths, additions) {
 }
 
 function fail(message) {
-  console.error(`persistent-browser: ${message}`);
+  console.error(`browse: ${message}`);
   process.exit(1);
 }

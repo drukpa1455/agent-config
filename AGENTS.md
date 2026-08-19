@@ -16,9 +16,10 @@ and Codex. Read `README.md` before changing either surface.
 ## Change discipline
 
 - Give each policy change one observed failure and one behavioral purpose.
-- Keep globally implicit skills rare. A capability that writes, controls shared
-  state, imposes an architectural lens, or adds human gates is explicit-only in
-  both Pi and Codex.
+- Keep globally implicit skills rare. Make a capability explicit-only when
+  loading it imposes an architectural lens, changes ordinary task flow, or adds
+  human gates. Automatic discovery never authorizes effects or bypasses resource
+  ownership and the high-impact boundary.
 - Test prompt behavior with pressure cases covering the original failure and
   protected safety contexts; do not validate wording alone.
 - Preserve cross-harness invocation metadata when adding or renaming a skill.

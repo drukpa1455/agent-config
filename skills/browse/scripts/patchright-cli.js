@@ -18,6 +18,6 @@ try {
 program({ embedderVersion: version }).catch(error => fail(error.message));
 
 function fail(message) {
-  console.error(`persistent-browser: ${message}`);
+  console.error(`browse: ${message}`);
   process.exit(1);
 }

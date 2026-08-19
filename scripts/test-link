@@ -84,6 +84,8 @@ ln -s "$root/skills/implementation" "$HOME/.agents/skills/implementation"
 ln -s "$root/skills/implementation" "$HOME/.claude/skills/implementation"
 ln -s "$root/skills/systematic-debugging" "$HOME/.agents/skills/systematic-debugging"
 ln -s "$root/skills/systematic-debugging" "$HOME/.claude/skills/systematic-debugging"
+ln -s "$root/skills/persistent-browser" "$HOME/.agents/skills/persistent-browser"
+ln -s "$root/skills/persistent-browser" "$HOME/.claude/skills/persistent-browser"
 check "relinking an existing tree succeeds" "$(exit_status_of_link)" "0"
 assert_every_projection_linked "after relink"
 check "removes retired .agents implementation link" \
@@ -94,6 +96,10 @@ check "removes retired .agents systematic-debugging link" \
   "$(path_state ".agents/skills/systematic-debugging")" "missing"
 check "removes retired .claude systematic-debugging link" \
   "$(path_state ".claude/skills/systematic-debugging")" "missing"
+check "removes retired .agents persistent-browser link" \
+  "$(path_state ".agents/skills/persistent-browser")" "missing"
+check "removes retired .claude persistent-browser link" \
+  "$(path_state ".claude/skills/persistent-browser")" "missing"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed" >&2

@@ -1,5 +1,5 @@
 {
-  "name": "persistent-browser-runtime",
+  "name": "browse-runtime",
   "private": true,
   "dependencies": {
     "@playwright/cli": "0.1.17",
