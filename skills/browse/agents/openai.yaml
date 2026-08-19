@@ -1,0 +1,6 @@
+interface:
+  display_name: "Browse"
+  short_description: "Control a persistent headed browser"
+  default_prompt: "Use $browse to complete this interactive browser task."
+policy:
+  allow_implicit_invocation: true

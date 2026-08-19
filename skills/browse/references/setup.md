@@ -6,7 +6,8 @@ Setup requires Node.js 20+, npm, and stable Google Chrome. It downloads exact np
 $SKILL_DIR/scripts/setup
 ```
 
-Default local paths:
+Default local paths, retained across the skill rename so existing profiles keep
+their identity:
 
 - state and profiles: `~/.local/share/persistent-browser/`
 - disposable output: `~/.cache/persistent-browser/`

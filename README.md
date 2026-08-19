@@ -14,7 +14,7 @@ skills/curated-wiki/         schema-driven knowledge curation
 skills/genius/               source-backed engineering lenses
 skills/spec/                 grounded specifications and delivery graphs
 skills/implement/            scoped execution and verification
-skills/persistent-browser/   on-demand browser capability
+skills/browse/               portable headed browser control
 skills/debug/                 evidence-first root-cause diagnosis
 ```
 
@@ -146,9 +146,11 @@ npx skills add drukpa1455/agent-config --skill debug
 
 See [`skills/debug/SKILL.md`](skills/debug/SKILL.md).
 
-## Persistent browser
+## Browse
 
-`persistent-browser` explicitly controls two visible browser profiles through one local dashboard:
+`browse` provides one portable headed browser surface across shell-capable
+harnesses. It defers to an equivalent harness-native browser and owns two
+persistent profiles behind one live dashboard:
 
 - official Playwright for compatibility, diagnostics, and security-sensitive work
 - Patchright for authorized social-media workflows
@@ -161,12 +163,14 @@ bypass CAPTCHA, access controls, account limits, or site policy.
 Install only this skill through the cross-harness Skills CLI:
 
 ```sh
-npx skills add drukpa1455/agent-config --skill persistent-browser
+npx skills add drukpa1455/agent-config --skill browse
 ```
 
-The first browser run requires Node.js 20+, npm, stable Google Chrome, and the skill's explicit setup step. Setup installs pinned npm dependencies and Chrome for Testing into local user storage; it never stores profiles or credentials in Git.
+The first browser run requires Node.js 20+, npm, stable Google Chrome, and the
+skill's first-run setup. Setup installs pinned npm dependencies and Chrome for
+Testing into local user storage; it never stores profiles or credentials in Git.
 
-See [`skills/persistent-browser/SKILL.md`](skills/persistent-browser/SKILL.md).
+See [`skills/browse/SKILL.md`](skills/browse/SKILL.md).
 
 ## License
 
