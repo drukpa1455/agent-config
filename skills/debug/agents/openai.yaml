@@ -1,0 +1,6 @@
+interface:
+  display_name: "Debug"
+  short_description: "Find and fix the owning cause"
+  default_prompt: "Use $debug to diagnose this failure and fix its owning cause."
+policy:
+  allow_implicit_invocation: true

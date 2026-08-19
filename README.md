@@ -12,9 +12,10 @@ scripts/test-link            projection proof against a throwaway home
 skills/operator-crm/         governed operator CRM workflows
 skills/curated-wiki/         schema-driven knowledge curation
 skills/genius/               source-backed engineering lenses
-skills/implementation/      grounded planning and delivery
+skills/spec/                 grounded specifications and delivery graphs
+skills/implement/            scoped execution and verification
 skills/persistent-browser/   on-demand browser capability
-skills/systematic-debugging/  evidence-first root-cause diagnosis
+skills/debug/                 evidence-first root-cause diagnosis
 ```
 
 Project-level `AGENTS.md` files remain authoritative for project-specific rules and layer after the shared global policy.
@@ -104,40 +105,46 @@ npx skills add drukpa1455/agent-config --skill genius
 The skill is explicit-only. Use `/skill:genius <problem-or-design-question>`.
 See [`skills/genius/SKILL.md`](skills/genius/SKILL.md).
 
-## Implementation
+## Specification and implementation
 
-`implementation` grounds and delivers repository work in one flow: intent and
-live truth, decisions, order, work, and proof. It accepts a specification,
-existing plan, issue, findings block, epic, or stage.
+`spec` turns a consequential repository discussion into an executable agreement:
+observable behavior, codebase-grounded design, and the smallest useful graph of
+stages, issues, and sub-issues. Complex designs and multi-stage epics include
+compact ASCII architecture and delivery maps. Later stages retain durable
+contracts without false implementation precision and are refined from evidence
+after each stage lands. Coverage checks connect every contract to delivery and
+proof without creating another status system. The skill stops before
+product-code edits.
 
-Repository sources own current behavior, active plans own unresolved decisions
-and intended order, Git and merged pull requests own completed delivery history,
-GitHub owns live delivery state, and retained evidence owns proof. Durable plan
-content moves to its canonical owner as work lands; completed execution detail is
-retired. Diagrams are projections. A plan- or map-only request stops after that
-output; otherwise one coherent outcome stays one change, while real dependency
-or evidence boundaries become stages. A bounded polish pass converges duplicated
-semantics in the touched surface without expanding into unrelated cleanup.
+`implement` consumes a decided issue, stage, epic, spec, plan, findings block, or
+brief. It studies relevant prior art, re-grounds each stage against fresh trunk,
+uses isolated worktrees, delivers the selected scope through review and merge,
+then performs a fresh-trunk stage closeout and removes merged branches and
+worktrees. For a full epic it repeats that loop, refining each next stage from
+what implementation revealed, and finishes with a cross-stage contract and
+architecture audit. Production mutation remains outside the skill's authority.
 
-Review the public [skills.sh listing](https://skills.sh/drukpa1455/agent-config/implementation)
-or install directly:
-
-```sh
-npx skills add drukpa1455/agent-config --skill implementation
-```
-
-Use `/skill:implementation <goal-or-artifact>`. See
-[`skills/implementation/SKILL.md`](skills/implementation/SKILL.md).
-
-## Systematic debugging
-
-`systematic-debugging` applies a proportional evidence loop to reproducible defects and unexplained required-check failures. It classifies expected baselines, read-only findings, command mistakes, and explained environment failures without turning each one into an implementation workflow.
+Install either explicit-only skill directly:
 
 ```sh
-npx skills add drukpa1455/agent-config --skill systematic-debugging
+npx skills add drukpa1455/agent-config --skill spec
+npx skills add drukpa1455/agent-config --skill implement
 ```
 
-See [`skills/systematic-debugging/SKILL.md`](skills/systematic-debugging/SKILL.md).
+Use `/skill:spec <discussion-or-goal>` before implementation, then
+`/skill:implement <decided-issue-stage-or-epic>` when the work is ready. See
+[`skills/spec/SKILL.md`](skills/spec/SKILL.md) and
+[`skills/implement/SKILL.md`](skills/implement/SKILL.md).
+
+## Debug
+
+`debug` applies a proportional evidence loop to reproducible defects and unexplained required-check failures. It classifies expected baselines, read-only findings, command mistakes, and explained environment failures without turning each one into an implementation workflow.
+
+```sh
+npx skills add drukpa1455/agent-config --skill debug
+```
+
+See [`skills/debug/SKILL.md`](skills/debug/SKILL.md).
 
 ## Persistent browser
 

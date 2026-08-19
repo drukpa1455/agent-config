@@ -1,0 +1,6 @@
+interface:
+  display_name: "Spec"
+  short_description: "Shape work into a grounded delivery spec"
+  default_prompt: "Use $spec to turn our discussion into a grounded specification and delivery graph."
+policy:
+  allow_implicit_invocation: false
