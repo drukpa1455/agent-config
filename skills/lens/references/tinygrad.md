@@ -10,33 +10,36 @@ observed on 2026-07-11. The repository is collaborative. Attribute a mechanic to
 Tinygrad unless a commit or primary statement establishes individual ownership;
 do not turn project behavior into a claim about George Hotz's intent.
 
-## Use this lens when
+## Fit
 
-- broad public operations continue as parallel internal models;
-- transformation phases or legal states are implicit;
-- execution rediscovers order already known during planning;
-- effects occur before global validation or optimization;
-- adapters leak target branches into the core;
-- a wrapper or carrier may no longer own a distinct fact;
-- final output cannot explain which transformation changed meaning.
-
-Do not use it to justify a graph, compiler vocabulary, rewrite engine, cache,
-scheduler, JIT, dense syntax, or low line count in ordinary application code.
+Use this lens when target evidence shows competing semantic carriers, implicit
+phases, reconstructed execution order, premature effects, target leakage, or a
+carrier with no distinct responsibility. Do not use it merely to justify a
+graph, compiler vocabulary, rewrite engine, cache, scheduler, JIT, dense syntax,
+or low line count in ordinary application code.
 
 ## Decision card
 
-1. **Semantic closure:** do broad surfaces and transformations converge on one
-   owned language?
-2. **Legal, additive phases:** is each phase valid, and does every retained form
-   add a fact?
-3. **Purpose-specific identity:** are semantic structure, runtime bindings,
-   diagnostics, and effect state separated before caching or comparison?
-4. **Planned effects:** does planning own causal order, with each plan-to-plan
-   optimization preserving it across the effect boundary?
-5. **Capability edges:** are target facts introduced only by the phase or edge
-   that owns the capability and lifecycle?
-6. **Proof and deletion:** can each transformation be inspected, replayed,
-   measured at its owning phase, and deleted when it owns no distinct fact?
+Use only the tests matching the evidenced target pressure.
+
+1. **Semantic-center test:** can every operation and transformation name one
+   canonical carrier of meaning? If not, choose the semantic owner and derive or
+   remove competing models.
+2. **New-fact test:** what distinct fact does each retained phase or
+   representation add? If none, merge or delete it and validate the transitions
+   that remain.
+3. **Identity test:** does this cache, comparison, or replay identity contain
+   only facts relevant to that operation? If not, normalize environment and
+   bindings first; separate diagnostics and effects from meaning.
+4. **Plan-consumption test:** is causal order explicit before effects, preserved
+   by optimization, and consumed directly during execution? If not, make order
+   part of the plan instead of reconstructing it from side state.
+5. **Capability-edge test:** does each target-specific fact enter where its
+   capability and lifecycle are owned? If not, move it toward that edge; do not
+   invent a universal interface before repeated targets expose one.
+6. **Reownership test:** can the transformation be inspected or replayed, and
+   can a carrier be deleted without losing the only owner of a fact? If not,
+   move its responsibilities and proof first.
 
 If durable compatibility, distributed authority, transactional repair, or a
 hard resource budget dominates, Tinygrad may be the wrong lens.
