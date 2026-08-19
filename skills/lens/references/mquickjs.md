@@ -12,34 +12,38 @@ the pinned Git history also includes contributions from Erge, Wes, and Siqi Yan.
 Attribute project mechanics to MQuickJS and its contributors unless a primary
 source establishes narrower ownership. Do not infer personal intent.
 
-## Use this lens when
+## Fit
 
-- a hard RAM, storage, stack, latency, or capacity ceiling should shape the API;
-- a system pays permanently for semantics its supported domain does not need;
-- addresses or instances move while callers retain stale references;
-- static facts consume dynamic memory or startup work;
-- an intermediate representation may own no required transformation or proof;
-- cancellation, exhaustion, or executable-input trust is implicit;
-- tests cover happy output but not relocation, limits, or rejected states.
-
-Do not use it to justify silent compatibility breaks, bit packing, one giant
-arena, a custom VM, generated code, or unvalidated executable artifacts without
-the same measured pressure.
+Use this lens when target evidence shows a hard resource ceiling, costly excess
+semantics, moving storage, static facts consuming dynamic budget, implicit
+interruption, or executable-artifact trust. Do not use it to justify silent
+compatibility breaks, compact encoding, one arena, generated code, or custom
+runtime machinery without the same measured pressure.
 
 ## Decision card
 
-1. **Hard budget:** is the real resource ceiling explicit at construction, with
-   one owner, a failure reserve, and known cleanup effects?
-2. **Designed subset:** which semantics justify permanent runtime cost, and
-   which unsupported states are rejected visibly?
-3. **Purpose-built representation:** do storage and identity follow measured
-   operations rather than aesthetic compactness?
-4. **Relocatable state:** which references survive movement, rebuilding, or
-   compaction, and can tests force that change?
-5. **Static facts:** which facts can become generated read-only artifacts, and
-   how do location, lifetime, mutation, and versioning re-enter ownership?
-6. **Execution bounds and trust:** are stack, arguments, time, artifacts, and
-   hostile inputs bounded and validated at their actual boundaries?
+Use only the tests matching the evidenced target pressure.
+
+1. **Construction-budget test:** does construction name the hard ceiling,
+   owner, failure reserve, exhaustion behavior, and cleanup effects? If not, the
+   budget is not yet a system invariant.
+2. **Subtraction test:** can the product contract honestly reject the costly
+   state or semantic? If not, preserve compatibility; never optimize through
+   silent subtraction.
+3. **Representation test:** do measured operations and a demonstrated budget
+   justify specialized storage? If not, use ordinary types and storage.
+4. **Movement test:** can every retained reference survive relocation,
+   rebuilding, or compaction, and can tests force that event? If not, introduce
+   owner-updateable handles or durable identity appropriate to the lifetime.
+5. **Static-fact test:** is the fact genuinely immutable and generated from one
+   canonical source, with mutation and lifetime transitions explicit? If not,
+   keep it under ordinary runtime ownership.
+6. **Execution-bound test:** are memory, stack, arguments, time, interruption,
+   and cleanup bounded separately, with an owner for each? If not, do not
+   describe the whole system as bounded.
+7. **Artifact-trust test:** are repeatability, compatibility, validation, and
+   hostile-input trust separate claims? If not, keep the artifact internal or
+   add validation at the real trust boundary.
 
 If there is no measured resource pressure, broad compatibility is mandatory, or
 ordinary objects and functions already make ownership obvious, MQuickJS may be
