@@ -1,0 +1,6 @@
+interface:
+  display_name: "Lens"
+  short_description: "Apply source-backed engineering lenses"
+  default_prompt: "Use $lens to apply the most relevant pinned engineering lens without copying project machinery."
+policy:
+  allow_implicit_invocation: false

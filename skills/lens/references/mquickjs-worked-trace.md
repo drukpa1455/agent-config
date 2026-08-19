@@ -13,7 +13,7 @@ building an archived copy in temporary storage.
 ## Verify and isolate the source
 
 ```sh
-MQUICKJS_PATH=${MQUICKJS_PATH:-$HOME/tmp/genius-study/mquickjs}
+MQUICKJS_PATH=${MQUICKJS_PATH:-$HOME/tmp/lens-study/mquickjs}
 REV=ee50431eac9b14b99f722b537ec4cac0c8dd75ab
 
 test "$(git -C "$MQUICKJS_PATH" remote get-url origin)" = \
