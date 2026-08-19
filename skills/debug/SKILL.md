@@ -1,19 +1,13 @@
 ---
-name: systematic-debugging
+name: debug
 description: Use when asked to diagnose or fix a reproducible defect, or when a required check for the current change fails without an established cause. Do not invoke for read-only inventories, expected red baselines, command misuse, unavailable optional tooling, or already-explained failures.
-license: MIT
-metadata:
-  source: https://github.com/obra/superpowers
 ---
 
-# Systematic Debugging
+# Debug
 
 Establish cause before changing behavior. Scale the investigation to the
 unknown; a known environment or orchestration mistake does not earn a defect
 workflow.
-
-Do not announce this skill or narrate its checklist. Report only material
-findings, blockers, and verification evidence.
 
 ## 1. Classify the failure
 
@@ -63,9 +57,10 @@ Do not treat correlation, a changed file, or a plausible explanation as cause.
 State one concrete hypothesis and why the evidence supports it. Run the
 smallest test that could disprove it. Change one variable at a time.
 
-If falsified, return to the owning boundary with the new evidence. After three
-falsified fix hypotheses, stop and question the architecture with the user
-instead of stacking a fourth patch.
+If falsified, return to the owning boundary with the new evidence. When repeated
+falsification undermines the causal model, revisit the boundary and assumptions
+before trying another fix. Ask the user only when the next path changes approved
+scope or contracts.
 
 ## 5. Fix the source
 
@@ -86,5 +81,6 @@ Freshly rerun:
 3. any broader contract check justified by the changed boundary.
 
 Report exact passes, remaining failures, and current revision. A passing rerun
-proves only what that command covers. Stop on an unexplained failure, unknown
-external-write success, or evidence that changes approved scope or contracts.
+proves only what that command covers. An unexplained failure returns to the
+evidence loop. Stop for unknown external-write success, unavailable required
+evidence or authority, or evidence that changes approved scope or contracts.
