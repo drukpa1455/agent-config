@@ -9,7 +9,6 @@ AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
-skills/operator-crm/         governed operator CRM workflows
 skills/wiki/                 owner-controlled knowledge curation
 skills/lens/                 source-backed engineering lenses
 skills/spec/                 grounded specifications and delivery graphs
@@ -71,22 +70,6 @@ npx skills add drukpa1455/agent-config --skill wiki
 ```
 
 See [`skills/wiki/SKILL.md`](skills/wiki/SKILL.md).
-
-## Operator CRM
-
-`operator-crm` designs and implements a private operator CRM around one
-deterministic path: canonical evidence, pure normalization, preview-first plans,
-idempotent tenant-scoped writes, durable receipts, and replaceable reports. It
-keeps paid enrichment, product admission, and external outreach behind separate
-authority boundaries.
-
-```sh
-npx skills add drukpa1455/agent-config --skill operator-crm
-```
-
-The skill is explicit-only. Use
-`/skill:operator-crm <crm-design-or-implementation-task>`. See
-[`skills/operator-crm/SKILL.md`](skills/operator-crm/SKILL.md).
 
 ## Lens
 
