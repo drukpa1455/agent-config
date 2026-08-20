@@ -1,6 +1,6 @@
 ---
 name: lens
-description: Apply a revision-bound Tinygrad or MQuickJS engineering lens to a repository design. Use explicitly for $lens, genius, Tinygrad, MQuickJS, George Hotz, Fabrice Bellard, Charlie Gordon, or a source-backed exemplary-software comparison.
+description: Apply a revision-bound Tinygrad, MQuickJS, or DaoFP engineering lens to a repository design. Use explicitly for $lens, Tinygrad, MQuickJS, DaoFP, George Hotz, Fabrice Bellard, Charlie Gordon, Bartosz Milewski, or a source-backed software-design comparison.
 disable-model-invocation: true
 ---
 
@@ -19,10 +19,11 @@ pressure:
 | -------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | Tinygrad | Parallel semantic models, implicit phases, replanning, target leakage, or redundant carriers              | [`tinygrad.md`](references/tinygrad.md) at `e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b` |
 | MQuickJS | Hard budgets, excess semantics, moving storage, dynamic copies of static facts, or executable-input trust | [`mquickjs.md`](references/mquickjs.md) at `ee50431eac9b14b99f722b537ec4cac0c8dd75ab` |
+| DaoFP    | Unclear interfaces, awkward composition, false genericity, hidden effects, or unnecessary sequencing      | [`daofp.md`](references/daofp.md) at `7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc`       |
 
-Use both only when both pressures materially shape the decision. If direct code
-already owns the required meaning, budget, order, and effects, recommend no new
-abstraction. Neither lens substitutes for target evidence.
+Use multiple lenses only when their pressures materially shape the same
+decision. If direct code already owns the required meaning, budget, order, and
+effects, recommend no new abstraction. No lens substitutes for target evidence.
 
 Read the selected profile completely before applying it. Read its worked trace
 only when reproducing mechanics or when exact experimental evidence affects the
