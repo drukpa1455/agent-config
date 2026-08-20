@@ -42,8 +42,8 @@ Use only the tests matching the evidenced target pressure.
    other's result? If yes, preserve independence; require sequential composition
    only for a real data or effect dependency.
 7. **Recursion-ownership test:** can recursive shape be separated from the
-   operation that consumes or produces it, and would doing so remove an evidenced
-   intermediate or duplicate traversal? If not, keep the direct recursion.
+   operation that consumes or produces it, giving repeated traversals one owner
+   or removing an evidenced intermediate? If not, keep the direct recursion.
 
 If the target problem is local, ordinary functions already compose clearly, or
 the language cannot express a proposed law without obscuring ownership, DaoFP
@@ -85,11 +85,16 @@ reconstructing, behaves predictably
 ([`4-SumTypes.tex`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/4-SumTypes.tex#L121-L332),
 [`5-ProductTypes.tex`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/5-ProductTypes.tex#L13-L117)).
 
-**Transfer:** write the constructors, observers, round trips, and invalid cases
-that define the boundary. Choose a class layout, table, tagged union, closure, or
-wire representation afterward. A universal property is useful here as a design
-test: the interface should provide exactly the mapping its consumers require,
-not as a reason to encode categorical machinery.
+Universal constructions characterize an object through mappings in or out:
+every valid candidate factors uniquely through the universal one. The result is
+canonical up to isomorphism, not necessarily minimal in API size
+([`9-NaturalTransformations.tex::Universal Constructions Revisited`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/9-NaturalTransformations.tex#L748-L768)).
+
+**Transfer:** write the constructors, observers, round trips, invalid cases, and
+unique mediating operation that define the boundary. Choose a class layout,
+table, tagged union, closure, or wire representation afterward. Use universal
+factorization to compare candidates, not as a reason to encode categorical
+machinery.
 
 ### Composition laws expose false boundaries
 
@@ -106,6 +111,39 @@ A mapper that changes meaning, a wrapper that cannot preserve identity, or a
 generic adapter that switches on concrete payloads has not earned its abstraction
 claim. Laws support ordinary named functions; they do not require abstract names
 in production code.
+
+### Free construction records only justified structure
+
+A free construction adds the operations and laws required by a structure while
+imposing no extra equations. DaoFP presents the free monoid as a recorded program
+that can later be folded into different concrete monoids
+([`10-Adjunctions.tex::Free/Forgetful Adjunctions`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/10-Adjunctions.tex#L1178-L1335)).
+Free monads similarly separate a sequence of operations from the interpreter
+that supplies its effects
+([`15-Monads.tex::Free Monads`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/15-Monads.tex#L810-L855)).
+
+```text
+domain operations -> recorded program -> validate | transform | interpret
+```
+
+**Transfer:** reify operations as data only when multiple meaningful
+interpreters, transformations, inspections, or durable handoffs justify the
+program representation. Prefer a domain-specific command type or AST over a
+generic free encoding. If one direct execution path owns the behavior, keep the
+functions direct.
+
+### Defunctionalization makes a closed behavior set explicit
+
+DaoFP replaces a finite family of closures and captured environments with a sum
+type of frames plus one `apply` interpreter. The resulting continuation is
+ordinary recursive data that can be inspected or serialized
+([`10-Adjunctions.tex::Defunctionalization`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/10-Adjunctions.tex#L1025-L1166),
+[`Haskell/10-Defunc.hs`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/Haskell/10-Defunc.hs)).
+
+**Transfer:** use tagged frames and an interpreter when functions must cross a
+process, durability, inspection, or explicit-control boundary and the behavior
+set is deliberately closed. Do not centralize an open plugin or extension model
+into an ever-growing dispatcher.
 
 ### Effects are composition contracts
 
@@ -134,17 +172,41 @@ from interpretation
 ([`11-Algebras.tex`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/11-Algebras.tex),
 [`12-Coalgebras.tex`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/12-Coalgebras.tex)).
 
-**Transfer:** use this distinction when several operations share a recursive
-shape or when producer-consumer fusion removes a measured intermediate. Direct
-recursion is clearer for one local operation. Do not introduce recursion-scheme
-libraries, fixed-point encodings, or advanced types without repeated pressure.
+The first benefit is ownership: the traversal owns recursion while clients
+supply non-recursive production or consumption steps. A hylomorphism may also
+fuse a producer and consumer without materializing the conceptual intermediate.
+The book then shows a well-typed fold over an infinite structure that diverges
+and warns that Haskell examples are illustrations rather than proofs
+([`12-Coalgebras.tex::The impedance mismatch`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/12-Coalgebras.tex#L209-L254)).
+
+**Transfer:** centralize recursion when several operations share its shape or
+when fusion removes a measured intermediate. Direct recursion is clearer for one
+local operation. Structural lawfulness does not prove termination,
+productivity, bounded memory, or acceptable complexity.
+
+### Focused updates earn composition through laws
+
+DaoFP derives a lens from `get` and `set`, then obtains three laws: setting the
+current focus changes nothing, getting after setting returns the new focus, and
+the last of two sets wins
+([`17-Comonads.tex::Lenses`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/17-Comonads.tex#L478-L569)).
+Its existential representation preserves an opaque residue while replacing the
+focus; nested lenses compose by combining their residues
+([`18-Ends.tex::Existential Lens`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/18-Ends.tex#L940-L1161)).
+
+**Transfer:** use a lawful focus when repeated nested reads and immutable updates
+must compose across representations. Test its round trips. A direct update
+function remains clearer for an ordinary record; profunctor optics and Tambara
+modules are explanatory machinery, not a default dependency.
 
 ## Transfer limits
 
 DaoFP develops a mathematical model in Haskell and category theory. Real systems
 still need explicit mutation ownership, resource bounds, transactions,
 authorization, compatibility, observability, cancellation, and cleanup. A law
-about pure values does not establish those operational properties.
+about pure values does not establish those operational properties. Nor does a
+lawful type establish termination, productivity, resource use, or runtime
+scheduling.
 
 Do not copy the costume. Start with ordinary domain types, named functions, and
 tests of observable laws. Reach for higher-kinded encodings, free structures,
@@ -155,11 +217,17 @@ repeated composition problem make them the simplest honest representation.
 
 - [`DaoFP.tex`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/DaoFP.tex)
   owns the book assembly and chapter order.
-- Chapters 1-6 develop composition and algebraic data construction.
-- Chapters 8-10 develop structure-preserving mappings, naturality, universal
-  constructions, and adjunctions.
-- Chapters 11-12 develop recursive algebras and coalgebras.
-- Chapters 13-15 develop explicit effects and their parallel or sequential
-  composition.
-- Chapters 16-22 continue into advanced categorical and dependent-type
-  machinery; they are source context, not default transfer guidance.
+
+Read only the tier justified by the target pressure:
+
+| Tier           | Chapters | Use for                                                                       |
+| -------------- | -------- | ----------------------------------------------------------------------------- |
+| Default        | 1-9      | Composition, algebraic shape, construction, observation, laws, and genericity |
+| Evidence-gated | 10-15    | Free construction, defunctionalization, recursion ownership, and effects      |
+| Specialized    | 16-22    | Comonadic context, optics, Kan extensions, enrichment, and dependent types    |
+
+Within the specialized tier, chapter 17 supplies the practical lens laws and
+chapter 22 sharpens the distinction between definitional equality,
+propositionally proven equality, and isomorphism. The remaining machinery mainly
+explains representation equivalences and composition; do not load it merely to
+name an application abstraction.
