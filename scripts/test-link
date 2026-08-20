@@ -90,6 +90,8 @@ ln -s "$root/skills/curated-wiki" "$HOME/.agents/skills/curated-wiki"
 ln -s "$root/skills/curated-wiki" "$HOME/.claude/skills/curated-wiki"
 ln -s "$root/skills/genius" "$HOME/.agents/skills/genius"
 ln -s "$root/skills/genius" "$HOME/.claude/skills/genius"
+ln -s "$root/skills/operator-crm" "$HOME/.agents/skills/operator-crm"
+ln -s "$root/skills/operator-crm" "$HOME/.claude/skills/operator-crm"
 check "relinking an existing tree succeeds" "$(exit_status_of_link)" "0"
 assert_every_projection_linked "after relink"
 check "removes retired .agents implementation link" \
@@ -112,6 +114,10 @@ check "removes retired .agents genius link" \
   "$(path_state ".agents/skills/genius")" "missing"
 check "removes retired .claude genius link" \
   "$(path_state ".claude/skills/genius")" "missing"
+check "removes retired .agents operator-crm link" \
+  "$(path_state ".agents/skills/operator-crm")" "missing"
+check "removes retired .claude operator-crm link" \
+  "$(path_state ".claude/skills/operator-crm")" "missing"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed" >&2
