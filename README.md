@@ -90,9 +90,10 @@ The skill is explicit-only. Use
 
 ## Lens
 
-`lens` carries two deeply studied, revision-bound lenses: Tinygrad with George
-Hotz and contributors, and MQuickJS with Fabrice Bellard, Charlie Gordon, and
-contributors. Its small entrypoint selects one lens from target pressure, then
+`lens` carries three deeply studied, revision-bound lenses: Tinygrad with George
+Hotz and contributors, MQuickJS with Fabrice Bellard, Charlie Gordon, and
+contributors, and DaoFP by Bartosz Milewski. Its small entrypoint selects one
+lens from target pressure, then
 loads only that profile. The profiles retain decision criteria, mechanics,
 source paths, limitations, and optional reproducible worked traces.
 
