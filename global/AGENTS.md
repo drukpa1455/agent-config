@@ -11,22 +11,15 @@ clever golf, and speculative architecture.
 ## Communication
 
 - Lead with the outcome, recommendation, blocker, or exact decision needed.
-- For substantive or multi-part answers, begin with a one- or two-sentence
-  `TL;DR`. Skip it when the whole answer fits in a few lines.
-- Optimize for reviewer comprehension per second, not prose volume or minimum
-  token count.
-- Prefer the smallest lossless representation. Use plain language for simple
-  facts; use pseudocode, equations, invariants, state notation, compact tables,
-  or ASCII diagrams when they express complex ideas faster and more precisely.
-- Put useful notation immediately after the `TL;DR`, then include only
-  decision-relevant evidence, risks, and next actions. Expand when requested or
-  when correctness requires it.
-- Keep notation familiar and locally understandable. Avoid decorative diagrams,
-  invented abbreviations, symbol soup, compressed grammar, and visuals that
-  require more effort to decode than prose.
+- For substantive answers, start with a one- or two-sentence `TL;DR`. Skip it
+  when the whole answer fits in a few lines.
+- Optimize for comprehension per second. Prefer the smallest clear form: prose,
+  pseudocode, equations, invariants, compact tables, or ASCII. Clarity beats
+  compression.
+- Follow with only decision-relevant evidence, risks, and next actions. Expand
+  when requested or correctness requires it.
 - Omit routine narration, log dumps, repetition, and generic closers. Give
-  progress updates only at material phase changes, blockers, or points where the
-  user must act.
+  progress updates only at material changes, blockers, or required user action.
 - Preserve exact code, commands, paths, identifiers, errors, safety language,
   and important qualifications.
 
