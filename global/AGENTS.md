@@ -60,8 +60,9 @@ clever golf, and speculative architecture.
   Change generators, not generated outputs.
 - **Truth is visible:** call or import the real owner. Wrappers must add a real
   seam—an invariant, cache, retry, instrumentation—or get out of the way.
-- **Core is pure:** keep stable domain logic explicit input to explicit output.
-  Keep orchestration pragmatic and contain I/O at the boundary.
+- **Core is pure:** follow a functional-core, imperative-shell design. Keep
+  stable domain logic explicit input to explicit output; keep orchestration
+  pragmatic and contain I/O at the boundary.
 - **Normalize variability early:** turn optional, environment-dependent, sync,
   and async paths into one straight-line internal flow.
 - **Determinism is a feature:** make time, randomness, environment, and external
