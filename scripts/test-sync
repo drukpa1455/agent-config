@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+sync="$root/scripts/sync"
+policy="$root/global/AGENTS.md"
+temporary=$(mktemp -d)
+trap 'rm -rf "$temporary"' EXIT
+
+repository="$temporary/repository"
+git init -q "$repository"
+
+"$sync" "$repository" >/dev/null
+cmp "$policy" "$repository/AGENTS.md"
+
+"$sync" "$repository" >/dev/null
+cmp "$policy" "$repository/AGENTS.md"
+
+mkdir "$repository/nested"
+if "$sync" "$repository/nested" >/dev/null 2>&1; then
+  echo "accepted a path below the repository root" >&2
+  exit 1
+fi
+
+if "$sync" "$temporary/missing" >/dev/null 2>&1; then
+  echo "accepted a missing repository" >&2
+  exit 1
+fi
+
+linked="$temporary/linked"
+outside="$temporary/outside"
+git init -q "$linked"
+printf 'keep\n' > "$outside"
+ln -s "$outside" "$linked/AGENTS.md"
+if "$sync" "$linked" >/dev/null 2>&1; then
+  echo "followed a symbolic AGENTS.md" >&2
+  exit 1
+fi
+[ "$(cat "$outside")" = keep ]
+
+echo "sync projection passed"

@@ -9,6 +9,8 @@ AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
+scripts/sync                 explicit repository policy projection
+scripts/test-sync            projection proof against throwaway repositories
 skills/wiki/                 owner-controlled knowledge curation
 skills/lens/                 source-backed engineering lenses
 skills/spec/                 grounded specifications and delivery graphs
@@ -53,6 +55,19 @@ git -C ~/src/agent-config pull --ff-only
 ```
 
 Unattended pulls are intentionally excluded because skills and global instructions can execute policy and code.
+
+## Share the policy with a repository
+
+Repositories whose `AGENTS.md` is an exact projection of the global policy can
+sync it explicitly:
+
+```sh
+~/src/agent-config/scripts/sync ~/src/project-a ~/src/project-b
+```
+
+The command writes only `AGENTS.md`. It does not fetch, stage, commit, or push.
+Repository-specific acceptance rules belong in `CONTRIBUTING.md` so the shared
+policy remains one exact file.
 
 ## Wiki
 
@@ -158,6 +173,10 @@ skill's first-run setup. Setup installs pinned npm dependencies and Chrome for
 Testing into local user storage; it never stores profiles or credentials in Git.
 
 See [`skills/browse/SKILL.md`](skills/browse/SKILL.md).
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License
 
