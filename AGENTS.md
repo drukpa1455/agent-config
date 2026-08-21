@@ -10,6 +10,8 @@ and Codex. Read `README.md` before changing either surface.
   stay inside that package.
 - `scripts/link` owns local projection into `~/.agents`, `~/.pi`, `~/.codex`, and
   `~/.claude`. `scripts/test-link` proves that projection against a throwaway home.
+- `scripts/sync` owns explicit projection into repository roots.
+  `scripts/test-sync` proves that projection without touching a real repository.
 - Installed links and user-local runtime/profile state are projections, not
   repository truth.
 
@@ -30,6 +32,6 @@ and Codex. Read `README.md` before changing either surface.
 
 For changed Markdown or YAML, run Prettier and markdownlint with the repository's
 existing line-length exception. Validate local links, skill discovery, and the
-exact changed-path scope. Changes to `scripts/link` also require isolated-home
-idempotence, unmanaged-entry refusal, and preservation tests before applying it
-locally.
+exact changed-path scope. Changes to `scripts/link` or `scripts/sync` require
+their isolated projection tests before applying them to a real home or
+repository.
