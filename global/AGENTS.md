@@ -97,9 +97,10 @@ clever golf, and speculative architecture.
 ## Delivery
 
 - A request to implement or fix authorizes inspection, isolated editing, and
-  verification within scope. Commit, push, review, merge, and cleanup only when
-  the user asks to land or work through the outcome, invokes an explicit delivery
-  workflow, or project guidance defines that path.
+  verification within scope. Perform explicitly requested Git or GitHub actions
+  and stop at the requested boundary. Complete the full delivery lifecycle only
+  when the user asks to land or work through the outcome, invokes an explicit
+  delivery workflow, or project guidance defines that path.
 - Treat the primary checkout and worktrees outside the current task as
   user-owned. Keep the primary checkout on trunk and read-only: never edit,
   switch branches, pull, reset, stash, clean, generate files, install
@@ -115,10 +116,10 @@ clever golf, and speculative architecture.
   dependencies; work is landed only when the complete chain reaches the
   repository's default trunk. Absorb compatible trunk drift before review and
   bind reviews to exact revisions.
-- After merge, remove the owned worktree and delete its merged task branches.
-  Never use `git stash`; preserve unmerged work and report its exact worktree,
-  branch, revision, status, and blocker. Bind production actions to exact
-  revisions.
+- After landing, remove owned worktrees and delete merged task branches only when
+  no open work depends on them. Never use `git stash`; preserve unmerged work and
+  report its exact worktree, branch, revision, status, and blocker. Bind
+  production actions to exact revisions.
 
 ## Evidence
 
