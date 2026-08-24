@@ -101,24 +101,24 @@ clever golf, and speculative architecture.
   and stop at the requested boundary. Complete the full delivery lifecycle only
   when the user asks to land or work through the outcome, invokes an explicit
   delivery workflow, or project guidance defines that path.
-- Treat the primary checkout and worktrees outside the current task as
+- Treat the primary checkout and task workspaces outside the current task as
   user-owned. Keep the primary checkout on trunk and read-only: never edit,
   switch branches, pull, reset, stash, clean, generate files, install
   dependencies, or run services there.
-- Every agent-authored change uses one uniquely named task branch and dedicated
-  worktree assigned to that task. Use the repository's isolation entrypoint and
-  worktree root when available. Each worktree has one writer; never modify or
-  remove another agent's worktree or branch unless ownership is explicitly
-  transferred.
+- Every agent-authored change uses one uniquely named task branch in a dedicated
+  worktree or repository-provided isolated workspace assigned to that task. Use
+  the repository's isolation entrypoint and workspace root when available. Each
+  task workspace has one writer; never modify or remove another agent's workspace
+  or branch unless ownership is explicitly transferred.
 - For authorized delivery, take each coherent change through commit, push, a
   pull request, required review and checks, merge, and verification of the exact
   landed revision from fresh trunk. Use stacked pull requests only for real
   dependencies; work is landed only when the complete chain reaches the
   repository's default trunk. Absorb compatible trunk drift before review and
   bind reviews to exact revisions.
-- After landing, remove owned worktrees and delete merged task branches only when
-  no open work depends on them. Never use `git stash`; preserve unmerged work and
-  report its exact worktree, branch, revision, status, and blocker. Bind
+- After landing, remove owned task workspaces and delete merged task branches
+  only when no open work depends on them. Never use `git stash`; preserve
+  unmerged work and report its exact workspace, branch, revision, status, and blocker. Bind
   production actions to exact revisions.
 
 ## Evidence
