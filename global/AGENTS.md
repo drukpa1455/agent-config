@@ -97,10 +97,9 @@ clever golf, and speculative architecture.
 ## Delivery
 
 - A request to implement or fix authorizes inspection, isolated editing, and
-  verification within scope. Unless the user requests local-only work, deliver
-  each coherent change through commit, push, a pull request into the repository's
-  default trunk, required review and checks, merge, and verification of the exact
-  landed revision from fresh trunk.
+  verification within scope. Commit, push, review, merge, and cleanup only when
+  the user asks to land or work through the outcome, invokes an explicit delivery
+  workflow, or project guidance defines that path.
 - Treat the primary checkout and worktrees outside the current task as
   user-owned. Keep the primary checkout on trunk and read-only: never edit,
   switch branches, pull, reset, stash, clean, generate files, install
@@ -110,10 +109,13 @@ clever golf, and speculative architecture.
   worktree root when available. Each worktree has one writer; never modify or
   remove another agent's worktree or branch unless ownership is explicitly
   transferred.
-- Absorb compatible trunk drift before review. After merge, verify the landed
-  revision, remove the owned worktree, and delete its merged task branches. Never
-  use `git stash`; preserve unmerged work and report its exact worktree, branch,
-  revision, status, and blocker. Bind reviews and production actions to exact
+- For authorized delivery, take each coherent change through commit, push, a
+  pull request into the repository's default trunk, required review and checks,
+  merge, and verification of the exact landed revision from fresh trunk. Absorb
+  compatible trunk drift before review and bind reviews to exact revisions.
+- After merge, remove the owned worktree and delete its merged task branches.
+  Never use `git stash`; preserve unmerged work and report its exact worktree,
+  branch, revision, status, and blocker. Bind production actions to exact
   revisions.
 
 ## Evidence
