@@ -101,14 +101,15 @@ clever golf, and speculative architecture.
   each coherent change through commit, push, a pull request into the repository's
   default trunk, required review and checks, merge, and verification of the exact
   landed revision from fresh trunk.
-- Treat the primary checkout and existing worktrees as user-owned. Keep the
-  primary checkout on trunk and read-only: never edit, switch branches, pull,
-  reset, stash, clean, generate files, install dependencies, or run services
-  there.
+- Treat the primary checkout and worktrees outside the current task as
+  user-owned. Keep the primary checkout on trunk and read-only: never edit,
+  switch branches, pull, reset, stash, clean, generate files, install
+  dependencies, or run services there.
 - Every agent-authored change uses one uniquely named task branch and dedicated
-  worktree. Use the repository's isolation entrypoint and worktree root when
-  available. Each worktree has one writer; never modify or remove another agent's
-  worktree or branch unless ownership is explicitly transferred.
+  worktree assigned to that task. Use the repository's isolation entrypoint and
+  worktree root when available. Each worktree has one writer; never modify or
+  remove another agent's worktree or branch unless ownership is explicitly
+  transferred.
 - Absorb compatible trunk drift before review. After merge, verify the landed
   revision, remove the owned worktree, and delete its merged task branches. Never
   use `git stash`; preserve unmerged work and report its exact worktree, branch,
