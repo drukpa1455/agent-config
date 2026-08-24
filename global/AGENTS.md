@@ -110,9 +110,11 @@ clever golf, and speculative architecture.
   remove another agent's worktree or branch unless ownership is explicitly
   transferred.
 - For authorized delivery, take each coherent change through commit, push, a
-  pull request into the repository's default trunk, required review and checks,
-  merge, and verification of the exact landed revision from fresh trunk. Absorb
-  compatible trunk drift before review and bind reviews to exact revisions.
+  pull request, required review and checks, merge, and verification of the exact
+  landed revision from fresh trunk. Use stacked pull requests only for real
+  dependencies; work is landed only when the complete chain reaches the
+  repository's default trunk. Absorb compatible trunk drift before review and
+  bind reviews to exact revisions.
 - After merge, remove the owned worktree and delete its merged task branches.
   Never use `git stash`; preserve unmerged work and report its exact worktree,
   branch, revision, status, and blocker. Bind production actions to exact
