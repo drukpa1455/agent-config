@@ -97,16 +97,23 @@ clever golf, and speculative architecture.
 ## Delivery
 
 - A request to implement or fix authorizes inspection, isolated editing, and
-  verification within scope. Continue through commit, push, review, merge, and
-  cleanup when the user asks to land or work through the outcome, or when project
-  guidance defines that delivery path.
-- Keep the primary checkout on trunk and read-only for agents. Use a dedicated
-  worktree for agent-authored changes unless the repository provides another safe
-  isolation method; use its entrypoint and guard when available.
-- Do not use `git stash` in a shared repository. Preserve work in its owning
-  worktree or branch, absorb compatible drift, and keep landed changes coherent,
-  single-purpose, and independently verifiable.
-- Bind reviews and production actions to exact revisions.
+  verification within scope. Unless the user requests local-only work, deliver
+  each coherent change through commit, push, a pull request into the repository's
+  default trunk, required review and checks, merge, and verification of the exact
+  landed revision from fresh trunk.
+- Treat the primary checkout and existing worktrees as user-owned. Keep the
+  primary checkout on trunk and read-only: never edit, switch branches, pull,
+  reset, stash, clean, generate files, install dependencies, or run services
+  there.
+- Every agent-authored change uses one uniquely named task branch and dedicated
+  worktree. Use the repository's isolation entrypoint and worktree root when
+  available. Each worktree has one writer; never modify or remove another agent's
+  worktree or branch unless ownership is explicitly transferred.
+- Absorb compatible trunk drift before review. After merge, verify the landed
+  revision, remove the owned worktree, and delete its merged task branches. Never
+  use `git stash`; preserve unmerged work and report its exact worktree, branch,
+  revision, status, and blocker. Bind reviews and production actions to exact
+  revisions.
 
 ## Evidence
 
