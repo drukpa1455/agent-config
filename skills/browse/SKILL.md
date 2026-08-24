@@ -1,13 +1,18 @@
 ---
 name: browse
-description: Control a headed browser when the current harness lacks an equivalent surface or the task needs this skill's persistent profile, live dashboard, or authorized Patchright route. Prefer a harness-native browser for ordinary navigation when it provides the needed capability.
+description: Control the canonical persistent headed browser through this skill's Playwright or Patchright scripts. Use explicitly when the user invokes $browse for its persistent profiles, live dashboard, or authorized social-media browser work.
+disable-model-invocation: true
 ---
 
 # Browse
 
-Provide one portable browser surface across shell-capable harnesses. Profiles,
-downloads, and runtime state stay outside repositories. Resolve `$SKILL_DIR`
-from this loaded file and set it in each shell command; never guess its path.
+Loading this skill selects its canonical browser surface. Use only this package's
+Playwright or Patchright scripts; never delegate to another browser skill,
+harness-native browser, or browser CLI.
+
+Profiles, downloads, and runtime state stay outside repositories. Resolve
+`$SKILL_DIR` from this loaded file and set it in each shell command; never guess
+its path.
 
 ## Route
 
