@@ -109,7 +109,9 @@ clever golf, and speculative architecture.
 - Treat the primary checkout and task workspaces outside the current task as
   user-owned. Keep the primary checkout on trunk and read-only: never edit,
   switch branches, pull, reset, stash, clean, generate files, install
-  dependencies, or run services there.
+  dependencies, or run services there. The sole exception is a repository-owned,
+  lock-serialized projection updater required by project guidance; it may
+  fast-forward clean trunk and refresh its projections after landing.
 - Every agent-authored change uses one uniquely named task branch in a leased
   worktree or repository-provided isolated workspace. Create it through the
   repository's isolation entrypoint and canonical workspace root when available.

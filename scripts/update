@@ -1,0 +1,131 @@
+#!/bin/sh
+set -eu
+
+fail() {
+  echo "update: $1" >&2
+  exit 1
+}
+
+timed() {
+  python3 -c '
+import os, signal, subprocess, sys
+timeout, command = float(sys.argv[1]), sys.argv[2:]
+process = subprocess.Popen(command, start_new_session=True)
+interrupted = [None]
+signals = (signal.SIGHUP, signal.SIGINT, signal.SIGTERM)
+def interrupt(number, _frame):
+    interrupted[0] = number
+    raise InterruptedError
+def stop():
+    for number in signals:
+        signal.signal(number, signal.SIG_IGN)
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+        process.wait(timeout=1)
+    except ProcessLookupError:
+        process.wait()
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.wait()
+for number in signals:
+    signal.signal(number, interrupt)
+try:
+    status = process.wait(timeout=timeout)
+except subprocess.TimeoutExpired:
+    stop()
+    print("update: remote command timed out", file=sys.stderr)
+    status = 124
+except BaseException:
+    stop()
+    if interrupted[0]:
+        raise SystemExit(128 + interrupted[0])
+    raise
+raise SystemExit(status)
+' "${UPDATE_TIMEOUT:-120}" "$@"
+}
+
+on_trunk() {
+  git -C "$primary" rev-list --first-parent "origin/$default" |
+    awk -v target="$1" '$0 == target { found = 1 } END { exit !found }'
+}
+
+root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd -P)
+common=$(git -C "$root" rev-parse --git-common-dir 2>/dev/null) ||
+  fail "not inside the agent-config repository"
+case $common in
+  /*) ;;
+  *) common="$root/$common" ;;
+esac
+common=$(CDPATH= cd -- "$common" && pwd -P)
+lock="$common/agent-config-update.lock"
+exec 9>"$lock"
+python3 -c '
+import fcntl
+try:
+    fcntl.flock(9, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    raise SystemExit(1)
+' || fail "another update is active"
+scratch=
+release() {
+  [ -z "$scratch" ] || rm -rf "$scratch"
+}
+trap release EXIT
+trap 'exit 1' HUP INT TERM
+
+primary=$(
+  git -C "$root" worktree list --porcelain |
+    sed -n 's/^worktree //p' |
+    sed -n '1p'
+)
+[ -n "$primary" ] || fail "Git reported no primary checkout"
+primary=$(CDPATH= cd -- "$primary" && pwd -P)
+
+[ -z "$(git -C "$root" status --porcelain --ignored)" ] ||
+  fail "invoking worktree is not clean"
+[ -z "$(git -C "$primary" status --porcelain --ignored)" ] ||
+  fail "primary checkout is not clean"
+
+remote_head=$(
+  GIT_TERMINAL_PROMPT=0 timed git -C "$primary" ls-remote --symref origin HEAD
+) || fail "cannot query origin's default branch"
+default=$(printf '%s\n' "$remote_head" | awk '$1 == "ref:" && $3 == "HEAD" {
+  sub("^refs/heads/", "", $2); print $2; exit
+}')
+[ -n "$default" ] || fail "cannot determine origin's default branch"
+current=$(git -C "$primary" branch --show-current)
+[ "$current" = "$default" ] || fail "primary checkout is not on $default"
+
+refspec="+refs/heads/$default:refs/remotes/origin/$default"
+GIT_TERMINAL_PROMPT=0 timed git -C "$primary" -c core.hooksPath=/dev/null \
+  fetch --quiet origin "$refspec"
+primary_head=$(git -C "$primary" rev-parse HEAD)
+on_trunk "$primary_head" || fail "primary checkout is not on origin/$default"
+target=$(git -C "$primary" rev-parse "origin/$default")
+if [ "$root" != "$primary" ]; then
+  target=$(git -C "$root" rev-parse HEAD)
+  on_trunk "$target" ||
+    fail "invoking revision is not on origin/$default first-parent history"
+fi
+final=$primary_head
+if ! git -C "$primary" merge-base --is-ancestor "$target" "$final"; then
+  git -C "$primary" merge-base --is-ancestor "$final" "$target" ||
+    fail "primary checkout has diverged from $target"
+  final=$target
+fi
+scratch=$(mktemp -d)
+git -C "$primary" archive "$final" | tar -x -C "$scratch"
+"$scratch/scripts/link" --check "$primary" >/dev/null
+rm -rf "$scratch"
+scratch=
+if [ "$final" != "$primary_head" ]; then
+  git -C "$primary" -c core.hooksPath=/dev/null \
+    merge --quiet --ff-only "$final"
+fi
+"$primary/scripts/link" >/dev/null
+
+revision=$(git -C "$primary" rev-parse --short HEAD)
+echo "updated agent config to $revision"
