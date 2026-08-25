@@ -1,17 +1,54 @@
 #!/bin/sh
 set -eu
 
-root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
-policy="$root/global/AGENTS.md"
+root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd -P)
+mode=${1:-link}
+case $mode in
+  link) projection=$root ;;
+  --check) projection=${2:-$root} ;;
+  *) echo "usage: link [--check [projection-root]]" >&2; exit 1 ;;
+esac
+policy="$projection/global/AGENTS.md"
+
+same_link() {
+  source=$1
+  destination=$2
+  target=$(readlink "$destination") || return 1
+  [ "$target" = "$source" ] && return
+  case $target in
+    /*) ;;
+    *) target="$(dirname "$destination")/$target" ;;
+  esac
+  [ -d "$(dirname "$target")" ] || return 1
+  target=$(CDPATH= cd -- "$(dirname "$target")" && pwd -P)/$(basename "$target")
+  [ "$target" = "$source" ]
+}
+
+check_parent() {
+  parent=$(dirname "$1")
+  while [ ! -e "$parent" ] && [ ! -L "$parent" ]; do
+    parent=$(dirname "$parent")
+  done
+  [ -d "$parent" ] || {
+    echo "refusing non-directory projection parent $parent" >&2
+    exit 1
+  }
+}
+
+check_write() {
+  check_parent "$1"
+  [ -w "$parent" ] && [ -x "$parent" ] || {
+    echo "refusing unwritable projection parent $parent" >&2
+    exit 1
+  }
+}
 
 link_file() {
   source=$1
   destination=$2
 
-  mkdir -p "$(dirname "$destination")"
-
   if [ -L "$destination" ]; then
-    [ "$(readlink "$destination")" = "$source" ] || {
+    same_link "$source" "$destination" || {
       echo "refusing to replace $destination" >&2
       exit 1
     }
@@ -23,6 +60,9 @@ link_file() {
     exit 1
   }
 
+  check_write "$destination"
+  [ "$mode" != --check ] || return 0
+  mkdir -p "$(dirname "$destination")"
   ln -s "$source" "$destination"
 }
 
@@ -30,21 +70,34 @@ link_skills() {
   skills_dir=$1
 
   if [ -L "$skills_dir" ]; then
-    [ "$(readlink "$skills_dir")" = "$root/skills" ] || {
+    same_link "$projection/skills" "$skills_dir" || {
       echo "refusing to replace $skills_dir" >&2
       exit 1
     }
+    if [ "$mode" = --check ]; then
+      check_write "$skills_dir"
+      return 0
+    fi
     rm "$skills_dir"
   fi
 
+  if [ ! -e "$skills_dir" ]; then
+    check_write "$skills_dir"
+    [ "$mode" != --check ] || return 0
+  fi
   mkdir -p "$skills_dir"
 
   for destination in "$skills_dir"/*; do
     [ -e "$destination" ] || [ -L "$destination" ] || continue
-    source="$root/skills/$(basename "$destination")"
+    skill=$(basename "$destination")
+    source="$projection/skills/$skill"
 
-    if [ -L "$destination" ] && [ "$(readlink "$destination")" = "$source" ]; then
-      if [ -f "$source/SKILL.md" ]; then
+    if [ -L "$destination" ] && same_link "$source" "$destination"; then
+      if [ -f "$root/skills/$skill/SKILL.md" ]; then
+        continue
+      fi
+      if [ "$mode" = --check ]; then
+        check_write "$destination"
         continue
       fi
       rm "$destination"
@@ -57,7 +110,8 @@ link_skills() {
 
   for source in "$root"/skills/*; do
     [ -f "$source/SKILL.md" ] || continue
-    link_file "$source" "$skills_dir/$(basename "$source")"
+    skill=$(basename "$source")
+    link_file "$projection/skills/$skill" "$skills_dir/$skill"
   done
 }
 
@@ -68,4 +122,8 @@ link_file "$policy" "$HOME/.pi/agent/AGENTS.md"
 link_file "$policy" "$HOME/.codex/AGENTS.md"
 link_file "$policy" "$HOME/.claude/CLAUDE.md"
 
-echo "linked agent config from $root"
+if [ "$mode" = --check ]; then
+  echo "checked agent config links for $projection"
+else
+  echo "linked agent config from $root"
+fi

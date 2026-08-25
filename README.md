@@ -9,6 +9,8 @@ AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
+scripts/update               guarded local checkout and link refresh
+scripts/test-update          update proof against throwaway repositories
 scripts/sync                 explicit repository policy projection
 scripts/test-sync            projection proof against throwaway repositories
 skills/wiki/                 owner-controlled knowledge curation
@@ -48,13 +50,19 @@ reads it under the name its own harness loads:
 Run `/reload` in Pi after changes; start a new Codex or Claude Code session to
 reload them.
 
-Update explicitly after review:
+Update explicitly after review from any worktree:
 
 ```sh
-git -C ~/src/agent-config pull --ff-only
+scripts/update
 ```
 
-Unattended pulls are intentionally excluded because skills and global instructions can execute policy and code.
+The updater serializes concurrent calls, requires a clean primary checkout on
+the remote's live default branch, fast-forwards it without hooks, and refreshes
+all links. From the primary it installs current remote trunk; from another
+worktree it advances no farther than that worktree's landed revision. It refuses
+dirty, divergent, non-trunk, or unlanded state. Unattended updates remain
+excluded because skills and global instructions can execute policy and code.
+The command requires Git, Python 3.9 or newer, and standard `tar`.
 
 ## Share the policy with a repository
 

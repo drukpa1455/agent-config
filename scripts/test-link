@@ -60,6 +60,31 @@ assert_every_projection_linked() {
 }
 
 isolated_home
+"$link" --check >/dev/null
+check "check mode leaves policy absent" \
+  "$(path_state ".codex/AGENTS.md")" "missing"
+check "check mode leaves skills absent" \
+  "$(path_state ".agents/skills")" "missing"
+
+isolated_home
+touch "$HOME/.codex"
+status=0
+"$link" --check >/dev/null 2>&1 || status=$?
+check "check mode rejects a non-directory parent" "$status" "1"
+check "check mode preserves that parent" \
+  "$(path_state ".codex")" "present"
+
+isolated_home
+mkdir "$HOME/.codex"
+chmod 555 "$HOME/.codex"
+status=0
+"$link" --check >/dev/null 2>&1 || status=$?
+chmod 755 "$HOME/.codex"
+check "check mode rejects an unwritable parent" "$status" "1"
+check "check mode leaves that parent empty" \
+  "$(path_state ".codex/AGENTS.md")" "missing"
+
+isolated_home
 check "first run succeeds" "$(exit_status_of_link)" "0"
 assert_every_projection_linked "first run"
 check "second run succeeds" "$(exit_status_of_link)" "0"
@@ -118,6 +143,26 @@ check "removes retired .agents operator-crm link" \
   "$(path_state ".agents/skills/operator-crm")" "missing"
 check "removes retired .claude operator-crm link" \
   "$(path_state ".claude/skills/operator-crm")" "missing"
+
+isolated_home
+logical="$HOME/source"
+ln -s "$root" "$logical"
+for destination in $policy_destinations; do
+  mkdir -p "$HOME/$(dirname "$destination")"
+  ln -s "$logical/global/AGENTS.md" "$HOME/$destination"
+done
+for skills_dir in $skills_destinations; do
+  mkdir -p "$HOME/$skills_dir"
+  for skill in $managed_skills; do
+    ln -s "$logical/skills/$skill" "$HOME/$skills_dir/$skill"
+  done
+  ln -s "$logical/skills/retired" "$HOME/$skills_dir/retired"
+done
+check "accepts links through a logical checkout path" "$(exit_status_of_link)" "0"
+check "removes a retired logical .agents link" \
+  "$(path_state ".agents/skills/retired")" "missing"
+check "removes a retired logical .claude link" \
+  "$(path_state ".claude/skills/retired")" "missing"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed" >&2
