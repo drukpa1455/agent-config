@@ -1,0 +1,241 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname "$0")/../../.." && pwd)
+work="$root/skills/implement/scripts/work"
+temporary=$(mktemp -d)
+trap 'rm -rf "$temporary"' EXIT HUP INT TERM
+home="$temporary/home"
+remote="$temporary/remote.git"
+primary="$temporary/source"
+mkdir -p "$home"
+
+git init --quiet --bare --initial-branch=main "$remote"
+git init --quiet --initial-branch=main "$primary"
+git -C "$primary" config user.email test@example.com
+git -C "$primary" config user.name Test
+printf 'seed\n' > "$primary/README.md"
+printf '.env\n' > "$primary/.gitignore"
+git -C "$primary" add README.md .gitignore
+git -C "$primary" commit --quiet -m seed
+git -C "$primary" config "url.$remote.insteadOf" https://example.test/team/remote.git
+git -C "$primary" remote add origin https://example.test/team/remote.git
+git -C "$primary" push --quiet -u origin main
+git -C "$primary" remote set-head origin main
+git -C "$primary" push --quiet origin main:refs/heads/task/taken
+
+ok() {
+  printf 'ok   %s\n' "$1"
+}
+
+rejects() {
+  description=$1
+  shift
+  if "$@" >"$temporary/out" 2>"$temporary/err"; then
+    printf 'not ok   %s\n' "$description" >&2
+    exit 1
+  fi
+  ok "$description"
+}
+
+done_at() {
+  destination=$1
+  (cd "$destination" && HOME="$home" "$work" done)
+}
+
+new_at() {
+  destination=$1
+  task=$2
+  (cd "$destination" && HOME="$home" "$work" new "$task")
+}
+
+git -C "$primary" switch --quiet -c feature
+rejects "new refuses a non-trunk primary" new_at "$primary" wrong-base
+git -C "$primary" switch --quiet main
+
+workspace=$(new_at "$primary" first)
+[ "$workspace" = "$home/.worktrees/example.test/team/remote/first" ]
+[ "$(git -C "$workspace" branch --show-current)" = task/first ]
+ok "new creates the canonical task worktree and branch"
+
+rejects "new rejects path-like task names" new_at "$primary" ../escape
+rejects "new refuses an existing remote task branch" new_at "$primary" taken
+rejects "new refuses a duplicate task" new_at "$primary" first
+rejects "new refuses a task worktree as source" new_at "$workspace" second
+rejects "done refuses the primary checkout" done_at "$primary"
+
+foreign="$home/.worktrees/foreign"
+git -C "$primary" worktree add --quiet -b foreign "$foreign" origin/main
+rejects "done refuses a foreign worktree" done_at "$foreign"
+git -C "$primary" worktree remove "$foreign"
+git -C "$primary" branch -D foreign >/dev/null
+
+printf 'secret\n' > "$workspace/.env"
+rejects "done preserves ignored work" done_at "$workspace"
+rm "$workspace/.env"
+
+printf 'change\n' >> "$workspace/README.md"
+rejects "done preserves dirty work" done_at "$workspace"
+git -C "$workspace" add README.md
+git -C "$workspace" commit --quiet -m change
+head=$(git -C "$workspace" rev-parse HEAD)
+git -C "$workspace" push --quiet -u origin task/first
+
+git -C "$primary" commit --quiet --allow-empty -m merge
+merge=$(git -C "$primary" rev-parse HEAD)
+git -C "$primary" push --quiet origin main
+
+mkdir -p "$temporary/bin"
+cat > "$temporary/bin/gh" <<'SH'
+#!/bin/sh
+case " $* " in
+  *" --state merged "*)
+    printf '[{"headRefOid":"%s",' "$TEST_HEAD"
+    printf '"mergeCommit":{"oid":"%s"},' "$TEST_MERGE"
+    printf '"baseRefName":"stack"}'
+    if [ -n "${TEST_EXTRA_MERGE:-}" ]; then
+      printf ',{"headRefOid":"%s",' "$TEST_HEAD"
+      printf '"mergeCommit":{"oid":"%s"}}' "$TEST_EXTRA_MERGE"
+    fi
+    printf ']\n'
+    ;;
+  *" --state open "*)
+    if [ "${TEST_OPEN:-0}" -eq 1 ]; then
+      printf '[{"number":2}]\n'
+    else
+      printf '[]\n'
+    fi
+    ;;
+  *)
+    exit 2
+    ;;
+esac
+SH
+chmod +x "$temporary/bin/gh"
+
+done_as() {
+  destination=$1
+  expected_head=$2
+  expected_merge=$3
+  open=${4:-0}
+  extra_merge=${5:-}
+  (
+    cd "$destination"
+    HOME="$home" \
+      PATH="$temporary/bin:$PATH" \
+      TEST_HEAD="$expected_head" \
+      TEST_MERGE="$expected_merge" \
+      TEST_OPEN="$open" \
+      TEST_EXTRA_MERGE="$extra_merge" \
+      "$work" done
+  )
+}
+
+rejects \
+  "done requires the exact merged head" \
+  done_as "$workspace" 0000000000000000000000000000000000000000 "$merge"
+rejects "done requires the merge on trunk" done_as "$workspace" "$head" "$head"
+rejects \
+  "done preserves an open dependent pull request" \
+  done_as "$workspace" "$head" "$merge" 1
+
+git -C "$primary" branch task/dependent task/first
+rejects "done preserves an unattached dependent branch" done_as "$workspace" "$head" "$merge"
+git -C "$primary" branch -D task/dependent >/dev/null
+
+git -C "$primary" merge --quiet --no-ff task/first -m landed
+merge=$(git -C "$primary" rev-parse HEAD)
+git -C "$primary" push --quiet origin main
+tree=$(git -C "$primary" rev-parse main^{tree})
+future=$(printf 'future\n' | git -C "$primary" commit-tree "$tree" -p main)
+git -C "$primary" update-ref refs/heads/future "$future"
+
+git -C "$primary" push --quiet --force origin main:refs/heads/task/first
+rejects "done preserves a changed remote task branch" done_as "$workspace" "$head" "$merge"
+git -C "$primary" push --quiet --force origin "$head":refs/heads/task/first
+
+push_remote="$temporary/push.git"
+git init --quiet --bare --initial-branch=main "$push_remote"
+git -C "$primary" push --quiet "$push_remote" "$head":refs/heads/task/first
+git -C "$primary" push --quiet origin :refs/heads/task/first
+git -C "$primary" config remote.origin.pushurl "$push_remote"
+
+second_push="$temporary/second-push.git"
+git init --quiet --bare --initial-branch=main "$second_push"
+git -C "$primary" config --add remote.origin.pushurl "$second_push"
+rejects "done refuses multiple push remotes" done_as "$workspace" "$head" "$merge"
+git -C "$primary" ls-remote --exit-code --heads "$push_remote" refs/heads/task/first >/dev/null
+git -C "$primary" config --unset-all remote.origin.pushurl
+git -C "$primary" config remote.origin.pushurl "$push_remote"
+
+git -C "$primary" worktree lock "$workspace"
+rejects "done preserves a locked worktree" done_as "$workspace" "$head" "$merge"
+git -C "$primary" ls-remote --exit-code --heads "$push_remote" refs/heads/task/first >/dev/null
+git -C "$primary" worktree unlock "$workspace"
+
+result=$(
+  cd "$workspace"
+  HOME="$home" \
+    PATH="$temporary/bin:$PATH" \
+    TEST_HEAD="$head" \
+    TEST_MERGE="$merge" \
+    TEST_EXTRA_MERGE="$head" \
+    "$work" done
+)
+physical_primary=$(CDPATH= cd -- "$primary" && pwd -P)
+[ "$result" = "$physical_primary" ]
+[ ! -e "$workspace" ]
+if git -C "$primary" show-ref --verify --quiet refs/heads/task/first; then
+  exit 1
+fi
+if git -C "$primary" ls-remote --exit-code --heads origin refs/heads/task/first >/dev/null; then
+  exit 1
+fi
+if git -C "$primary" ls-remote --exit-code --heads "$push_remote" refs/heads/task/first >/dev/null; then
+  exit 1
+fi
+ok "done accepts multiple merges and deletes from the push remote"
+git -C "$primary" branch -D future >/dev/null
+
+relative="$temporary/relative"
+relative_remote="$relative/remote.git"
+relative_primary="$relative/source"
+mkdir -p "$relative"
+git init --quiet --bare --initial-branch=main "$relative_remote"
+git init --quiet --initial-branch=main "$relative_primary"
+git -C "$relative_primary" config user.email test@example.com
+git -C "$relative_primary" config user.name Test
+printf 'seed\n' > "$relative_primary/README.md"
+git -C "$relative_primary" add README.md
+git -C "$relative_primary" commit --quiet -m seed
+git -C "$relative_primary" remote add origin ../remote.git
+git -C "$relative_primary" push --quiet -u origin main
+git -C "$relative_primary" remote set-head origin main
+relative_workspace=$(new_at "$relative_primary" relative)
+case "$relative_workspace" in
+  *'/remote.git/relative') ;;
+  *) exit 1 ;;
+esac
+rejects \
+  "relative origins retain one workspace identity" \
+  done_as "$relative_workspace" 0000000000000000000000000000000000000000 "$merge"
+if grep -Fq "workspace is not owned" "$temporary/err"; then
+  exit 1
+fi
+relative_head=$(git -C "$relative_workspace" rev-parse HEAD)
+done_as "$relative_workspace" "$relative_head" "$relative_head" >/dev/null
+[ ! -e "$relative_workspace" ]
+ok "done resolves a relative origin from primary"
+
+git -C "$relative_primary" branch trunk
+git --git-dir="$relative_remote" symbolic-ref HEAD refs/heads/trunk
+git -C "$relative_primary" push --quiet origin trunk
+git -C "$relative_primary" remote set-head origin main
+git -C "$relative_primary" switch --quiet trunk
+renamed_workspace=$(new_at "$relative_primary" renamed)
+[ "$(git -C "$renamed_workspace" rev-parse HEAD)" = "$(git -C "$relative_primary" rev-parse trunk)" ]
+ok "new reads the live remote default branch"
+git -C "$relative_primary" worktree remove "$renamed_workspace"
+git -C "$relative_primary" branch -D task/renamed >/dev/null
+
+printf 'all checks passed\n'
