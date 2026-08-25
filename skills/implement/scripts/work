@@ -1,0 +1,269 @@
+#!/usr/bin/env python3
+
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+from urllib.parse import quote
+
+
+def fail(message):
+    raise SystemExit(f"work: {message}")
+
+
+def run(*command, cwd=None, check=True):
+    try:
+        result = subprocess.run(
+            command,
+            cwd=cwd,
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+        )
+    except FileNotFoundError:
+        fail(f"command not found: {command[0]}")
+    except subprocess.TimeoutExpired:
+        fail(f"command timed out: {command[0]}")
+    if check and result.returncode:
+        fail(result.stderr.strip() or "command failed: " + " ".join(command))
+    return result
+
+
+def git(*arguments, cwd=None, check=True):
+    return run("git", *arguments, cwd=cwd, check=check)
+
+
+def repository():
+    result = git("rev-parse", "--show-toplevel", check=False)
+    if result.returncode:
+        fail("not inside a Git repository")
+    return Path(result.stdout.strip()).resolve()
+
+
+def primary(root):
+    for line in git("worktree", "list", "--porcelain", cwd=root).stdout.splitlines():
+        if line.startswith("worktree "):
+            return Path(line.removeprefix("worktree ")).resolve()
+    fail("Git reported no primary worktree")
+
+
+def default_base(root):
+    result = git("ls-remote", "--symref", "origin", "HEAD", cwd=primary(root))
+    for line in result.stdout.splitlines():
+        match = re.fullmatch(r"ref:\s+refs/heads/(.+)\s+HEAD", line)
+        if match:
+            return f"origin/{match.group(1)}"
+    fail("cannot determine origin's default branch")
+
+
+def refresh(base, root):
+    remote, separator, branch = base.partition("/")
+    if not separator or not branch:
+        fail(f"invalid default branch: {base}")
+    refspec = f"+refs/heads/{branch}:refs/remotes/{remote}/{branch}"
+    git("fetch", "--quiet", remote, refspec, cwd=primary(root))
+
+
+def identity(root):
+    url = git("config", "--get", "remote.origin.url", cwd=root).stdout.strip()
+    if "://" in url:
+        _, remainder = url.split("://", 1)
+        host, _, path = remainder.partition("/")
+        host = host.rsplit("@", 1)[-1]
+        parts = [host, *path.split("/")]
+        parts[-1] = parts[-1].removesuffix(".git")
+    else:
+        scp = re.fullmatch(r"(?:[^@/]+@)?([^:/]+):(.+)", url)
+        if scp:
+            parts = [scp.group(1), *scp.group(2).split("/")]
+            parts[-1] = parts[-1].removesuffix(".git")
+        else:
+            local = Path(url).expanduser()
+            if not local.is_absolute():
+                local = primary(root) / local
+            parts = ["local", *local.resolve().parts]
+    parts = [part for part in parts if part and part != "/"]
+    if len(parts) < 2:
+        fail("cannot derive repository identity from origin")
+    identity_parts = tuple(quote(part, safe="._-") for part in parts)
+    if any(part in {".", ".."} for part in identity_parts):
+        fail("origin has an unsafe repository identity")
+    return identity_parts
+
+
+def workspace_root():
+    root = Path(os.environ.get("WORKTREE_ROOT", Path.home() / ".worktrees")).expanduser()
+    if not root.is_absolute():
+        fail("WORKTREE_ROOT must be absolute")
+    return root
+
+
+def remote_head(root, branch):
+    targets = git(
+        "remote", "get-url", "--push", "--all", "origin", cwd=primary(root)
+    ).stdout.splitlines()
+    if len(targets) != 1:
+        fail("origin must have exactly one push URL")
+    result = git(
+        "ls-remote", "--exit-code", "--heads", targets[0], f"refs/heads/{branch}",
+        cwd=primary(root), check=False,
+    )
+    if result.returncode not in (0, 2):
+        fail(result.stderr.strip() or "remote branch lookup failed")
+    return result.stdout.partition("\t")[0] or None
+
+
+def new(task):
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", task):
+        fail("task must use lowercase words separated by hyphens")
+    root = repository()
+    if root != primary(root):
+        fail("run new from the primary checkout")
+    base = default_base(root)
+    current = git("branch", "--show-current", cwd=root).stdout.strip()
+    if current != base.partition("/")[2]:
+        fail("primary checkout is not on origin's default branch")
+    destination = workspace_root().joinpath(*identity(root), task)
+    branch = f"task/{task}"
+    if destination.exists() or destination.is_symlink():
+        fail(f"workspace already exists: {destination}")
+    exists = git(
+        "show-ref", "--verify", "--quiet", f"refs/heads/{branch}",
+        cwd=root, check=False,
+    )
+    if not exists.returncode:
+        fail(f"branch already exists: {branch}")
+    refresh(base, root)
+    if remote_head(root, branch):
+        fail(f"remote branch already exists: origin/{branch}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    git("worktree", "add", "-b", branch, str(destination), base, cwd=root)
+    print(destination)
+
+
+def pull_requests(fields, *filters):
+    result = run(
+        "gh",
+        "pr",
+        "list",
+        *filters,
+        "--json",
+        fields,
+        "--limit",
+        "100",
+        check=False,
+    )
+    if result.returncode:
+        fail(result.stderr.strip() or "GitHub pull-request lookup failed")
+    try:
+        pulls = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        fail("GitHub returned invalid pull-request data")
+    if not isinstance(pulls, list) or not all(isinstance(pull, dict) for pull in pulls):
+        fail("GitHub returned unexpected pull-request data")
+    return pulls
+
+
+def merged_pull_requests(branch, head):
+    pulls = pull_requests("headRefOid,mergeCommit", "--state", "merged", "--head", branch)
+    matches = [pull for pull in pulls if pull.get("headRefOid") == head]
+    if not matches:
+        fail("exact branch head has no merged pull request")
+    return matches
+
+
+def check_dependencies(root, branch, head, base):
+    if pull_requests("number", "--state", "open", "--base", branch):
+        fail("an open pull request depends on this branch")
+    landed = git("merge-base", "--is-ancestor", head, base, cwd=root, check=False)
+    if not landed.returncode:
+        return
+    branches = git(
+        "for-each-ref", "--format=%(refname:short)", "refs/heads", cwd=root
+    ).stdout.splitlines()
+    for candidate in branches:
+        if candidate == branch:
+            continue
+        depends = not git(
+            "merge-base", "--is-ancestor", branch, candidate, cwd=root, check=False
+        ).returncode
+        landed = not git(
+            "merge-base", "--is-ancestor", candidate, base, cwd=root, check=False
+        ).returncode
+        if depends and not landed:
+            fail(f"worktree branch depends on this branch: {candidate}")
+
+
+def check_owner(root, branch):
+    task = branch.removeprefix("task/")
+    if task == branch or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", task):
+        fail("workspace is not owned by the fallback lifecycle")
+    expected = workspace_root().joinpath(*identity(root), task).resolve()
+    if root != expected:
+        fail("workspace is not owned by the fallback lifecycle")
+
+
+def check_unlocked(root):
+    records = git("worktree", "list", "--porcelain", cwd=root).stdout.split("\n\n")
+    record = next((item for item in records if item.startswith(f"worktree {root}\n")), "")
+    if any(line.startswith("locked") for line in record.splitlines()):
+        fail("task worktree is locked")
+
+
+def check_landing(root, branch, head):
+    base = default_base(root)
+    refresh(base, root)
+    for pull in merged_pull_requests(branch, head):
+        merge = pull.get("mergeCommit")
+        landed = merge.get("oid") if isinstance(merge, dict) else None
+        if isinstance(landed, str) and landed:
+            on_trunk = git(
+                "merge-base", "--is-ancestor", landed, base, cwd=root, check=False
+            )
+            if not on_trunk.returncode:
+                return base
+    fail("no matching merged revision is present on fresh trunk")
+
+
+def done():
+    root = repository()
+    main = primary(root)
+    if root == main:
+        fail("run done from the task worktree, not the primary checkout")
+    branch_result = git("symbolic-ref", "--quiet", "--short", "HEAD", cwd=root, check=False)
+    if branch_result.returncode:
+        fail("task worktree has no branch")
+    branch = branch_result.stdout.strip()
+    check_owner(root, branch)
+    check_unlocked(root)
+    if git("status", "--porcelain", "--ignored", cwd=root).stdout:
+        fail("task worktree is not clean")
+    head = git("rev-parse", "HEAD", cwd=root).stdout.strip()
+    base = check_landing(root, branch, head)
+    check_dependencies(root, branch, head, base)
+    remote = remote_head(root, branch)
+    if remote not in (None, head):
+        fail("remote task branch changed after review")
+    if remote:
+        lease = f"--force-with-lease=refs/heads/{branch}:{head}"
+        git("push", "--quiet", lease, "origin", f":refs/heads/{branch}", cwd=main)
+    git("worktree", "remove", str(root), cwd=main)
+    git("branch", "-D", branch, cwd=main)
+    print(main)
+
+
+def main():
+    if len(sys.argv) == 3 and sys.argv[1] == "new":
+        new(sys.argv[2])
+    elif len(sys.argv) == 2 and sys.argv[1] == "done":
+        done()
+    else:
+        fail("usage: work new <task> | work done")
+
+
+if __name__ == "__main__":
+    main()
