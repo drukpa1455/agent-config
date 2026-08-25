@@ -110,21 +110,29 @@ clever golf, and speculative architecture.
   user-owned. Keep the primary checkout on trunk and read-only: never edit,
   switch branches, pull, reset, stash, clean, generate files, install
   dependencies, or run services there.
-- Every agent-authored change uses one uniquely named task branch in a dedicated
-  worktree or repository-provided isolated workspace assigned to that task. Use
-  the repository's isolation entrypoint and workspace root when available. Each
-  task workspace has one writer; never modify or remove another agent's workspace
-  or branch unless ownership is explicitly transferred.
+- Every agent-authored change uses one uniquely named task branch in a leased
+  worktree or repository-provided isolated workspace. Create it through the
+  repository's isolation entrypoint and canonical workspace root when available.
+  Each task workspace has one writer; never move, modify, unlock, or remove
+  another agent's workspace or branch unless ownership is explicitly transferred.
 - For authorized delivery, take each coherent change through commit, push, a
   pull request, required review and checks, merge, and verification of the exact
   landed revision from fresh trunk. Use stacked pull requests only for real
   dependencies; work is landed only when the complete chain reaches the
   repository's default trunk. Absorb compatible trunk drift before review and
   bind reviews to exact revisions.
-- After landing, remove owned task workspaces and delete merged task branches
-  only when no open work depends on them. Never use `git stash`; preserve
-  unmerged work and report its exact workspace, branch, revision, status, and blocker. Bind
-  production actions to exact revisions.
+- A task workspace is a lease, not storage. It exists only while its change is
+  active, blocked, under review, or required by dependent work. After landing,
+  its owner removes the workspace and merged branch when no open work depends on
+  them. Drain legacy locations through their owners; never relocate active work
+  or infer abandonment from age.
+- Keep disposable logs, screenshots, traces, builds, and experiments in
+  task-scoped scratch and delete them when the task ends. Do not create generic
+  run archives. Retain output only in its canonical product, issue, pull request,
+  or artifact owner with an explicit lifetime.
+- Never use `git stash`; preserve unmerged work and report its exact workspace,
+  branch, revision, status, and blocker. Bind production actions to exact
+  revisions.
 
 ## Evidence
 
