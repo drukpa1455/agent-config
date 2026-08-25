@@ -84,15 +84,20 @@ clever golf, and speculative architecture.
 
 - Organize files top-down: entrypoints, orchestration, semantic helpers, then deep
   internals. Keep the happy path straight.
-- Function and file size are design signals, not quotas. Split only at real
-  responsibility boundaries.
-- Names carry intent. Prefer purpose-first nouns and verbs over vague `Manager`,
-  `Helper`, or `Util` names.
+- Treat ~27 lines per function and ~270 per file as design-review thresholds,
+  not limits. Past them, verify one responsibility; split only at a real boundary.
+- Prefer one semantic word for files and directories. Use a compound when it is
+  the domain term or names a family; never abbreviate merely to satisfy the rule.
+- Name functions by action or transformation, types by domain role, and variables
+  by the fact they hold. Short locals require narrow scope; shared names stay
+  explicit. Avoid vague `Manager`, `Helper`, or `Util` names.
 - Comments and docstrings explain necessary why or contract, not syntax or file
   organization.
 - Treat optional fields and same-shaped identifiers as design warnings. Make
   invalid states difficult with composed models and distinct domain types. Keep
   dependencies visible with explicit imports and exports.
+- Keep passes bounded, conversions centralized, failures explicit, and public
+  and dependency surfaces small and visible.
 
 ## Delivery
 
@@ -125,8 +130,9 @@ clever golf, and speculative architecture.
 
 - Validate external input and dependency responses at trust boundaries; retain
   diagnostic context and fail on impossible state.
-- Test behavior changes. Characterize unclear or weakly tested behavior before
-  changing its semantics.
+- Test behavior, expected failures, and key invariants; stress the boundary most
+  likely to break. Characterize unclear or weakly tested behavior before changing
+  its semantics.
 - Verify with fresh evidence before claiming success. Benchmark performance and
   prove refactor equivalence. Treat review findings as hypotheses to test, not
   instructions to obey.
