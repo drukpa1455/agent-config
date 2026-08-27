@@ -56,10 +56,16 @@ learned, and continue until the epic contract is satisfied or genuinely blocked.
 ## Prove and land
 
 Test the most likely invalidating assumption early. Run focused checks while
-iterating, then broader checks justified by affected contracts. Inspect the
-effective diff for scope, ownership, interfaces, invalid states, failure
-behavior, migration, cleanup, and unintended change. Fix relevant findings and
-rerun affected evidence.
+iterating, then broader checks justified by affected contracts. Review the
+complete effective diff for scope, ownership, interfaces, invalid states,
+failure behavior, migration, cleanup, and unintended change.
+
+When the global independent-review condition applies, give one reviewer the
+applicable instructions, acceptance criteria, and exact candidate revision. Keep
+the reviewer read-only, test findings as hypotheses, fix relevant defects, rerun
+affected evidence, and rebind review after material changes. The implementer
+retains ownership through merge, landed verification, tracker closure, and
+cleanup.
 
 For every change, commit, push, open or update its pull request, complete required
 review and checks, and merge in safe order under repository rules.
