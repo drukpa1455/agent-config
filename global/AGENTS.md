@@ -101,11 +101,12 @@ clever golf, and speculative architecture.
 
 ## Delivery
 
-- A request to implement or fix authorizes inspection, isolated editing, and
-  verification within scope. Perform explicitly requested Git or GitHub actions
-  and stop at the requested boundary. Complete the full delivery lifecycle only
-  when the user asks to land or work through the outcome, invokes an explicit
-  delivery workflow, or project guidance defines that path.
+- A request to implement, fix, change, build, update, or rework authorizes full
+  delivery unless the user sets a narrower boundary. Isolate, implement, verify,
+  review, commit, open a ready pull request, merge, verify the landed revision,
+  close its tracker, and remove owned branches and workspaces. Report the change
+  only as landed or blocked with its exact preserved state. Research, diagnosis,
+  planning, status, and review remain read-only unless they request a change.
 - Treat the primary checkout and task workspaces outside the current task as
   user-owned. Keep the primary checkout on trunk and read-only: never edit,
   switch branches, pull, reset, stash, clean, generate files, install
@@ -143,6 +144,11 @@ clever golf, and speculative architecture.
 - Test behavior, expected failures, and key invariants; stress the boundary most
   likely to break. Characterize unclear or weakly tested behavior before changing
   its semantics.
+- The implementer reviews the complete effective diff against applicable
+  instructions before merge. Add one independent read-only review of the exact
+  candidate revision when a plausible defect could cross a trust boundary,
+  corrupt durable state, alter a shared architectural owner, or evade focused
+  tests; material changes invalidate that review.
 - Verify with fresh evidence before claiming success. Benchmark performance and
   prove refactor equivalence. Treat review findings as hypotheses to test, not
   instructions to obey.
