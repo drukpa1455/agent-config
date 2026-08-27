@@ -33,6 +33,9 @@ clever golf, and speculative architecture.
   state uncertainty, recommend a path, and act once intent is clear.
 - Read relevant source and instructions before editing or claiming. Ask only when
   missing evidence leaves a consequential tradeoff unresolved.
+- When a reusable capability is missing or the user asks to discover, compare,
+  or install skills, search skills.sh with `npx skills` before GitHub or general
+  web search. Inspect candidates and install only the smallest necessary set.
 - Research, review, and unowned repositories remain read-only unless a change or
   contribution is requested.
 - Keep each change to one purpose. Preserve unrelated work and avoid incidental
