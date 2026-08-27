@@ -19,6 +19,7 @@ skills/spec/                 grounded specifications and delivery graphs
 skills/implement/            scoped execution and verification
 skills/browse/               portable headed browser control
 skills/debug/                 evidence-first root-cause diagnosis
+skills/gws/                   Google Workspace CLI routing
 ```
 
 Project-level `AGENTS.md` files remain authoritative for project-specific rules and layer after the shared global policy.
@@ -182,6 +183,19 @@ skill's first-run setup. Setup installs pinned npm dependencies and Chrome for
 Testing into local user storage; it never stores profiles or credentials in Git.
 
 See [`skills/browse/SKILL.md`](skills/browse/SKILL.md).
+
+## Google Workspace
+
+`gws` routes Gmail, Calendar, Drive, Docs, Sheets, and other Google Workspace
+work through the installed Google Workspace CLI. It prefers semantic helpers and
+live CLI schemas over copied API catalogs, distinguishes drafts from sends, and
+keeps authentication material private.
+
+```sh
+npx skills add drukpa1455/agent-config --skill gws
+```
+
+See [`skills/gws/SKILL.md`](skills/gws/SKILL.md).
 
 ## Contributing
 
