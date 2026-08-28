@@ -3,4 +3,4 @@ interface:
   short_description: "Control a persistent headed browser"
   default_prompt: "Use $browse to complete this interactive browser task."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

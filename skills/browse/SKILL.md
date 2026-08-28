@@ -1,14 +1,14 @@
 ---
 name: browse
-description: Control the canonical persistent headed browser through this skill's Playwright or Patchright scripts. Use explicitly when the user invokes $browse for its persistent profiles, live dashboard, or authorized social-media browser work.
-disable-model-invocation: true
+description: Use for interactive or visual browser automation, persistent authenticated profiles, Playwright, Patchright, local web testing, or authorized social-media browser work. Control the canonical headed browser through this skill's scripts.
 ---
 
 # Browse
 
-Loading this skill selects its canonical browser surface. Use only this package's
+This skill owns interactive browser automation. Use only this package's
 Playwright or Patchright scripts; never delegate to another browser skill,
-harness-native browser, or browser CLI.
+harness-native browser, Computer Use, or another browser CLI unless the user
+explicitly names that surface.
 
 Profiles, downloads, and runtime state stay outside repositories. Resolve
 `$SKILL_DIR` from this loaded file and set it in each shell command; never guess
