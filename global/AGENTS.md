@@ -36,6 +36,9 @@ clever golf, and speculative architecture.
 - When a reusable capability is missing or the user asks to discover, compare,
   or install skills, search skills.sh with `npx skills` before GitHub or general
   web search. Inspect candidates and install only the smallest necessary set.
+- Route interactive browser automation through the owned `browse` skill. Use a
+  harness-native browser or Computer Use only when the user explicitly names
+  that surface.
 - Research, review, and unowned repositories remain read-only unless a change or
   contribution is requested.
 - Keep each change to one purpose. Preserve unrelated work and avoid incidental

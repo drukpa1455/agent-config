@@ -160,9 +160,9 @@ See [`skills/debug/SKILL.md`](skills/debug/SKILL.md).
 ## Browse
 
 `browse` provides one canonical headed browser surface across shell-capable
-harnesses. It is explicit-only: ordinary navigation may use a harness-native
-browser, while loading `$browse` selects its two persistent profiles behind one
-live dashboard:
+harnesses. Interactive browser automation loads it automatically; harness-native
+browsers and Computer Use require explicit user choice. It selects two persistent
+profiles behind one live dashboard:
 
 - official Playwright for compatibility, diagnostics, and security-sensitive work
 - Patchright for authorized social-media workflows
