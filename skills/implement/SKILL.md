@@ -60,15 +60,19 @@ iterating, then broader checks justified by affected contracts. Review the
 complete effective diff for scope, ownership, interfaces, invalid states,
 failure behavior, migration, cleanup, and unintended change.
 
-When the global independent-review condition applies, give one reviewer the
-applicable instructions, acceptance criteria, and exact candidate revision. Keep
-the reviewer read-only, test findings as hypotheses, fix relevant defects, rerun
-affected evidence, and rebind review after material changes. The implementer
-retains ownership through merge, landed verification, tracker closure, and
-cleanup.
+For every change, commit and push the candidate, then open or update its ready
+pull request. Bind the candidate head and await every configured review and
+required check for that exact revision. Fetch the review findings; completion or
+a successful or neutral check is not approval. Validate each finding, fix valid
+defects, reject false findings with evidence, and resolve every review thread.
 
-For every change, commit, push, open or update its pull request, complete required
-review and checks, and merge in safe order under repository rules.
+When the global independent-review condition applies, use one configured
+read-only reviewer when available; otherwise give one reviewer the applicable
+instructions, acceptance criteria, and exact candidate revision. After any
+material change, rerun affected evidence, push the new candidate, and repeat the
+review loop. Merge only when reviews cover the exact head, no finding remains
+unresolved, and required checks pass. The implementer retains ownership through
+merge, landed verification, tracker closure, and cleanup.
 
 ## Close the scope
 

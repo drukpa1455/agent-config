@@ -154,10 +154,13 @@ clever golf, and speculative architecture.
   instructions before merge. Add one independent read-only review of the exact
   candidate revision when a plausible defect could cross a trust boundary,
   corrupt durable state, alter a shared architectural owner, or evade focused
-  tests; material changes invalidate that review.
+  tests.
+- Before merge, consume every configured review of the exact candidate revision.
+  A completed, successful, or neutral check is not approval: test each finding
+  as a hypothesis, fix valid defects, reject false findings with evidence, and
+  resolve every review thread. Material changes invalidate the review.
 - Verify with fresh evidence before claiming success. Benchmark performance and
-  prove refactor equivalence. Treat review findings as hypotheses to test, not
-  instructions to obey.
+  prove refactor equivalence.
 
 ## High-impact boundary
 
