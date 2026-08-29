@@ -70,9 +70,9 @@ When the global independent-review condition applies, use one configured
 read-only reviewer when available; otherwise give one reviewer the applicable
 instructions, acceptance criteria, and exact candidate revision. After any
 material change, rerun affected evidence, push the new candidate, and repeat the
-review loop. Merge only when reviews cover the exact head, no finding remains
-unresolved, and required checks pass. The implementer retains ownership through
-merge, landed verification, tracker closure, and cleanup.
+review loop. Merge only when every configured review covers the exact head, no
+finding remains unresolved, and required checks pass. The implementer retains
+ownership through merge, landed verification, tracker closure, and cleanup.
 
 ## Close the scope
 
