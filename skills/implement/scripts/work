@@ -317,7 +317,7 @@ def ready(root, branch, head):
 def sync_primary(root, base, target, carrier):
     main = primary(root)
     branch = base.partition("/")[2]
-    if git("status", "--porcelain", "--ignored", cwd=main).stdout:
+    if git("status", "--porcelain", "--untracked-files=all", cwd=main).stdout:
         fail("primary checkout is not clean")
     if git("branch", "--show-current", cwd=main).stdout.strip() != branch:
         fail(f"primary checkout is not on {branch}")
@@ -331,7 +331,16 @@ def sync_primary(root, base, target, carrier):
     behind = git("merge-base", "--is-ancestor", head, carrier, cwd=main, check=False)
     if behind.returncode:
         fail("primary checkout is not on the landed first-parent history")
-    git("-c", "core.hooksPath=/dev/null", "merge", "--quiet", "--ff-only", carrier, cwd=main)
+    git(
+        "-c",
+        "core.hooksPath=/dev/null",
+        "merge",
+        "--quiet",
+        "--ff-only",
+        "--no-overwrite-ignore",
+        carrier,
+        cwd=main,
+    )
 
 
 def done():
