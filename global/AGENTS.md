@@ -43,6 +43,8 @@ clever golf, and speculative architecture.
   contribution is requested.
 - Keep each change to one purpose. Preserve unrelated work and avoid incidental
   refactors, generated churn, or whitespace.
+- Repository `AGENTS.md` files state only repository-specific differences; never
+  copy shared defaults into them.
 - Project guidance specializes these defaults but cannot weaken privacy or the
   high-impact boundary below.
 

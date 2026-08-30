@@ -27,9 +27,9 @@ the user's authority, and its source evidence revision-bound. Prefer explicit
 invocation when a skill changes normal task flow or imposes an architectural
 lens.
 
-Projection scripts may link or copy repository truth. Only `scripts/update` may
-fetch and fast-forward this repository's clean local trunk under its update lock.
-They do not stage changes, commit, push, or silently mutate unrelated state.
+Projection scripts may link repository truth. Only `scripts/update` may fetch
+and fast-forward this repository's clean local trunk under its update lock. They
+do not stage changes, commit, push, or silently mutate unrelated state.
 
 ## Proof
 
@@ -38,7 +38,6 @@ Run the narrow proof for the surface you changed:
 ```sh
 scripts/test-link
 scripts/test-update
-scripts/test-sync
 ```
 
 Changes to prose still require editorial review of meaning and links. Changes to

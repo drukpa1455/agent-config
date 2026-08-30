@@ -16,8 +16,6 @@ and Codex. Read `README.md` before changing either surface.
 - `scripts/update` is the sole owner of lock-serialized, fast-forward refresh of
   the clean local trunk and its links. `scripts/test-update` proves that lifecycle
   against isolated repositories and a throwaway home.
-- `scripts/sync` owns explicit projection into repository roots.
-  `scripts/test-sync` proves that projection without touching a real repository.
 - Installed links and user-local runtime/profile state are projections, not
   repository truth.
 
@@ -38,8 +36,7 @@ and Codex. Read `README.md` before changing either surface.
 
 For changed Markdown or YAML, run Prettier and markdownlint with the repository's
 existing line-length exception. Validate local links, skill discovery, and the
-exact changed-path scope. Changes to `scripts/link`, `scripts/work`,
-`scripts/update`, or `scripts/sync` require their isolated projection tests before
-applying them to a real home or repository. After an agent-config change lands
-and passes fresh-trunk verification, run `scripts/update` from that exact landed
-revision.
+exact changed-path scope. Changes to `scripts/link`, `scripts/work`, or
+`scripts/update` require their isolated projection tests before applying them to
+a real home or repository. After an agent-config change lands and passes
+fresh-trunk verification, run `scripts/update` from that exact landed revision.

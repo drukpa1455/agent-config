@@ -13,8 +13,6 @@ scripts/work                 repository task lifecycle
 scripts/test-work            lifecycle delegation proof
 scripts/update               guarded local checkout and link refresh
 scripts/test-update          update proof against throwaway repositories
-scripts/sync                 explicit repository policy projection
-scripts/test-sync            projection proof against throwaway repositories
 skills/wiki/                 owner-controlled knowledge curation
 skills/lens/                 source-backed engineering lenses
 skills/spec/                 grounded specifications and delivery graphs
@@ -24,7 +22,8 @@ skills/debug/                 evidence-first root-cause diagnosis
 skills/gws/                   Google Workspace CLI routing
 ```
 
-Project-level `AGENTS.md` files remain authoritative for project-specific rules and layer after the shared global policy.
+Project-level `AGENTS.md` files contain only project-specific differences and
+layer after the shared global policy. Omit one when there are no differences.
 
 ## Use the shared configuration
 
@@ -66,19 +65,6 @@ worktree it advances no farther than that worktree's landed revision. It refuses
 dirty, divergent, non-trunk, or unlanded state. Unattended updates remain
 excluded because skills and global instructions can execute policy and code.
 The command requires Git, Python 3.9 or newer, and standard `tar`.
-
-## Share the policy with a repository
-
-Repositories whose `AGENTS.md` is an exact projection of the global policy can
-sync it explicitly:
-
-```sh
-~/src/agent-config/scripts/sync ~/src/project-a ~/src/project-b
-```
-
-The command writes only `AGENTS.md`. It does not fetch, stage, commit, or push.
-Repository-specific acceptance rules belong in `CONTRIBUTING.md` so the shared
-policy remains one exact file.
 
 ## Wiki
 
