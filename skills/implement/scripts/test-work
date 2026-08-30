@@ -16,7 +16,7 @@ git -C "$primary" config user.email test@example.com
 git -C "$primary" config user.name Test
 mkdir -p "$primary/scripts"
 printf 'seed\n' > "$primary/README.md"
-printf '.env\n' > "$primary/.gitignore"
+printf '.env\n.cache\n' > "$primary/.gitignore"
 cat >"$primary/scripts/update" <<'SH'
 #!/bin/sh
 landed=$(git -C "$(dirname "$0")/.." rev-parse HEAD)
@@ -167,6 +167,9 @@ git -C "$primary" branch -D task/dependent >/dev/null
 
 integrator="$temporary/integrator"
 git -C "$primary" worktree add --quiet -b integrate "$integrator" main
+printf 'landed\n' >"$integrator/.env"
+git -C "$integrator" add --force .env
+git -C "$integrator" commit --quiet -m tracked-ignore
 git -C "$integrator" merge --quiet --no-ff task/first -m landed
 merge=$(git -C "$integrator" rev-parse HEAD)
 git -C "$integrator" push --quiet origin HEAD:main
@@ -221,6 +224,12 @@ touch "$primary/untracked"
 rejects "done preserves a dirty primary" done_as "$workspace" "$head" "$merge"
 rm "$primary/untracked"
 
+printf 'local\n' >"$primary/.env"
+rejects "done preserves a colliding ignored primary" done_as "$workspace" "$head" "$merge"
+[ "$(cat "$primary/.env")" = local ]
+rm "$primary/.env"
+printf 'local\n' >"$primary/.cache"
+
 result=$(
   cd "$workspace"
   HOME="$home" \
@@ -232,6 +241,7 @@ result=$(
 )
 physical_primary=$(CDPATH= cd -- "$primary" && pwd -P)
 [ "$result" = "$physical_primary" ]
+[ "$(cat "$primary/.cache")" = local ]
 [ ! -e "$workspace" ]
 [ "$(git -C "$primary" rev-parse HEAD)" = "$merge" ]
 if git -C "$primary" show-ref --verify --quiet refs/heads/task/first; then
