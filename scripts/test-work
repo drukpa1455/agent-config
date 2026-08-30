@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+
+source_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+temporary=$(mktemp -d)
+trap 'rm -rf "$temporary"' EXIT HUP INT TERM
+root="$temporary/root"
+mkdir -p "$root/scripts" "$root/skills/implement/scripts"
+cp "$source_root/scripts/work" "$root/scripts/work"
+
+cat >"$root/skills/implement/scripts/work" <<'SH'
+#!/bin/sh
+printf 'fallback %s %s\n' "${WORK_PRIMARY_UPDATER:-none}" "$*" >>"$WORK_TEST_LOG"
+SH
+chmod +x "$root/skills/implement/scripts/work"
+
+log="$temporary/log"
+WORK_TEST_LOG="$log" "$root/scripts/work" new example
+[ "$(cat "$log")" = "fallback none new example" ]
+
+: >"$log"
+WORK_TEST_LOG="$log" "$root/scripts/work" done
+[ "$(cat "$log")" = "fallback scripts/update done" ]
+
+if WORK_TEST_LOG="$log" "$root/scripts/work" done extra >/dev/null 2>&1; then
+  exit 1
+fi
+
+printf 'all checks passed\n'

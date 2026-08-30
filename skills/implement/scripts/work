@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+import fcntl
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 from urllib.parse import quote
 
 
@@ -13,7 +15,7 @@ def fail(message):
     raise SystemExit(f"work: {message}")
 
 
-def run(*command, cwd=None, check=True):
+def run(*command, cwd=None, check=True, env=None, pass_fds=(), timeout=120):
     try:
         result = subprocess.run(
             command,
@@ -22,7 +24,9 @@ def run(*command, cwd=None, check=True):
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=120,
+            env=env,
+            pass_fds=pass_fds,
+            timeout=timeout,
         )
     except FileNotFoundError:
         fail(f"command not found: {command[0]}")
@@ -214,19 +218,120 @@ def check_unlocked(root):
         fail("task worktree is locked")
 
 
+def lock_primary(root):
+    common = Path(git("rev-parse", "--git-common-dir", cwd=root).stdout.strip())
+    if not common.is_absolute():
+        common = root / common
+    handles = []
+    for name in ("agent-config-update.lock", "agent-primary-update.lock"):
+        handle = (common.resolve() / name).open("a")
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            fail("another primary update is active")
+        handles.append(handle)
+    return handles
+
+
+def primary_updater():
+    configured = os.environ.get("WORK_PRIMARY_UPDATER")
+    if not configured:
+        return None
+    relative = Path(configured)
+    if relative.is_absolute() or ".." in relative.parts:
+        fail("WORK_PRIMARY_UPDATER must stay inside the primary checkout")
+    return relative
+
+
+def project_primary(root, relative, revision, locks):
+    scratch = Path(tempfile.mkdtemp(prefix="agent-project-")).resolve()
+    workspace = scratch / "landed"
+    try:
+        git("worktree", "add", "--quiet", "--detach", str(workspace), revision, cwd=root)
+        updater = (workspace / relative).resolve()
+        try:
+            updater.relative_to(workspace)
+        except ValueError:
+            fail("WORK_PRIMARY_UPDATER must stay inside the landed worktree")
+        if not updater.is_file() or not os.access(updater, os.X_OK):
+            fail(f"landed primary updater is not executable: {updater}")
+        descriptors = tuple(lock.fileno() for lock in locks)
+        environment = {
+            **os.environ,
+            "UPDATE_LOCK_FDS": ",".join(map(str, descriptors)),
+        }
+        run(
+            str(updater),
+            cwd=workspace,
+            env=environment,
+            pass_fds=descriptors,
+            timeout=None,
+        )
+    finally:
+        if workspace.exists():
+            git("worktree", "remove", "--force", str(workspace), cwd=primary(root))
+        scratch.rmdir()
+
+
+def trunk_carrier(root, merged, target, trunk):
+    if merged in trunk:
+        return merged
+    present = git("merge-base", "--is-ancestor", merged, target, cwd=root, check=False)
+    if present.returncode:
+        return None
+    carriers = git(
+        "rev-list",
+        "--first-parent",
+        "--reverse",
+        "--ancestry-path",
+        f"{merged}..{target}",
+        cwd=root,
+    ).stdout.splitlines()
+    return carriers[0] if carriers else None
+
+
 def check_landing(root, branch, head):
     base = default_base(root)
     refresh(base, root)
+    target = git("rev-parse", base, cwd=root).stdout.strip()
+    trunk = set(git("rev-list", "--first-parent", target, cwd=root).stdout.splitlines())
     for pull in merged_pull_requests(branch, head):
         merge = pull.get("mergeCommit")
-        landed = merge.get("oid") if isinstance(merge, dict) else None
-        if isinstance(landed, str) and landed:
-            on_trunk = git(
-                "merge-base", "--is-ancestor", landed, base, cwd=root, check=False
-            )
-            if not on_trunk.returncode:
-                return base
+        merged = merge.get("oid") if isinstance(merge, dict) else None
+        if isinstance(merged, str):
+            carrier = trunk_carrier(root, merged, target, trunk)
+            if carrier:
+                return base, target, carrier
     fail("no matching merged revision is present on fresh trunk")
+
+
+def ready(root, branch, head):
+    base, target, landed = check_landing(root, branch, head)
+    check_dependencies(root, branch, head, base)
+    remote = remote_head(root, branch)
+    if remote not in (None, head):
+        fail("remote task branch changed after review")
+    return base, target, landed, remote
+
+
+def sync_primary(root, base, target, carrier):
+    main = primary(root)
+    branch = base.partition("/")[2]
+    if git("status", "--porcelain", "--ignored", cwd=main).stdout:
+        fail("primary checkout is not clean")
+    if git("branch", "--show-current", cwd=main).stdout.strip() != branch:
+        fail(f"primary checkout is not on {branch}")
+    head = git("rev-parse", "HEAD", cwd=main).stdout.strip()
+    trunk = git("rev-list", "--first-parent", target, cwd=main).stdout.splitlines()
+    if head not in trunk:
+        fail(f"primary checkout has diverged from {base}")
+    present = git("merge-base", "--is-ancestor", carrier, head, cwd=main, check=False)
+    if not present.returncode:
+        return
+    behind = git("merge-base", "--is-ancestor", head, carrier, cwd=main, check=False)
+    if behind.returncode:
+        fail("primary checkout is not on the landed first-parent history")
+    git("-c", "core.hooksPath=/dev/null", "merge", "--quiet", "--ff-only", carrier, cwd=main)
 
 
 def done():
@@ -243,11 +348,13 @@ def done():
     if git("status", "--porcelain", "--ignored", cwd=root).stdout:
         fail("task worktree is not clean")
     head = git("rev-parse", "HEAD", cwd=root).stdout.strip()
-    base = check_landing(root, branch, head)
-    check_dependencies(root, branch, head, base)
-    remote = remote_head(root, branch)
-    if remote not in (None, head):
-        fail("remote task branch changed after review")
+    updater = primary_updater()
+    update_locks = lock_primary(root)
+    base, target, carrier, remote = ready(root, branch, head)
+    if updater:
+        project_primary(root, updater, carrier, update_locks)
+        base, target, carrier, remote = ready(root, branch, head)
+    sync_primary(root, base, target, carrier)
     if remote:
         lease = f"--force-with-lease=refs/heads/{branch}:{head}"
         git("push", "--quiet", lease, "origin", f":refs/heads/{branch}", cwd=main)

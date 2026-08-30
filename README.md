@@ -9,6 +9,8 @@ AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
+scripts/work                 repository task lifecycle
+scripts/test-work            lifecycle delegation proof
 scripts/update               guarded local checkout and link refresh
 scripts/test-update          update proof against throwaway repositories
 scripts/sync                 explicit repository policy projection

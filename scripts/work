@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd -P)
+fallback="$root/skills/implement/scripts/work"
+
+case ${1:-} in
+  new)
+    exec "$fallback" "$@"
+    ;;
+  done)
+    [ "$#" -eq 1 ] || { echo "usage: work new <task> | work done" >&2; exit 1; }
+    WORK_PRIMARY_UPDATER=scripts/update exec "$fallback" done
+    ;;
+  *)
+    echo "usage: work new <task> | work done" >&2
+    exit 1
+    ;;
+esac
