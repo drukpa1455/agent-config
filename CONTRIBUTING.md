@@ -38,6 +38,7 @@ Run the narrow proof for the surface you changed:
 ```sh
 scripts/test-link
 scripts/test-update
+scripts/test-browse
 ```
 
 Changes to prose still require editorial review of meaning and links. Changes to

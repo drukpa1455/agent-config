@@ -9,6 +9,7 @@ AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
 scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
+scripts/test-browse          browser isolation and lease proof
 scripts/work                 repository task lifecycle
 scripts/test-work            lifecycle delegation proof
 scripts/update               guarded local checkout and link refresh
@@ -149,16 +150,19 @@ See [`skills/debug/SKILL.md`](skills/debug/SKILL.md).
 
 `browse` provides one canonical headed browser surface across shell-capable
 harnesses. Interactive browser automation loads it automatically; harness-native
-browsers and Computer Use require explicit user choice. It selects two persistent
-profiles behind one live dashboard:
+browsers and Computer Use require explicit user choice. It provides task-local
+official browsers plus two authenticated profiles behind one live dashboard:
 
-- official Playwright for compatibility, diagnostics, and security-sensitive work
-- Patchright for authorized social-media workflows
+- isolated official Playwright for ordinary development and visual QA
+- shared official Playwright when a persistent login is required
+- shared Patchright for authorized social-media workflows
 
-The skill preserves native browser identity. Its fixed profiles are
-single-owner resources and may not be driven by concurrent agents. It does not
-rotate fingerprints, proxies, profiles, or accounts, and must not be used to
-bypass CAPTCHA, access controls, account limits, or site policy.
+Task browsers cannot collide and are deleted on close. Expiring task leases
+serialize each authenticated profile without treating a leftover window as an
+owner or asking the user to close it. The skill preserves native browser
+identity. It does not rotate fingerprints, proxies, profiles, or accounts, and
+must not be used to bypass CAPTCHA, access controls, account limits, or site
+policy.
 
 Install only this skill through the cross-harness Skills CLI:
 
@@ -166,9 +170,10 @@ Install only this skill through the cross-harness Skills CLI:
 npx skills add drukpa1455/agent-config --skill browse
 ```
 
-The first browser run requires Node.js 20+, npm, stable Google Chrome, and the
-skill's first-run setup. Setup installs pinned npm dependencies and Chrome for
-Testing into local user storage; it never stores profiles or credentials in Git.
+The first browser run requires Node.js 20+, npm, platform file locking, stable
+Google Chrome, and the skill's first-run setup. Setup installs pinned npm
+dependencies and Chrome for Testing into local user storage; it never stores
+profiles or credentials in Git.
 
 See [`skills/browse/SKILL.md`](skills/browse/SKILL.md).
 
