@@ -2,152 +2,208 @@
 'use strict';
 
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
+const leases = require('./lease');
+const state = require('./state');
 
-const mode = process.argv[2];
-const args = process.argv.slice(3);
-const settings = loadSettings();
-const paths = resolvePaths(settings);
+const valueOptions = new Set([
+  '--body', '--browser', '--cdp', '--config', '--content-type', '--cursor', '--data', '--depth',
+  '--description', '--device', '--domain', '--duration', '--endpoint', '--expires', '--extension',
+  '--filename', '--filter', '--header', '--host', '--modifiers', '--path', '--port', '--position',
+  '--profile', '--regex', '--remove-header', '--sameSite', '--session', '--size', '--skills',
+  '--status', '--style',
+]);
+const booleanOptions = new Set([
+  '--all', '--annotate', '--boxes', '--clear', '--dry-run', '--force', '--full-page', '--headed',
+  '--help', '--hide', '--hires', '--httpOnly', '--json', '--kill', '--list', '--mobile',
+  '--no-shell', '--only-shell', '--persistent', '--raw', '--secure', '--static', '--submit',
+  '--version', '--with-deps',
+]);
 
-prepare(paths);
-
-if (mode === 'official') {
-  launch(paths.officialCli, args, paths, {
-    PLAYWRIGHT_CLI_SESSION: 'persistent-official',
-    PLAYWRIGHT_MCP_CONFIG: paths.officialConfig,
-  });
-} else if (mode === 'patchright') {
-  launch(process.execPath, [path.join(__dirname, 'patchright-cli.js'), ...args], paths, {
-    PERSISTENT_BROWSER_RUNTIME: paths.patchrightRuntime,
-    PLAYWRIGHT_CLI_SESSION: 'persistent-patchright',
-    PLAYWRIGHT_MCP_CONFIG: paths.patchrightConfig,
-  });
-} else if (mode === 'dashboard') {
-  launch(paths.officialCli, ['show', ...args], paths, { PLAYWRIGHT_CLI_SESSION: null });
-} else if (mode === 'setup') {
-  setup(paths, args);
-} else {
-  fail(`Unknown mode: ${mode || '(missing)'}`);
+try {
+  main(process.argv[2], process.argv.slice(3));
+} catch (error) {
+  fail(error.message);
 }
 
-function loadSettings() {
-  const file = process.env.PERSISTENT_BROWSER_CONFIG ||
-    path.join(os.homedir(), '.config', 'persistent-browser', 'config.json');
-  if (!fs.existsSync(file)) return {};
+function main(mode, args) {
+  const paths = state.resolve();
+  if (mode === 'official') official(paths, args);
+  else if (mode === 'patchright') patchright(paths, args);
+  else if (mode === 'dashboard') dashboard(paths, args);
+  else if (mode === 'setup') setup(paths, args);
+  else throw new Error(`Unknown mode: ${mode || '(missing)'}`);
+}
 
-  let value;
-  try {
-    value = JSON.parse(fs.readFileSync(file, 'utf8'));
-  } catch (error) {
-    fail(`Invalid configuration ${file}: ${error.message}`);
+function official(paths, rawArgs) {
+  const shared = rawArgs[0] === '--shared';
+  if (!shared && rawArgs.includes('--shared'))
+    throw new Error('--shared must precede the browser command');
+
+  const args = shared ? rawArgs.slice(1) : rawArgs;
+  const owner = leases.actor();
+  const route = shared ? state.official(paths) : state.task(paths, owner.key);
+  const file = shared ? path.join(paths.dataDir, 'leases', 'official.json') : null;
+  execute(paths.officialCli, args, paths, route, owner, file);
+}
+
+function patchright(paths, args) {
+  const owner = leases.actor();
+  const route = state.patchright(paths);
+  const command = process.execPath;
+  const commandArgs = [path.join(__dirname, 'patchright-cli.js'), ...args];
+  const additions = { PERSISTENT_BROWSER_RUNTIME: paths.patchrightRuntime };
+  const file = path.join(paths.dataDir, 'leases', 'patchright.json');
+  execute(command, commandArgs, paths, route, owner, file, additions, args);
+}
+
+function execute(command, commandArgs, paths, route, owner, leaseFile, additions = {}, logicalArgs = commandArgs) {
+  requireRuntime(command);
+  rejectRouteOverrides(logicalArgs);
+  rejectUnknownLeadingOptions(logicalArgs);
+  const action = findAction(logicalArgs);
+  if (action === 'attach') throw new Error('attach bypasses the browser route owned by this wrapper');
+  const diagnostic = isDiagnostic(logicalArgs, action);
+  if (action === 'kill-all' && !diagnostic)
+    throw new Error('kill-all crosses browser task ownership; close each selected route instead');
+  const terminal = ['close', 'close-all', 'delete-data'].includes(action);
+  const cleanup = terminal && !diagnostic;
+  const globalDiagnostic = diagnostic && route.transient && !['list', 'show'].includes(action);
+  if (globalDiagnostic) state.prepareWorkspace(paths);
+  else if (diagnostic && route.transient) state.prepareRoute(route);
+  else state.prepare(route);
+
+  let commandLease;
+  if (leaseFile && !diagnostic) {
+    if (action === 'open') {
+      commandLease = leases.claim(leaseFile, label(route), owner);
+    } else {
+      commandLease = leases.own(leaseFile, label(route), owner);
+    }
   }
-  if (!value || Array.isArray(value) || typeof value !== 'object')
-    fail(`Configuration must be a JSON object: ${file}`);
-  return value;
-}
 
-function resolvePaths(settings) {
-  const home = os.homedir();
-  const dataDir = setting('dataDir', 'PERSISTENT_BROWSER_DATA_DIR',
-    path.join(home, '.local', 'share', 'persistent-browser'));
-  const outputDir = setting('outputDir', 'PERSISTENT_BROWSER_OUTPUT_DIR',
-    path.join(home, '.cache', 'persistent-browser'));
-  const runtimeDir = setting('runtimeDir', 'PERSISTENT_BROWSER_RUNTIME_DIR',
-    path.join(dataDir, 'runtime'));
-
-  return {
-    dataDir,
-    outputDir,
-    runtimeDir,
-    officialCli: setting('officialCli', 'PERSISTENT_BROWSER_OFFICIAL_CLI',
-      path.join(runtimeDir, 'node_modules', '.bin', 'playwright-cli')),
-    patchrightRuntime: setting('patchrightRuntime', 'PERSISTENT_BROWSER_PATCHRIGHT_RUNTIME', runtimeDir),
-    officialProfile: setting('officialProfile', 'PERSISTENT_BROWSER_OFFICIAL_PROFILE',
-      path.join(dataDir, 'official-profile')),
-    patchrightProfile: setting('patchrightProfile', 'PERSISTENT_BROWSER_PATCHRIGHT_PROFILE',
-      path.join(dataDir, 'patchright-profile')),
-    workspace: path.join(dataDir, 'workspace'),
-    configDir: path.join(dataDir, 'config'),
-    officialConfig: path.join(dataDir, 'config', 'official.json'),
-    patchrightConfig: path.join(dataDir, 'config', 'patchright.json'),
+  const environment = {
+    ...additions,
+    PLAYWRIGHT_CLI_SESSION: route.session,
+    PLAYWRIGHT_MCP_CONFIG: route.config,
   };
+  const maintain = leaseFile && !diagnostic
+    ? onError => leases.keep(leaseFile, label(route), owner, commandLease.operation, onError)
+    : null;
+  const cwd = globalDiagnostic ? paths.workspace : route.workspace;
+  const invocation = normalize(commandArgs, action, route, cleanup);
+  launch(command, invocation, cwd, environment, outcome => {
+    if (commandLease) {
+      if ((outcome.ok && cleanup) || (!outcome.ok && commandLease.acquired))
+        leases.release(leaseFile, owner, commandLease.operation);
+      else leases.finish(leaseFile, owner, commandLease.operation);
+    }
+    if (!leaseFile && outcome.ok && cleanup) {
+      state.remove(route);
+    }
+  }, maintain);
+}
 
-  function setting(key, environment, fallback) {
-    const value = process.env[environment] || settings[key] || fallback;
-    if (typeof value !== 'string' || !path.isAbsolute(value))
-      fail(`${key} must be an absolute path`);
-    return value;
+function normalize(args, action, route, cleanup) {
+  if (!cleanup) return args;
+  if (route.transient) return replaceAction(args, action, 'delete-data');
+  if (action === 'close-all') return replaceAction(args, action, 'close');
+  return args;
+}
+
+function replaceAction(args, action, replacement) {
+  const result = [...args];
+  result[result.indexOf(action)] = replacement;
+  return result;
+}
+
+function label(route) {
+  return route.session === 'persistent-patchright'
+    ? 'Patchright authenticated browser'
+    : 'Official authenticated browser';
+}
+
+function rejectRouteOverrides(args) {
+  const long = ['--browser', '--config', '--persistent', '--profile', '--session'];
+  const override = optionArgs(args).find(argument =>
+    long.some(flag =>
+      argument === flag ||
+      argument === `--no-${flag.slice(2)}` ||
+      argument.startsWith(`${flag}=`)) ||
+    /^-[^-]*s/.test(argument));
+  if (override)
+    throw new Error(`${override.split('=')[0]} overrides the browser route owned by this wrapper`);
+}
+
+function findAction(args) {
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument === '--') return args[index + 1];
+    if (!argument.startsWith('-')) return argument;
+    if (takesValue(argument, args[index + 1])) index += 1;
   }
 }
 
-function prepare(paths) {
-  const directories = [
-    paths.dataDir,
-    paths.outputDir,
-    paths.officialProfile,
-    paths.patchrightProfile,
-    paths.workspace,
-    path.join(paths.workspace, '.playwright'),
-    paths.configDir,
-    path.join(paths.outputDir, 'official', 'downloads'),
-    path.join(paths.outputDir, 'patchright', 'downloads'),
-  ];
-  for (const directory of directories) {
-    fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
-    fs.chmodSync(directory, 0o700);
+function rejectUnknownLeadingOptions(args) {
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument === '--' || !argument.startsWith('-')) return;
+    if (!knownOption(argument))
+      throw new Error(`Unknown browser option before command: ${argument.split('=', 1)[0]}`);
+    if (takesValue(argument, args[index + 1])) index += 1;
   }
-
-  writeJson(paths.officialConfig, browserConfig(
-    paths.officialProfile,
-    path.join(paths.outputDir, 'official'),
-    'chrome-for-testing',
-  ));
-  writeJson(paths.patchrightConfig, browserConfig(
-    paths.patchrightProfile,
-    path.join(paths.outputDir, 'patchright'),
-    'chrome',
-  ));
 }
 
-function browserConfig(profile, outputDir, channel) {
-  return {
-    browser: {
-      browserName: 'chromium',
-      userDataDir: profile,
-      launchOptions: {
-        channel,
-        headless: false,
-        downloadsPath: path.join(outputDir, 'downloads'),
-      },
-    },
-    outputDir,
-    outputMode: 'stdout',
-    allowUnrestrictedFileAccess: false,
-    timeouts: { action: 5000, navigation: 60000 },
-  };
+function knownOption(argument) {
+  const option = argument.split('=', 1)[0];
+  if (/^-[hv]+$/.test(option)) return true;
+  if (valueOptions.has(option) || booleanOptions.has(option)) return true;
+  if (option.startsWith('--no-')) return booleanOptions.has(`--${option.slice(5)}`);
+  return false;
 }
 
-function writeJson(file, value) {
-  const content = `${JSON.stringify(value, null, 2)}\n`;
-  if (!fs.existsSync(file) || fs.readFileSync(file, 'utf8') !== content)
-    fs.writeFileSync(file, content, { mode: 0o600 });
-  fs.chmodSync(file, 0o600);
+function takesValue(argument, next) {
+  const option = argument.split('=', 1)[0];
+  return valueOptions.has(option) && !argument.includes('=') &&
+    next !== undefined && next !== '--' && !next.startsWith('-');
+}
+
+function isDiagnostic(args, action) {
+  const options = optionArgs(args);
+  const names = options.map(argument => argument.split('=', 1)[0]);
+  if (!action || names.includes('--help') || names.includes('--version') ||
+    names.some(option => /^-[hv]+$/.test(option))) return true;
+  return action === 'list' || (action === 'show' && !options.includes('--annotate'));
+}
+
+function optionArgs(args) {
+  const separator = args.indexOf('--');
+  return separator < 0 ? args : args.slice(0, separator);
+}
+
+function dashboard(paths, args) {
+  rejectRouteOverrides(args);
+  if (optionArgs(args).includes('--annotate'))
+    throw new Error('annotate requires the selected browser route and its task lease');
+  // Playwright's registry spans workspaces; one stable cwd keeps one dashboard daemon.
+  state.prepareWorkspace(paths);
+  launch(paths.officialCli, ['show', ...args], paths.workspace, {
+    PLAYWRIGHT_CLI_SESSION: null,
+  }, () => {});
 }
 
 function setup(paths, setupArgs) {
   const allowed = new Set(['--no-browser-download']);
-  const unknown = setupArgs.filter(arg => !allowed.has(arg));
-  if (unknown.length) fail(`Unknown setup option: ${unknown.join(', ')}`);
+  const unknown = setupArgs.filter(argument => !allowed.has(argument));
+  if (unknown.length) throw new Error(`Unknown setup option: ${unknown.join(', ')}`);
   if (Number(process.versions.node.split('.')[0]) < 20)
-    fail(`Node.js 20+ is required; found ${process.versions.node}`);
+    throw new Error(`Node.js 20+ is required; found ${process.versions.node}`);
   if (!hasStableChrome())
-    fail('Stable Google Chrome is required for Patchright. Install it, then rerun setup.');
+    throw new Error('Stable Google Chrome is required for Patchright. Install it, then rerun setup.');
 
+  state.prepareSetup(paths);
   const source = path.join(__dirname, '..', 'runtime');
-  fs.mkdirSync(paths.runtimeDir, { recursive: true, mode: 0o700 });
-  fs.chmodSync(paths.runtimeDir, 0o700);
   for (const file of ['package.json', 'package-lock.json'])
     fs.copyFileSync(path.join(source, file), path.join(paths.runtimeDir, file));
 
@@ -171,34 +227,61 @@ function onPath(command) {
     .some(directory => fs.existsSync(path.join(directory, command)));
 }
 
-function run(command, commandArgs, cwd) {
-  const result = spawnSync(command, commandArgs, { cwd, stdio: 'inherit' });
-  if (result.error) fail(result.error.message);
-  if (result.status !== 0) fail(`${command} exited with status ${result.status}`);
+function run(command, args, cwd) {
+  const result = spawnSync(command, args, { cwd, stdio: 'inherit' });
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error(`${command} exited with status ${result.status}`);
 }
 
-function launch(command, commandArgs, paths, additions) {
+function requireRuntime(command) {
   if (!fs.existsSync(command))
-    fail(`Runtime missing: ${command}\nRead references/setup.md, disclose its downloads, then run scripts/setup.`);
+    throw new Error(`Runtime missing: ${command}\nRead references/setup.md, disclose its downloads, then run scripts/setup.`);
+}
 
+function launch(command, args, cwd, additions, after, maintain) {
+  requireRuntime(command);
+  const env = childEnvironment(additions);
+  const child = spawn(command, args, { cwd, env, stdio: 'inherit' });
+  let finished = false;
+  const stopMaintaining = maintain
+    ? maintain(error => {
+      child.kill('SIGTERM');
+      finish({ ok: false, error });
+    })
+    : () => {};
+  const handlers = new Map();
+  child.once('error', error => finish({ ok: false, error }));
+  child.once('exit', (code, signal) => finish({ ok: !signal && code === 0, code, signal }));
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    const handler = () => child.kill(signal);
+    handlers.set(signal, handler);
+    process.on(signal, handler);
+  }
+
+  function finish(outcome) {
+    if (finished) return;
+    finished = true;
+    stopMaintaining();
+    for (const [signal, handler] of handlers)
+      process.removeListener(signal, handler);
+    try {
+      after(outcome);
+    } catch (error) {
+      fail(error.message);
+    }
+    if (outcome.error) fail(outcome.error.message);
+    if (outcome.signal) process.kill(process.pid, outcome.signal);
+    else process.exit(outcome.code ?? 1);
+  }
+}
+
+function childEnvironment(additions) {
   const env = { ...process.env, NO_UPDATE_NOTIFIER: '1' };
   for (const [key, value] of Object.entries(additions)) {
     if (value === null) delete env[key];
     else env[key] = value;
   }
-
-  const child = spawn(command, commandArgs, {
-    cwd: paths.workspace,
-    env,
-    stdio: 'inherit',
-  });
-  child.on('error', error => fail(error.message));
-  child.on('exit', (code, signal) => {
-    if (signal) process.kill(process.pid, signal);
-    else process.exit(code ?? 1);
-  });
-  for (const signal of ['SIGINT', 'SIGTERM'])
-    process.on(signal, () => child.kill(signal));
+  return env;
 }
 
 function fail(message) {

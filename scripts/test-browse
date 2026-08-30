@@ -1,0 +1,471 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+temporary=$(mktemp -d)
+trap 'rm -rf "$temporary"' EXIT HUP INT TERM
+
+export HOME="$temporary/home"
+export PERSISTENT_BROWSER_DATA_DIR="$temporary/state"
+export PERSISTENT_BROWSER_OUTPUT_DIR="$temporary/output"
+export PERSISTENT_BROWSER_RUNTIME_DIR="$temporary/runtime"
+export PERSISTENT_BROWSER_OFFICIAL_CLI="$temporary/playwright-cli"
+export PERSISTENT_BROWSER_PATCHRIGHT_RUNTIME="$temporary/runtime"
+export BROWSE_TEST_LOG="$temporary/log"
+export BROWSE_TEST_SESSIONS="$temporary/sessions"
+
+mkdir -p "$HOME" "$BROWSE_TEST_SESSIONS" \
+  "$PERSISTENT_BROWSER_PATCHRIGHT_RUNTIME/node_modules/patchright-core/lib/tools/cli-client"
+: >"$BROWSE_TEST_LOG"
+
+fake_official() {
+  printf '%s\n' \
+    '#!/bin/sh' \
+    'status=${BROWSE_TEST_EXIT:-0}' \
+    'delay=${BROWSE_TEST_DELAY:-0}' \
+    '[ "$delay" = 0 ] || sleep "$delay"' \
+    'result=failed' \
+    'if [ "$status" -eq 0 ]; then' \
+    '  marker="$BROWSE_TEST_SESSIONS/$PLAYWRIGHT_CLI_SESSION"' \
+    '  case "${1:-}" in' \
+    '    open) if [ -e "$marker" ]; then result=restarted; else result=opened; fi; : >"$marker" ;;' \
+    '    close|delete-data) rm -f "$marker"; result=closed ;;' \
+    '    *) result=used ;;' \
+    '  esac' \
+    'fi' \
+    'printf "%s|%s|%s|%s|%s\n" "$PLAYWRIGHT_CLI_SESSION" "$PLAYWRIGHT_MCP_CONFIG" "$PWD" "$*" "$result" >>"$BROWSE_TEST_LOG"' \
+    'exit "$status"' >"$PERSISTENT_BROWSER_OFFICIAL_CLI"
+  chmod +x "$PERSISTENT_BROWSER_OFFICIAL_CLI"
+}
+
+fake_patchright() {
+  patch_file="$PERSISTENT_BROWSER_PATCHRIGHT_RUNTIME/node_modules/patchright-core/lib/tools/cli-client/program.js"
+  package_file="$PERSISTENT_BROWSER_PATCHRIGHT_RUNTIME/node_modules/patchright-core/package.json"
+
+  printf '%s\n' \
+    "'use strict';" \
+    "const fs = require('node:fs');" \
+    'exports.program = async () => {' \
+    '  const line = [process.env.PLAYWRIGHT_CLI_SESSION, process.env.PLAYWRIGHT_MCP_CONFIG, process.cwd(), process.argv.slice(2).join(" ")].join("|");' \
+    '  fs.appendFileSync(process.env.BROWSE_TEST_LOG, `${line}\n`);' \
+    '};' >"$patch_file"
+  printf '%s\n' '{"version":"1.61.1"}' >"$package_file"
+}
+
+fake_official
+fake_patchright
+browser="$root/skills/browse/scripts/browser"
+patchright="$root/skills/browse/scripts/patchright"
+dashboard="$root/skills/browse/scripts/dashboard"
+failures=0
+
+pass() {
+  printf 'ok   %s\n' "$1"
+}
+
+fail() {
+  printf 'FAIL %s\n' "$1" >&2
+  failures=$((failures + 1))
+}
+
+check() {
+  label=$1
+  shift
+  if "$@"; then pass "$label"; else fail "$label"; fi
+}
+
+run_browser() {
+  task=$1
+  shift
+  BROWSE_TASK_ID=$task "$browser" "$@"
+}
+
+run_patchright() {
+  task=$1
+  shift
+  BROWSE_TASK_ID=$task "$patchright" "$@"
+}
+
+hold_lock() {
+  lock=$1
+  ready=$2
+  if [ -x /usr/bin/lockf ]; then
+    /usr/bin/lockf -k "$lock" sh -c 'touch "$1"; sleep 0.2' sh "$ready" &
+  elif [ -x /usr/bin/flock ]; then
+    /usr/bin/flock "$lock" sh -c 'touch "$1"; sleep 0.2' sh "$ready" &
+  elif [ -x /bin/flock ]; then
+    /bin/flock "$lock" sh -c 'touch "$1"; sleep 0.2' sh "$ready" &
+  else
+    return 1
+  fi
+  lock_pid=$!
+  while [ ! -e "$ready" ]; do
+    kill -0 "$lock_pid" 2>/dev/null || return 1
+  done
+}
+
+reject_browser() {
+  label=$1
+  shift
+  before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+  if run_browser alpha "$@" >"$temporary/out" 2>"$temporary/error"; then
+    fail "$label"
+  else
+    pass "$label"
+  fi
+  after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+  check "$label stops before browser execution" test "$before" = "$after"
+}
+
+line_field() {
+  awk -F '|' -v row="$1" -v column="$2" \
+    'NR == row { print $column; exit }' "$BROWSE_TEST_LOG"
+}
+
+json_field() {
+  node -e 'const fs = require("node:fs"); const value = JSON.parse(fs.readFileSync(process.argv[1])); process.stdout.write(process.argv[2].split(".").reduce((item, key) => item[key], value));' "$1" "$2"
+}
+
+agent_key() {
+  node -e 'const leases = require(process.argv[1]); process.stdout.write(leases.actor({}, process.argv[2], process.argv[3]).key);' \
+    "$root/skills/browse/scripts/lease.js" "$root" "$1"
+}
+
+check "one harness keeps a stable task identity" test "$(agent_key agent:pi-1)" = "$(agent_key agent:pi-1)"
+check "different harness tasks get distinct identities" test "$(agent_key agent:pi-1)" != "$(agent_key agent:claude-2)"
+if node -e 'require(process.argv[1]).actor({}, process.argv[2], null)' \
+  "$root/skills/browse/scripts/lease.js" "$root" >"$temporary/out" 2>"$temporary/error"
+then
+  fail "missing task identity fails closed"
+else
+  pass "missing task identity fails closed"
+fi
+check "identity failure explains the remedy" grep -q 'set BROWSE_TASK_ID' "$temporary/error"
+if node -e 'require(process.argv[1]).actor({ TERM_SESSION_ID: "shared" }, process.argv[2], null)' \
+  "$root/skills/browse/scripts/lease.js" "$root" >"$temporary/out" 2>"$temporary/error"
+then
+  fail "terminal identity fails closed"
+else
+  pass "terminal identity fails closed"
+fi
+
+mkdir -p "$temporary/bin"
+printf '%s\n' '#!/bin/sh' ': >"$BROWSE_TEST_FLOCK"' 'shift 3' 'exec "$@"' \
+  >"$temporary/bin/flock"
+chmod +x "$temporary/bin/flock"
+BROWSE_TEST_FLOCK="$temporary/flock-used" PATH="$temporary/bin:$PATH" node - \
+  "$root/skills/browse/scripts/lease.js" "$temporary/flock.json" <<'NODE'
+const fs = require('node:fs');
+const exists = fs.existsSync;
+fs.existsSync = file => file === '/usr/bin/lockf' ? false : exists(file);
+const leases = require(process.argv[2]);
+const file = process.argv[3];
+const owner = leases.actor({ BROWSE_TASK_ID: 'flock' });
+const operation = leases.claim(file, 'test browser', owner).operation;
+leases.release(file, owner, operation);
+NODE
+check "flock resolves from PATH" test -e "$temporary/flock-used"
+
+heartbeat="$temporary/heartbeat.json"
+heartbeat_operation=$(node -e 'const leases = require(process.argv[1]); const owner = leases.actor({ BROWSE_TASK_ID: "heartbeat" }); process.stdout.write(leases.claim(process.argv[2], "test browser", owner).operation);' \
+  "$root/skills/browse/scripts/lease.js" "$heartbeat")
+hold_lock "${heartbeat}.lock" "$temporary/lock-ready"
+if node - "$root/skills/browse/scripts/lease.js" "$heartbeat" "$heartbeat_operation" <<'NODE'
+const fs = require('node:fs');
+const leases = require(process.argv[2]);
+const file = process.argv[3];
+const operation = process.argv[4];
+const owner = leases.actor({ BROWSE_TASK_ID: 'heartbeat' });
+const before = JSON.parse(fs.readFileSync(file)).touchedAt;
+let failure;
+const stop = leases.keep(file, 'test browser', owner, operation, error => { failure = error; }, 10);
+setTimeout(() => {
+  stop();
+  const after = JSON.parse(fs.readFileSync(file)).touchedAt;
+  leases.release(file, owner, operation);
+  if (failure) throw failure;
+  if (after <= before) process.exitCode = 1;
+}, 350);
+NODE
+then
+  pass "keepalive retries transient lock contention"
+else
+  fail "keepalive retries transient lock contention"
+fi
+wait "$lock_pid"
+
+run_browser alpha open about:blank
+run_browser beta open about:blank
+alpha_session=$(line_field 1 1)
+beta_session=$(line_field 2 1)
+alpha_config=$(line_field 1 2)
+beta_config=$(line_field 2 2)
+alpha_workspace=$(line_field 1 3)
+beta_workspace=$(line_field 2 3)
+alpha_data=$(dirname "$alpha_config")
+beta_data=$(dirname "$beta_config")
+alpha_output=$(json_field "$alpha_config" outputDir)
+beta_output=$(json_field "$beta_config" outputDir)
+
+check "ordinary tasks use distinct sessions" test "$alpha_session" != "$beta_session"
+check "ordinary tasks use distinct profiles" test "$(json_field "$alpha_config" browser.userDataDir)" != "$(json_field "$beta_config" browser.userDataDir)"
+check "ordinary tasks use distinct workspaces" test "$alpha_workspace" != "$beta_workspace"
+check "ordinary tasks use distinct output" test "$alpha_output" != "$beta_output"
+run_browser alpha list
+check "task list uses its own workspace" \
+  test "$(tail -n 1 "$BROWSE_TEST_LOG" | awk -F '|' '{print $3}')" = "$alpha_workspace"
+run_browser alpha show
+check "task dashboard reveals from its own workspace" \
+  test "$(tail -n 1 "$BROWSE_TEST_LOG" | awk -F '|' '{print $3}')" = "$alpha_workspace"
+"$dashboard"
+check "standalone dashboard remains global" \
+  test "$(tail -n 1 "$BROWSE_TEST_LOG" | awk -F '|' '{print $3}')" = \
+  "$(CDPATH= cd -- "$PERSISTENT_BROWSER_DATA_DIR/workspace" && pwd -P)"
+
+run_browser alpha close
+check "task close removes its registry entry" \
+  test "$(tail -n 1 "$BROWSE_TEST_LOG" | awk -F '|' '{print $4}')" = delete-data
+check "task close removes its state" test ! -e "$alpha_data"
+check "task close removes its output" test ! -e "$alpha_output"
+check "task close preserves another task" test -d "$beta_data"
+check "task close preserves another output" test -d "$beta_output"
+run_browser beta --help close
+check "cleanup help preserves task state" test -d "$beta_data"
+check "cleanup help preserves task output" test -d "$beta_output"
+run_browser beta -hv close
+check "bundled diagnostics preserve task state" test -d "$beta_data"
+check "bundled diagnostics preserve task output" test -d "$beta_output"
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+if run_browser beta --typo close >"$temporary/out" 2>"$temporary/error"; then
+  fail "unknown leading options cannot trigger task cleanup"
+else
+  pass "unknown leading options cannot trigger task cleanup"
+fi
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "invalid task cleanup stops before browser execution" test "$before" = "$after"
+check "invalid task cleanup preserves task state" test -d "$beta_data"
+check "invalid task cleanup preserves task output" test -d "$beta_output"
+run_browser beta close-all
+check "task close-all removes its registry entry" \
+  test "$(tail -n 1 "$BROWSE_TEST_LOG" | awk -F '|' '{print $4}')" = delete-data
+check "task close-all removes its state" test ! -e "$beta_data"
+check "task close-all removes its output" test ! -e "$beta_output"
+
+official_lease="$PERSISTENT_BROWSER_DATA_DIR/leases/official.json"
+if BROWSE_TEST_EXIT=7 BROWSE_TASK_ID=failed "$browser" --shared open about:blank \
+  >"$temporary/out" 2>"$temporary/error"; then
+  fail "failed shared open reports failure"
+else
+  pass "failed shared open reports failure"
+fi
+check "failed shared open releases its lease" test ! -e "$official_lease"
+
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+set +e
+BROWSE_TEST_DELAY=0.3 BROWSE_TEST_EXIT=7 BROWSE_TASK_ID=overlap \
+  "$browser" --shared open about:blank >"$temporary/overlap.out" 2>"$temporary/overlap.err" &
+overlap_pid=$!
+set -e
+while [ ! -e "$official_lease" ]; do
+  kill -0 "$overlap_pid" 2>/dev/null || break
+done
+if run_browser overlap --shared open about:blank >"$temporary/out" 2>"$temporary/error"; then
+  fail "same-task shared commands are serialized"
+else
+  pass "same-task shared commands are serialized"
+fi
+check "overlap reports the active command" grep -q 'active command' "$temporary/error"
+set +e
+wait "$overlap_pid"
+overlap_status=$?
+set -e
+check "failed overlapping owner reports failure" test "$overlap_status" -eq 7
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "only the active same-task command reaches the browser" test $((after - before)) -eq 1
+check "failed active acquisition releases its lease" test ! -e "$official_lease"
+
+run_browser alpha --shared --json open about:blank
+check "global option before open still acquires a lease" test -f "$official_lease"
+run_browser beta --shared --help close-all
+check "cleanup help preserves authenticated ownership" grep -q '"task": "alpha"' "$official_lease"
+run_browser alpha --shared -hv close
+check "bundled diagnostics preserve authenticated ownership" grep -q '"task": "alpha"' "$official_lease"
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+if run_browser alpha --shared --typo close >"$temporary/out" 2>"$temporary/error"; then
+  fail "unknown leading options cannot release authenticated ownership"
+else
+  pass "unknown leading options cannot release authenticated ownership"
+fi
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "invalid shared cleanup stops before browser execution" test "$before" = "$after"
+check "invalid shared cleanup preserves authenticated ownership" grep -q '"task": "alpha"' "$official_lease"
+if BROWSE_TEST_EXIT=7 BROWSE_TASK_ID=alpha "$browser" --shared open about:blank \
+  >"$temporary/out" 2>"$temporary/error"; then
+  fail "failed repeated open reports failure"
+else
+  pass "failed repeated open reports failure"
+fi
+check "failed repeated open preserves valid ownership" grep -q '"task": "alpha"' "$official_lease"
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+if run_browser beta --shared --filename show screenshot >"$temporary/out" 2>"$temporary/error"; then
+  fail "option values cannot bypass authenticated ownership"
+else
+  pass "option values cannot bypass authenticated ownership"
+fi
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "option-value contention stops before browser execution" test "$before" = "$after"
+run_browser alpha --shared --filename close screenshot
+check "option values cannot release authenticated ownership" grep -q '"task": "alpha"' "$official_lease"
+reject_browser "long session override is rejected" --shared snapshot --session persistent-patchright
+reject_browser "short session override is rejected" --shared snapshot -s=persistent-patchright
+reject_browser "browser override is rejected" --shared open --browser=firefox
+reject_browser "config override is rejected" --shared open --config=/tmp/other.json
+reject_browser "profile override is rejected" --shared open --profile=/tmp/other-profile
+reject_browser "persistent override is rejected" --shared open --persistent
+reject_browser "attach is rejected" --shared attach other-browser
+run_browser alpha --shared show --annotate
+pass "the lease owner can request an annotated view"
+
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+if "$dashboard" --annotate >"$temporary/out" 2>"$temporary/error"; then
+  fail "the passive dashboard rejects agent annotation"
+else
+  pass "the passive dashboard rejects agent annotation"
+fi
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "dashboard annotation stops before browser execution" test "$before" = "$after"
+
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+if run_browser beta --shared show --annotate >"$temporary/out" 2>"$temporary/error"; then
+  fail "another task cannot annotate a live shared browser"
+else
+  pass "another task cannot annotate a live shared browser"
+fi
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "contention stops before browser execution" test "$before" = "$after"
+check "contention identifies the owner" grep -q 'leased by alpha' "$temporary/error"
+if grep -qi 'close.*chrome\|close.*browser' "$temporary/error"; then
+  fail "contention never asks the user to close a window"
+else
+  pass "contention never asks the user to close a window"
+fi
+
+if run_browser beta --shared open about:blank >"$temporary/out" 2>"$temporary/error"; then
+  fail "shared open respects a live lease"
+else
+  pass "shared open respects a live lease"
+fi
+
+run_browser alpha --shared --json close
+check "global option before close still releases its lease" test ! -e "$official_lease"
+check "shared close preserves its profile" test -d "$PERSISTENT_BROWSER_DATA_DIR/official-profile"
+run_browser beta --shared open about:blank
+check "next task acquires the released lease" grep -q '"task": "beta"' "$official_lease"
+
+node -e 'const fs = require("node:fs"); const file = process.argv[1]; const value = JSON.parse(fs.readFileSync(file)); value.touchedAt = 0; value.expiresAt = 0; fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);' "$official_lease"
+run_browser gamma --shared open about:blank
+check "open reclaims an expired lease" grep -q '"task": "gamma"' "$official_lease"
+
+node -e 'const fs = require("node:fs"); const file = process.argv[1]; const value = JSON.parse(fs.readFileSync(file)); value.touchedAt = 0; value.expiresAt = 0; fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);' "$official_lease"
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+if run_browser gamma --shared snapshot >"$temporary/out" 2>"$temporary/error"; then
+  fail "an expired lease cannot be revived by its previous owner"
+else
+  pass "an expired lease cannot be revived by its previous owner"
+fi
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "same-owner expiry stops before browser execution" test "$before" = "$after"
+check "same-owner expiry directs the task to open" grep -q 'run open to reclaim it' "$temporary/error"
+run_browser gamma --shared open about:blank
+
+run_browser gamma --shared close
+touch "$BROWSE_TEST_SESSIONS/persistent-official"
+run_browser delta --shared open about:blank
+check "an unmanaged open window is not ownership evidence" grep -q '"task": "delta"' "$official_lease"
+check "open normalizes the unmanaged session" test "$(tail -n 1 "$BROWSE_TEST_LOG" | awk -F '|' '{print $5}')" = restarted
+run_browser delta --shared close
+
+if run_browser epsilon --shared snapshot >"$temporary/out" 2>"$temporary/error"; then
+  fail "shared commands require an acquired lease"
+else
+  pass "shared commands require an acquired lease"
+fi
+check "missing lease directs the task to open" grep -q 'run open first' "$temporary/error"
+
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+printf '{broken\n' >"$official_lease"
+if run_browser corrupt --shared open about:blank >"$temporary/out" 2>"$temporary/error"; then
+  fail "malformed lease fails closed"
+else
+  pass "malformed lease fails closed"
+fi
+check "malformed lease identifies its state" grep -q 'Invalid browser lease' "$temporary/error"
+printf '{"version":1}\n' >"$official_lease"
+if run_browser corrupt --shared open about:blank >"$temporary/out" 2>"$temporary/error"; then
+  fail "invalid lease shape fails closed"
+else
+  pass "invalid lease shape fails closed"
+fi
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "corrupt leases stop before browser execution" test "$before" = "$after"
+rm -f "$official_lease"
+
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+lock="${official_lease}.lock"
+: >"$lock"
+touch -t 200001010000 "$lock"
+set +e
+BROWSE_TASK_ID=race-a "$browser" --shared open about:blank >"$temporary/a.out" 2>"$temporary/a.err" &
+pid_a=$!
+BROWSE_TASK_ID=race-b "$browser" --shared open about:blank >"$temporary/b.out" 2>"$temporary/b.err" &
+pid_b=$!
+wait "$pid_a"
+status_a=$?
+wait "$pid_b"
+status_b=$?
+set -e
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "simultaneous claims have one winner" test $((status_a + status_b)) -eq 1
+check "only the lease winner reaches the browser" test $((after - before)) -eq 1
+check "a leftover lock file is not ownership evidence" test -f "$lock"
+rm -f "$official_lease"
+
+patchright_lease="$PERSISTENT_BROWSER_DATA_DIR/leases/patchright.json"
+run_patchright alpha open about:blank
+check "Patchright open acquires a lease" test -f "$patchright_lease"
+if run_patchright beta snapshot >"$temporary/out" 2>"$temporary/error"; then
+  fail "Patchright rejects another live owner"
+else
+  pass "Patchright rejects another live owner"
+fi
+run_patchright alpha close
+check "Patchright close releases its lease" test ! -e "$patchright_lease"
+check "Patchright close preserves its profile" test -d "$PERSISTENT_BROWSER_DATA_DIR/patchright-profile"
+run_patchright beta open about:blank
+check "Patchright transfers after release" grep -q '"task": "beta"' "$patchright_lease"
+
+run_browser alpha --shared open about:blank
+before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+if run_browser cleanup kill-all >"$temporary/out" 2>"$temporary/error"; then
+  fail "global shutdown is unavailable"
+else
+  pass "global shutdown is unavailable"
+fi
+after=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
+check "global shutdown stops before browser execution" test "$before" = "$after"
+check "rejected global shutdown preserves the official lease" grep -q '"task": "alpha"' "$official_lease"
+check "rejected global shutdown preserves the Patchright lease" grep -q '"task": "beta"' "$patchright_lease"
+run_browser alpha --shared close-all
+check "shared close-all releases its own lease" test ! -e "$official_lease"
+check "shared close-all preserves the other lease" grep -q '"task": "beta"' "$patchright_lease"
+check "shared close-all targets only its session" \
+  test "$(tail -n 1 "$BROWSE_TEST_LOG" | awk -F '|' '{print $4}')" = close
+run_patchright beta close
+check "final Patchright close releases its lease" test ! -e "$patchright_lease"
+
+if [ "$failures" -gt 0 ]; then
+  printf '%s check(s) failed\n' "$failures" >&2
+  exit 1
+fi
+
+printf 'all checks passed\n'

@@ -5,12 +5,17 @@ Patchright is the default for user-authorized social-media work and an explicit 
 ## Invariants
 
 - Command: `$SKILL_DIR/scripts/patchright`
-- Profile: isolated from official Playwright
+- Profile: persistent and isolated from official Playwright
 - Dashboard: `$SKILL_DIR/scripts/dashboard`
 - Apply every boundary in the parent skill.
 - Never share, copy, or concurrently open another engine's profile.
 - Never attach official Playwright to this browser over CDP; that defeats Patchright's execution-context protections.
 - Keep one stable native identity. Do not rotate or spoof fingerprints, user agents, proxies, locale, geolocation, or device properties.
+
+The wrapper guards the profile with an expiring task lease. `open` acquires or
+reclaims it, owned actions renew it, and `close` releases it. A visible window
+is not ownership evidence. If another live task holds the lease, retry after
+release or expiry; never ask the user to close the window.
 
 ## Differences
 
