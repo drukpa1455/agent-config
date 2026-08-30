@@ -14,9 +14,18 @@ git init --quiet --bare --initial-branch=main "$remote"
 git init --quiet --initial-branch=main "$primary"
 git -C "$primary" config user.email test@example.com
 git -C "$primary" config user.name Test
+mkdir -p "$primary/scripts"
 printf 'seed\n' > "$primary/README.md"
 printf '.env\n' > "$primary/.gitignore"
-git -C "$primary" add README.md .gitignore
+cat >"$primary/scripts/update" <<'SH'
+#!/bin/sh
+landed=$(git -C "$(dirname "$0")/.." rev-parse HEAD)
+[ "$landed" = "$TEST_PROJECTED" ]
+git -C "$TEST_PRIMARY" merge --quiet --ff-only "$landed"
+printf 'update\n' >>"$TEST_UPDATE_LOG"
+SH
+chmod +x "$primary/scripts/update"
+git -C "$primary" add README.md .gitignore scripts/update
 git -C "$primary" commit --quiet -m seed
 git -C "$primary" config "url.$remote.insteadOf" https://example.test/team/remote.git
 git -C "$primary" remote add origin https://example.test/team/remote.git
@@ -112,6 +121,7 @@ case " $* " in
 esac
 SH
 chmod +x "$temporary/bin/gh"
+update_log="$temporary/update-log"
 
 done_as() {
   destination=$1
@@ -119,18 +129,30 @@ done_as() {
   expected_merge=$3
   open=${4:-0}
   extra_merge=${5:-}
+  updater=${6:-0}
   (
     cd "$destination"
+    if [ "$updater" -eq 1 ]; then
+      export WORK_PRIMARY_UPDATER=scripts/update
+    fi
     HOME="$home" \
       PATH="$temporary/bin:$PATH" \
       TEST_HEAD="$expected_head" \
       TEST_MERGE="$expected_merge" \
       TEST_OPEN="$open" \
       TEST_EXTRA_MERGE="$extra_merge" \
+      TEST_PRIMARY="$primary" \
+      TEST_PROJECTED="$expected_merge" \
+      TEST_UPDATE_LOG="$update_log" \
       "$work" done
   )
 }
 
+: >"$update_log"
+rejects \
+  "repository updater waits for landing proof" \
+  done_as "$workspace" 0000000000000000000000000000000000000000 "$merge" 0 "" 1
+[ ! -s "$update_log" ]
 rejects \
   "done requires the exact merged head" \
   done_as "$workspace" 0000000000000000000000000000000000000000 "$merge"
@@ -143,9 +165,13 @@ git -C "$primary" branch task/dependent task/first
 rejects "done preserves an unattached dependent branch" done_as "$workspace" "$head" "$merge"
 git -C "$primary" branch -D task/dependent >/dev/null
 
-git -C "$primary" merge --quiet --no-ff task/first -m landed
-merge=$(git -C "$primary" rev-parse HEAD)
-git -C "$primary" push --quiet origin main
+integrator="$temporary/integrator"
+git -C "$primary" worktree add --quiet -b integrate "$integrator" main
+git -C "$integrator" merge --quiet --no-ff task/first -m landed
+merge=$(git -C "$integrator" rev-parse HEAD)
+git -C "$integrator" push --quiet origin HEAD:main
+git -C "$primary" worktree remove "$integrator"
+git -C "$primary" branch -D integrate >/dev/null
 tree=$(git -C "$primary" rev-parse main^{tree})
 future=$(printf 'future\n' | git -C "$primary" commit-tree "$tree" -p main)
 git -C "$primary" update-ref refs/heads/future "$future"
@@ -173,18 +199,41 @@ rejects "done preserves a locked worktree" done_as "$workspace" "$head" "$merge"
 git -C "$primary" ls-remote --exit-code --heads "$push_remote" refs/heads/task/first >/dev/null
 git -C "$primary" worktree unlock "$workspace"
 
+primary_head=$(git -C "$primary" rev-parse HEAD)
+git -C "$primary" switch --quiet --detach task/first
+git -C "$primary" branch -f main task/first
+git -C "$primary" switch --quiet main
+rejects "done preserves a second-parent primary" done_as "$workspace" "$head" "$merge"
+git -C "$primary" switch --quiet --detach
+git -C "$primary" branch -f main "$primary_head"
+git -C "$primary" switch --quiet main
+
+for lock_name in agent-config-update.lock agent-primary-update.lock; do
+  lock="$primary/.git/$lock_name"
+  exec 8>"$lock"
+  python3 -c 'import fcntl; fcntl.flock(8, fcntl.LOCK_EX | fcntl.LOCK_NB)'
+  rejects "done preserves work during another primary update" \
+    done_as "$workspace" "$head" "$merge"
+  exec 8>&-
+done
+
+touch "$primary/untracked"
+rejects "done preserves a dirty primary" done_as "$workspace" "$head" "$merge"
+rm "$primary/untracked"
+
 result=$(
   cd "$workspace"
   HOME="$home" \
     PATH="$temporary/bin:$PATH" \
     TEST_HEAD="$head" \
-    TEST_MERGE="$merge" \
-    TEST_EXTRA_MERGE="$head" \
+    TEST_MERGE="$head" \
+    TEST_EXTRA_MERGE="" \
     "$work" done
 )
 physical_primary=$(CDPATH= cd -- "$primary" && pwd -P)
 [ "$result" = "$physical_primary" ]
 [ ! -e "$workspace" ]
+[ "$(git -C "$primary" rev-parse HEAD)" = "$merge" ]
 if git -C "$primary" show-ref --verify --quiet refs/heads/task/first; then
   exit 1
 fi
@@ -194,8 +243,35 @@ fi
 if git -C "$primary" ls-remote --exit-code --heads "$push_remote" refs/heads/task/first >/dev/null; then
   exit 1
 fi
-ok "done accepts multiple merges and deletes from the push remote"
+ok "done resolves a stacked carrier and deletes from the push remote"
 git -C "$primary" branch -D future >/dev/null
+
+projected_workspace=$(new_at "$primary" projected)
+printf 'projected\n' >>"$projected_workspace/README.md"
+git -C "$projected_workspace" add README.md
+git -C "$projected_workspace" commit --quiet -m projected
+projected_head=$(git -C "$projected_workspace" rev-parse HEAD)
+git -C "$projected_workspace" push --quiet -u origin task/projected
+
+projected_integrator="$temporary/projected-integrator"
+git -C "$primary" worktree add --quiet -b projected-integrate \
+  "$projected_integrator" main
+git -C "$projected_integrator" merge --quiet --no-ff task/projected -m projected
+projected_merge=$(git -C "$projected_integrator" rev-parse HEAD)
+git -C "$projected_integrator" push --quiet "$remote" HEAD:main
+git -C "$primary" worktree remove "$projected_integrator"
+git -C "$primary" branch -D projected-integrate >/dev/null
+
+projected_tree=$(git -C "$primary" rev-parse "$projected_merge^{tree}")
+later=$(printf 'later\n' | git -C "$primary" commit-tree \
+  "$projected_tree" -p "$projected_merge")
+git -C "$primary" push --quiet "$remote" "$later":main
+: >"$update_log"
+done_as "$projected_workspace" "$projected_head" "$projected_merge" 0 "" 1 \
+  >/dev/null
+[ "$(cat "$update_log")" = update ]
+[ "$(git -C "$primary" rev-parse HEAD)" = "$projected_merge" ]
+ok "done preserves a repository-projected primary while trunk advances"
 
 relative="$temporary/relative"
 relative_remote="$relative/remote.git"

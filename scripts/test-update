@@ -74,10 +74,12 @@ printf '%s\n' '#!/bin/sh' \
   "exec '$real_git' \"\$@\"" >"$temporary/bin/git"
 chmod +x "$temporary/bin/git"
 rejects "remote timeouts release the update lock" run_timed_update
-lock="$primary/.git/agent-config-update.lock"
-exec 8>"$lock"
-python3 -c 'import fcntl; fcntl.flock(8, fcntl.LOCK_EX | fcntl.LOCK_NB)'
-exec 8>&-
+for name in agent-config-update.lock agent-primary-update.lock; do
+  lock="$primary/.git/$name"
+  exec 8>"$lock"
+  python3 -c 'import fcntl; fcntl.flock(8, fcntl.LOCK_EX | fcntl.LOCK_NB)'
+  exec 8>&-
+done
 touch "$landed/dirty"
 rejects "a dirty invoking worktree preserves the primary" run_update
 rm "$landed/dirty"
@@ -136,11 +138,21 @@ rejects "a side-branch primary is not treated as trunk" run_primary_update
 git -C "$primary" merge --quiet --ff-only origin/main
 
 common=$(git -C "$primary" rev-parse --git-common-dir)
-lock="$primary/$common/agent-config-update.lock"
-exec 8>"$lock"
-python3 -c 'import fcntl; fcntl.flock(8, fcntl.LOCK_EX | fcntl.LOCK_NB)'
-rejects "an active update lock preserves the primary" run_update
+exec 7>"$primary/$common/agent-config-update.lock"
+exec 8>"$primary/$common/agent-primary-update.lock"
+python3 -c 'import fcntl; fcntl.flock(7, fcntl.LOCK_EX); fcntl.flock(8, fcntl.LOCK_EX)'
+env UPDATE_LOCK_FDS=7,8 HOME="$home" "$landed/scripts/update" >/dev/null
+exec 7>&-
 exec 8>&-
+ok "an inherited lifecycle lock remains authoritative"
+
+for name in agent-config-update.lock agent-primary-update.lock; do
+  lock="$primary/$common/$name"
+  exec 8>"$lock"
+  python3 -c 'import fcntl; fcntl.flock(8, fcntl.LOCK_EX | fcntl.LOCK_NB)'
+  rejects "an active update lock preserves the primary" run_update
+  exec 8>&-
+done
 run_update >/dev/null
 ok "a released update lock is immediately reusable"
 

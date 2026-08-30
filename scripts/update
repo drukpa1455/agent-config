@@ -60,15 +60,30 @@ case $common in
   *) common="$root/$common" ;;
 esac
 common=$(CDPATH= cd -- "$common" && pwd -P)
-lock="$common/agent-config-update.lock"
-exec 9>"$lock"
-python3 -c '
+if [ -n "${UPDATE_LOCK_FDS:-}" ]; then
+  lock_fds=$UPDATE_LOCK_FDS
+else
+  exec 9>"$common/agent-config-update.lock"
+  exec 8>"$common/agent-primary-update.lock"
+  lock_fds=9,8
+fi
+python3 - "$common" "$lock_fds" <<'PY' || fail "another update is active"
 import fcntl
-try:
-    fcntl.flock(9, fcntl.LOCK_EX | fcntl.LOCK_NB)
-except BlockingIOError:
+import os
+import sys
+
+root, raw = sys.argv[1:]
+fds = [int(value) for value in raw.split(",")]
+names = ("agent-config-update.lock", "agent-primary-update.lock")
+if len(fds) != len(names):
     raise SystemExit(1)
-' || fail "another update is active"
+for descriptor, name in zip(fds, names):
+    actual = os.fstat(descriptor)
+    expected = os.stat(os.path.join(root, name))
+    if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
+        raise SystemExit(1)
+    fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+PY
 scratch=
 release() {
   [ -z "$scratch" ] || rm -rf "$scratch"

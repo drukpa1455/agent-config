@@ -34,12 +34,12 @@ requires it.
 
 ## Execute the scope
 
-Keep the primary checkout on trunk and read-only. Use the repository's isolation
-entrypoint for each independently landable change. When none exists, resolve
-`$SKILL_DIR` from this loaded file and run `$SKILL_DIR/scripts/work new <task>`;
-it creates a task branch and worktree under `~/.worktrees`. Follow the issue
-graph in dependency order; use stacked work only for real dependencies. The
-fallback requires Git and Python 3.9 or newer.
+Keep the primary checkout on trunk and free of task work. Use the repository's
+isolation entrypoint for each independently landable change. When none exists,
+resolve `$SKILL_DIR` from this loaded file and run
+`$SKILL_DIR/scripts/work new <task>`; it creates a task branch and worktree under
+`~/.worktrees`. Follow the issue graph in dependency order; use stacked work only
+for real dependencies. The fallback requires Git and Python 3.9 or newer.
 
 Keep required behavior, tests, migration, documentation, and cleanup together.
 Do not absorb adjacent polish, speculative architecture, or unrelated failures.
@@ -91,12 +91,13 @@ Update or close completed issues, intentionally close superseded pull requests,
 then use the repository's cleanup entrypoint or run
 `$SKILL_DIR/scripts/work done`. The fallback removes only its current clean task
 worktree and branch after proving a pull request for its exact head was merged
-into fresh trunk and no open or local work depends on it. It requires
-authenticated `gh`; if unavailable,
-preserve the workspace and use provider-native evidence and cleanup. Do not create
-a separate summary artifact when the canonical spec, tracker, and retained
-evidence suffice. Do not destroy blocked evidence merely to make the tracker look
-clean; leave every unresolved artifact in an explicit reported state.
+into fresh trunk and no open or local work depends on it. It first fast-forwards
+a clean primary trunk; dirty, off-trunk, or diverged primaries preserve the task
+workspace. It requires authenticated `gh`; if unavailable, preserve the workspace
+and use provider-native evidence and cleanup. Do not create a separate summary
+artifact when the canonical spec, tracker, and retained evidence suffice. Do not
+destroy blocked evidence merely to make the tracker look clean; leave every
+unresolved artifact in an explicit reported state.
 
 Invocation authorizes delivery and cleanup for the selected repository scope. It
 does not bypass the global high-impact boundary or authorize production mutation.

@@ -113,12 +113,12 @@ clever golf, and speculative architecture.
   close its tracker, and remove owned branches and workspaces. Report the change
   only as landed or blocked with its exact preserved state. Research, diagnosis,
   planning, status, and review remain read-only unless they request a change.
-- Treat the primary checkout and task workspaces outside the current task as
-  user-owned. Keep the primary checkout on trunk and read-only: never edit,
-  switch branches, pull, reset, stash, clean, generate files, install
-  dependencies, or run services there. The sole exception is a repository-owned,
-  lock-serialized projection updater required by project guidance; it may
-  fast-forward clean trunk and refresh its projections after landing.
+- Treat task workspaces outside the current task as user-owned. Keep the primary
+  checkout on trunk and free of task work: never edit files, switch branches,
+  reset, stash, clean, generate files, install dependencies, or run services
+  there. After landing, fast-forward a clean primary trunk to the verified landed
+  revision, using the repository updater when available. If it is dirty,
+  off-trunk, or diverged, preserve it and report the exact state.
 - Every agent-authored change uses one uniquely named task branch in a leased
   worktree or repository-provided isolated workspace. Create it through the
   repository's isolation entrypoint and canonical workspace root when available.
