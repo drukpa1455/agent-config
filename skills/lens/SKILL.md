@@ -67,9 +67,11 @@ need routine refresh. For decisive evidence identify:
 <repository>@<full-revision> <path>::<symbol-or-section>
 ```
 
-For a fresh checkout, record origin, full revision, and status. Keep study
-repositories read-only. Do not fetch, clone, initialize submodules, install
-dependencies, build, or execute upstream code without explicit approval.
+For requested study, fetch or clone source read-only into task-scoped scratch
+without further confirmation. Record origin, full revision, and status; delete
+the scratch checkout when the study ends. Do not initialize submodules, install
+dependencies, build, or execute upstream code unless the user explicitly
+requests that action.
 
 Add another lens only after an equivalent primary-source study establishes a
 distinct pressure, mechanics, collaborators, failures, and transfer limits.
