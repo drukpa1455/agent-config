@@ -7,6 +7,19 @@ policy="$root/global/AGENTS.md"
 policy_destinations=".pi/agent/AGENTS.md .codex/AGENTS.md .claude/CLAUDE.md"
 skills_destinations=".agents/skills .claude/skills"
 failures=0
+harness_path=$(mktemp -d)
+AGENT_CONFIG_HARNESS_PATH=$harness_path
+export AGENT_CONFIG_HARNESS_PATH
+
+enable_harnesses() {
+  rm -f "$harness_path"/*
+  for harness in "$@"; do
+    printf '#!/bin/sh\nexit 0\n' >"$harness_path/$harness"
+    chmod +x "$harness_path/$harness"
+  done
+}
+
+enable_harnesses pi codex claude
 
 managed_skills=$(
   for source in "$root"/skills/*; do
@@ -59,6 +72,23 @@ assert_every_projection_linked() {
   done
 }
 
+assert_codex_only() {
+  label=$1
+
+  check "$label: Codex policy is linked" \
+    "$(link_target ".codex/AGENTS.md")" "$policy"
+  check "$label: Pi policy is absent" \
+    "$(path_state ".pi/agent/AGENTS.md")" "missing"
+  check "$label: Claude policy is absent" \
+    "$(path_state ".claude/CLAUDE.md")" "missing"
+  check "$label: Claude skills are absent" \
+    "$(path_state ".claude/skills")" "missing"
+  for skill in $managed_skills; do
+    check "$label: .agents/skills/$skill links its package" \
+      "$(link_target ".agents/skills/$skill")" "$root/skills/$skill"
+  done
+}
+
 isolated_home
 "$link" --check >/dev/null
 check "check mode leaves policy absent" \
@@ -91,6 +121,37 @@ check "second run succeeds" "$(exit_status_of_link)" "0"
 assert_every_projection_linked "second run"
 linked_home=$HOME
 
+enable_harnesses codex
+check "relinking for Codex only succeeds" "$(exit_status_of_link)" "0"
+assert_codex_only "Codex-only relink"
+
+mkdir -p "$HOME/.pi" "$HOME/.claude"
+printf 'local Pi state\n' >"$HOME/.pi/local"
+printf 'local Claude state\n' >"$HOME/.claude/settings.json"
+ln -s "$root/skills/retired" "$HOME/.agents/skills/retired"
+mkdir -p "$HOME/.claude/skills"
+ln -s "$root/skills/retired" "$HOME/.claude/skills/retired"
+enable_harnesses
+check "relinking with no harness succeeds" "$(exit_status_of_link)" "0"
+for destination in $policy_destinations; do
+  check "no harness: $destination is absent" \
+    "$(path_state "$destination")" "missing"
+done
+check "no harness: shared skills are absent" \
+  "$(path_state ".agents/skills")" "missing"
+check "no harness: Claude skills are absent" \
+  "$(path_state ".claude/skills")" "missing"
+check "no harness: retired shared skill is absent" \
+  "$(path_state ".agents/skills/retired")" "missing"
+check "no harness: retired Claude skill is absent" \
+  "$(path_state ".claude/skills/retired")" "missing"
+check "no harness: unrelated Pi state remains" \
+  "$(cat "$HOME/.pi/local")" "local Pi state"
+check "no harness: unrelated Claude state remains" \
+  "$(cat "$HOME/.claude/settings.json")" "local Claude state"
+
+enable_harnesses pi codex claude
+
 isolated_home
 mkdir -p "$HOME/.claude"
 printf 'hand written policy\n' >"$HOME/.claude/CLAUDE.md"
@@ -105,6 +166,7 @@ check "leaves that entry in place" "$(path_state ".claude/skills/not-ours")" "pr
 
 HOME=$linked_home
 export HOME
+"$link" >/dev/null
 ln -s "$root/skills/implementation" "$HOME/.agents/skills/implementation"
 ln -s "$root/skills/implementation" "$HOME/.claude/skills/implementation"
 ln -s "$root/skills/systematic-debugging" "$HOME/.agents/skills/systematic-debugging"
