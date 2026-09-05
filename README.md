@@ -41,6 +41,10 @@ refuses unmanaged entries, so globally active prompt content remains versioned
 and reviewable. Install project-specific or third-party skills in their owning
 repository instead of the global directory.
 
+Only harnesses whose `pi`, `codex`, or `claude` executable is available on
+`PATH` receive projections. Re-running the linker after removing a harness
+removes its owned links and leaves unrelated configuration untouched.
+
 Pi, Codex, and Claude Code read the same skills and the same global policy. Each
 reads it under the name its own harness loads:
 

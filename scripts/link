@@ -24,6 +24,12 @@ same_link() {
   [ "$target" = "$source" ]
 }
 
+harness_available() {
+  harness=$1
+  harness_path=${AGENT_CONFIG_HARNESS_PATH:-$PATH}
+  (PATH=$harness_path; command -v "$harness" >/dev/null 2>&1)
+}
+
 check_parent() {
   parent=$(dirname "$1")
   while [ ! -e "$parent" ] && [ ! -L "$parent" ]; do
@@ -64,6 +70,15 @@ link_file() {
   [ "$mode" != --check ] || return 0
   mkdir -p "$(dirname "$destination")"
   ln -s "$source" "$destination"
+}
+
+unlink_file() {
+  source=$1
+  destination=$2
+
+  [ -L "$destination" ] && same_link "$source" "$destination" || return 0
+  check_write "$destination"
+  [ "$mode" = --check ] || rm "$destination"
 }
 
 link_skills() {
@@ -115,12 +130,65 @@ link_skills() {
   done
 }
 
-link_skills "$HOME/.agents/skills"
-link_skills "$HOME/.claude/skills"
+unlink_skills() {
+  skills_dir=$1
 
-link_file "$policy" "$HOME/.pi/agent/AGENTS.md"
-link_file "$policy" "$HOME/.codex/AGENTS.md"
-link_file "$policy" "$HOME/.claude/CLAUDE.md"
+  if [ -L "$skills_dir" ]; then
+    unlink_file "$projection/skills" "$skills_dir"
+    return
+  fi
+  [ -d "$skills_dir" ] || return 0
+  for destination in "$skills_dir"/*; do
+    [ -e "$destination" ] || [ -L "$destination" ] || continue
+    skill=$(basename "$destination")
+    unlink_file "$projection/skills/$skill" "$skills_dir/$skill"
+  done
+  [ "$mode" = --check ] || rmdir "$skills_dir" 2>/dev/null || :
+}
+
+pi=false
+codex=false
+claude=false
+harness_available pi && pi=true
+harness_available codex && codex=true
+harness_available claude && claude=true
+
+if $pi || $codex; then
+  link_skills "$HOME/.agents/skills"
+else
+  unlink_skills "$HOME/.agents/skills"
+  [ "$mode" = --check ] || rmdir "$HOME/.agents" 2>/dev/null || :
+fi
+
+if $claude; then
+  link_skills "$HOME/.claude/skills"
+else
+  unlink_skills "$HOME/.claude/skills"
+fi
+
+if $pi; then
+  link_file "$policy" "$HOME/.pi/agent/AGENTS.md"
+else
+  unlink_file "$policy" "$HOME/.pi/agent/AGENTS.md"
+  if [ "$mode" != --check ]; then
+    rmdir "$HOME/.pi/agent" 2>/dev/null || :
+    rmdir "$HOME/.pi" 2>/dev/null || :
+  fi
+fi
+
+if $codex; then
+  link_file "$policy" "$HOME/.codex/AGENTS.md"
+else
+  unlink_file "$policy" "$HOME/.codex/AGENTS.md"
+  [ "$mode" = --check ] || rmdir "$HOME/.codex" 2>/dev/null || :
+fi
+
+if $claude; then
+  link_file "$policy" "$HOME/.claude/CLAUDE.md"
+else
+  unlink_file "$policy" "$HOME/.claude/CLAUDE.md"
+  [ "$mode" = --check ] || rmdir "$HOME/.claude" 2>/dev/null || :
+fi
 
 if [ "$mode" = --check ]; then
   echo "checked agent config links for $projection"
