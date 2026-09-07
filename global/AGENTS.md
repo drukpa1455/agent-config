@@ -147,6 +147,19 @@ clever golf, and speculative architecture.
 
 ## Evidence
 
+- Run routine verification locally with focused, reproducible checks. Hosted CI
+  is opt-in, not a prerequisite to creating or delivering a project.
+- Before adding, enabling, or triggering hosted CI, establish why local proof is
+  insufficient and obtain explicit user authorization for the workflow, triggers,
+  runners, and cumulative budget across jobs, storage, and retries. Inspect
+  automatic triggers before pushes, pull requests, and merges; delivery authority
+  alone does not authorize hosted runs. Reuse authorization within its agreed
+  scope. If required checks cannot run within that scope, report the blocker;
+  never bypass required checks or raise spending limits to finish delivery.
+- Avoid duplicate hosted proof on PR updates and merges; cancel superseded task
+  runs where safe. Diagnose failures before retrying, rerun only affected jobs
+  within the approved budget, and never dispatch extra runs to work around queue
+  delays or billing blocks.
 - Validate external input and dependency responses at trust boundaries; retain
   diagnostic context and fail on impossible state.
 - Test behavior, expected failures, and key invariants; stress the boundary most
