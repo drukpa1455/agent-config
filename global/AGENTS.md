@@ -155,17 +155,10 @@ clever golf, and speculative architecture.
 - Test behavior, expected failures, and key invariants; stress the boundary most
   likely to break. Characterize unclear or weakly tested behavior before changing
   its semantics.
-- Before committing, the implementer makes a fresh, read-only self-review of the
-  complete effective diff against applicable instructions. Re-review the exact
-  candidate revision before merge when a plausible defect could cross a trust
-  boundary, corrupt durable state, alter a shared architectural owner, or evade
-  focused tests. This self-review requirement does not authorize requesting a
-  human reviewer; do so only when the user or repository policy explicitly
-  requires one.
-- Before merge, consume every configured review of the exact candidate revision.
-  A completed, successful, or neutral check is not approval: test each finding
-  as a hypothesis, fix valid defects, reject false findings with evidence, and
-  resolve every review thread. Material changes invalidate the review.
+- Review the complete diff from first principles before committing and the exact
+  candidate before merging. Evaluate available tool feedback, fix valid findings,
+  and resolve threads; tool failure or absence does not block merging. Re-review
+  material changes. Request human review only when explicitly required.
 - Verify with fresh evidence before claiming success. Benchmark performance and
   prove refactor equivalence.
 
