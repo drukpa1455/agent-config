@@ -26,8 +26,8 @@ and Codex. Read `README.md` before changing either surface.
   loading it imposes an architectural lens, changes ordinary task flow, or adds
   human gates. Automatic discovery never authorizes effects or bypasses resource
   ownership and the high-impact boundary.
-- Test prompt behavior with pressure cases covering the original failure and
-  protected safety contexts; do not validate wording alone.
+- Review policy changes against concrete failure and safety scenarios; keep
+  verification proportional to the change.
 - Preserve cross-harness invocation metadata when adding or renaming a skill.
 - Do not add hooks, background services, telemetry, automatic model selection,
   or session state to enforce prose policy.
