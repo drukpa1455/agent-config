@@ -16,6 +16,7 @@ mkdir -p "$home" "$seed/scripts" "$seed/global" "$seed/skills/demo"
 cp "$root/scripts/update" "$seed/scripts/update"
 cp "$root/scripts/link" "$seed/scripts/link"
 printf 'version one\n' >"$seed/global/AGENTS.md"
+printf 'voice one\n' >"$seed/global/voice.md"
 printf '%s\n' '---' 'name: demo' '---' >"$seed/skills/demo/SKILL.md"
 printf 'secret\n' >"$seed/.gitignore"
 git init --quiet --initial-branch=main "$seed"
@@ -62,6 +63,7 @@ run_timed_update() {
 
 old=$(git -C "$primary" rev-parse HEAD)
 printf 'version two\n' >"$seed/global/AGENTS.md"
+printf 'voice two\n' >"$seed/global/voice.md"
 printf '%s\n' '[ ! -e "$HOME/target-conflict" ] || exit 1' >>"$seed/scripts/link"
 git -C "$seed" commit --quiet -am two
 git -C "$seed" push --quiet
@@ -87,6 +89,13 @@ mkdir "$home/.agents/skills/foreign"
 rejects "projection conflicts preserve the primary" run_update
 [ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
 rmdir "$home/.agents/skills/foreign"
+rm "$home/.agents/voice.md"
+printf 'personal voice\n' >"$home/.agents/voice.md"
+rejects "voice conflicts preserve the primary" run_update
+[ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
+[ "$(cat "$home/.agents/voice.md")" = "personal voice" ]
+rm "$home/.agents/voice.md"
+HOME="$home" "$primary/scripts/link" >/dev/null
 rm "$home/.codex/AGENTS.md"
 rmdir "$home/.codex"
 touch "$home/.codex"
@@ -113,6 +122,8 @@ result=$(run_update)
 [ "$(git -C "$active" rev-parse HEAD)" = "$old" ]
 [ "$(readlink "$home/.codex/AGENTS.md")" = "$primary/global/AGENTS.md" ]
 [ "$(cat "$home/.codex/AGENTS.md")" = "version two" ]
+[ "$(readlink "$home/.agents/voice.md")" = "$primary/global/voice.md" ]
+[ "$(cat "$home/.agents/voice.md")" = "voice two" ]
 [ ! -e "$marker" ]
 ok "a landed invocation fast-forwards and relinks the primary"
 

@@ -64,6 +64,9 @@ assert_every_projection_linked() {
       "$(link_target "$destination")" "$policy"
   done
 
+  check "$label: shared voice links its source" \
+    "$(link_target ".agents/voice.md")" "$root/global/voice.md"
+
   for skills_dir in $skills_destinations; do
     for skill in $managed_skills; do
       check "$label: $skills_dir/$skill links its package" \
@@ -77,6 +80,8 @@ assert_codex_only() {
 
   check "$label: Codex policy is linked" \
     "$(link_target ".codex/AGENTS.md")" "$policy"
+  check "$label: shared voice is linked" \
+    "$(link_target ".agents/voice.md")" "$root/global/voice.md"
   check "$label: Pi policy is absent" \
     "$(path_state ".pi/agent/AGENTS.md")" "missing"
   check "$label: Claude policy is absent" \
@@ -95,6 +100,8 @@ check "check mode leaves policy absent" \
   "$(path_state ".codex/AGENTS.md")" "missing"
 check "check mode leaves skills absent" \
   "$(path_state ".agents/skills")" "missing"
+check "check mode leaves voice absent" \
+  "$(path_state ".agents/voice.md")" "missing"
 
 isolated_home
 touch "$HOME/.codex"
@@ -139,6 +146,8 @@ for destination in $policy_destinations; do
 done
 check "no harness: shared skills are absent" \
   "$(path_state ".agents/skills")" "missing"
+check "no harness: shared voice is absent" \
+  "$(path_state ".agents/voice.md")" "missing"
 check "no harness: Claude skills are absent" \
   "$(path_state ".claude/skills")" "missing"
 check "no harness: retired shared skill is absent" \
@@ -150,6 +159,27 @@ check "no harness: unrelated Pi state remains" \
 check "no harness: unrelated Claude state remains" \
   "$(cat "$HOME/.claude/settings.json")" "local Claude state"
 
+enable_harnesses claude
+check "linking for Claude only succeeds" "$(exit_status_of_link)" "0"
+check "Claude-only: shared voice is linked" \
+  "$(link_target ".agents/voice.md")" "$root/global/voice.md"
+check "Claude-only: shared skills remain absent" \
+  "$(path_state ".agents/skills")" "missing"
+enable_harnesses pi codex claude
+
+isolated_home
+mkdir -p "$HOME/.agents"
+printf 'hand written voice\n' >"$HOME/.agents/voice.md"
+status=0
+"$link" --check >/dev/null 2>&1 || status=$?
+check "check mode rejects an unmanaged voice file" "$status" "1"
+check "refuses an unmanaged voice file" "$(exit_status_of_link)" "1"
+check "leaves that voice byte-identical" \
+  "$(cat "$HOME/.agents/voice.md")" "hand written voice"
+enable_harnesses
+check "no harness: preserves an unmanaged voice" "$(exit_status_of_link)" "0"
+check "no harness: unmanaged voice is unchanged" \
+  "$(cat "$HOME/.agents/voice.md")" "hand written voice"
 enable_harnesses pi codex claude
 
 isolated_home
@@ -220,7 +250,10 @@ for skills_dir in $skills_destinations; do
   done
   ln -s "$logical/skills/retired" "$HOME/$skills_dir/retired"
 done
+ln -s "$logical/global/voice.md" "$HOME/.agents/voice.md"
 check "accepts links through a logical checkout path" "$(exit_status_of_link)" "0"
+check "preserves the logical voice link" \
+  "$(link_target ".agents/voice.md")" "$logical/global/voice.md"
 check "removes a retired logical .agents link" \
   "$(path_state ".agents/skills/retired")" "missing"
 check "removes a retired logical .claude link" \
