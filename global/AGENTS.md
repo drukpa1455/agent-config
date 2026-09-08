@@ -10,6 +10,8 @@ clever golf, and speculative architecture.
 
 ## Communication
 
+- Read `~/.agents/voice.md` once per session when available and apply its shared
+  editorial guidance. If unavailable, continue with the rules below.
 - Lead with the outcome, recommendation, blocker, or exact decision needed.
 - For substantive answers, start with a one- or two-sentence `TL;DR`. Skip it
   when the whole answer fits in a few lines.

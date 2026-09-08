@@ -7,6 +7,7 @@ Shared global policy and portable skills for coding agents.
 ```text
 AGENTS.md                    repository-local change contract
 global/AGENTS.md             always-loaded working policy
+global/voice.md              shared editorial guidance
 scripts/link                 idempotent local linker
 scripts/test-link            projection proof against a throwaway home
 scripts/test-browse          browser isolation and lease proof
@@ -53,6 +54,11 @@ reads it under the name its own harness loads:
 ~/.codex/AGENTS.md       ~/.claude/skills/
 ~/.claude/CLAUDE.md
 ```
+
+The shared policy asks agents to read [`global/voice.md`](global/voice.md) once
+per session through its common link at `~/.agents/voice.md`. Edit the repository
+file to change the voice across projects and harnesses. The guide covers direct
+prose, useful uncertainty, and audience-specific tone.
 
 Run `/reload` in Pi after changes; start a new Codex or Claude Code session to
 reload them.

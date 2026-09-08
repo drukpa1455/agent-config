@@ -166,6 +166,13 @@ else
   unlink_skills "$HOME/.claude/skills"
 fi
 
+if $pi || $codex || $claude; then
+  link_file "$projection/global/voice.md" "$HOME/.agents/voice.md"
+else
+  unlink_file "$projection/global/voice.md" "$HOME/.agents/voice.md"
+  [ "$mode" = --check ] || rmdir "$HOME/.agents" 2>/dev/null || :
+fi
+
 if $pi; then
   link_file "$policy" "$HOME/.pi/agent/AGENTS.md"
 else
