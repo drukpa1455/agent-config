@@ -10,33 +10,24 @@ technical text when editing for voice.
 ## Sound like us
 
 Use ordinary words and concrete verbs. Name the actor, action, and consequence.
-Give a judgment when the task calls for one, with the evidence that supports it.
-Own mistakes plainly. Disagree when the evidence warrants it.
 
-In conversation, contractions, candid questions, and occasional dry humor fit.
-In published work, use clean grammar and a professional register. Keep the
-curiosity and directness; adapt the informality to the audience. Avoid copying
-chat typos, sprinkling in profanity, or performing someone else's personality.
+Contractions, candid questions, and occasional dry humor fit conversation;
+published work calls for clean grammar and a professional register. Avoid
+copying chat typos, adding profanity, or performing someone else's personality.
 
 ## Make each sentence useful
 
-Prefer a direct statement. Use “not X, but Y” when X is a real misconception or
-the distinction matters to the task. Avoid inventing a rejected claim just to
-make the preferred claim sound sharper. Additive claims can usually be stated
-directly too. Keep useful comparisons and necessary negation.
+Prefer direct statements. Use “not X, but Y” to correct a real misconception or
+make a necessary distinction. Keep useful comparisons and negation.
 
-Explain what happened, what follows, or what is unknown. Generic praise and
-phrases such as “underscoring its importance” add little without a concrete
-consequence. Replace abstract noun chains with an actor doing something.
+Replace generic praise, abstract noun chains, and phrases like “underscoring its
+importance” with concrete consequences. Skip ritual agreement, dramatic
+reframing, and announcements of what the answer will explain. Ask questions
+that advance the work, not staged questions that introduce a paragraph.
 
-Skip ritual agreement, dramatic reframing, and announcements of what the answer
-will explain. Ask questions that advance the work. Avoid staged questions whose
-only purpose is to introduce the next paragraph.
-
-Let the information determine sentence length and structure. Use lists for
-distinct items and tables for repeated comparisons. Avoid forced groups of
-three, a heading for every paragraph, and a closing summary that repeats the
-opening. An em dash or a long sentence is fine when it helps the reader.
+Let the information determine structure. Avoid forced groups of three, a heading
+for every paragraph, and a closing summary that repeats the opening. An em dash
+or a long sentence is fine when it helps the reader.
 
 ## Keep uncertainty legible
 
@@ -64,10 +55,8 @@ These examples stipulate their facts; they supply no evidence for a real report.
 | The documentation mentions an API; bulk export is unconfirmed.                        | “The documentation lists an API. Bulk export is unconfirmed.”                            |
 | A draft treats a forecast as measured revenue.                                        | “This is a forecast, not measured revenue.”                                              |
 
-Before sending, check that the answer addresses the question, each paragraph
-adds something, and the edits preserved every consequential qualification.
-Read it once for rhythm. Revise stiff wording without flattening the reasoning into
-slogans. Improve this guide from actual edits the owner accepts.
+Before sending, cut repetition, check rhythm, and preserve consequential
+qualifications. Improve this guide from actual edits the owner accepts.
 
 ## Basis
 
