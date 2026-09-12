@@ -51,15 +51,15 @@ SKILL_DIR=/absolute/path/to/browse
 "$SKILL_DIR/scripts/dashboard"
 ```
 
-Ordinary official browsers are task-isolated. `close` removes that task's
-profile and output without touching another task. Set `BROWSE_TASK_ID` when the
-same task runs commands from different working directories.
+Only the two shared profiles retain logins. Ordinary profiles and all output
+are task-scoped. Set one `BROWSE_TASK_ID` for the task and reuse it across working
+directories, commands, and cleanup; do not create ad hoc persistent profiles.
 
 The shared official profile and Patchright profile are durable, authenticated
 resources guarded by expiring task leases. Commands are serialized per profile.
 `open` atomically acquires or reclaims the lease, each owned action renews it,
 long actions keep it live until completion, and `close` releases it while
-preserving the profile. If another live task owns the lease, report its owner
+preserving login state. If another live task owns the lease, report its owner
 and expiry and retry later; never ask the user to close a browser window. An
 open window or a session shown by `list` is not ownership evidence.
 
@@ -76,7 +76,10 @@ role/name, label/text, test ID, and finally CSS. Perform one semantic action and
 verify its visible result. Re-snapshot after navigation or material DOM changes;
 never reuse stale refs.
 
-Rely on Playwright auto-waiting. Never use arbitrary sleeps or unbounded retries. Use `eval` or `run-code` only when semantic commands cannot express the operation, and keep execution and returned values narrow.
+Rely on Playwright auto-waiting. Never use arbitrary sleeps or unbounded retries. Use bounded `eval` or `run-code` when it makes an operation or repeated capture simpler; keep returned values narrow.
+
+`run-code` uses a restricted VM; use `page.evaluate` for browser globals.
+Remove temporary event listeners in `finally` so they cannot break later commands.
 
 ## Boundaries
 
@@ -84,14 +87,16 @@ Treat the request as authority for ordinary actions it plainly entails. Ask only
 when the exact effect is ambiguous or crosses the governing high-impact
 boundary. Inspect unknown success before retrying an external action.
 
-The user handles passwords, passkeys, CAPTCHA, and two-factor authentication. Pause while they authenticate; do not inspect the page until they say it is complete. Never inspect, export, save, or shell-capture cookies, storage, passwords, tokens, or authentication state unless the user explicitly requests that exact operation.
+Use existing sessions or credentials authorized for the account. Ask for help when authentication fails or needs user participation; avoid repeated attempts that could lock the account. Pause page inspection while the user authenticates. Never expose credentials in commands, logs, screenshots, or Git, or extract authentication state without explicit authorization. Inspect non-secret application state only as needed for the task.
 
 Treat screenshots, downloads, traces, videos, console output, and network bodies as potentially sensitive. Inspect only what the task requires and remove disposable artifacts when done.
 
-File access is restricted to the dedicated workspace. Upload only files the
-request identifies.
+Stage task-authorized uploads in the dedicated workspace; file access remains
+restricted there.
 
-Close the selected browser when active work is finished. Shared profiles
-persist; ordinary task profiles are deleted. `delete-data` and `close-all` stay
-within the selected route. Global `kill-all` is unavailable because it crosses
-task ownership.
+Before closing, resolve unknown side effects and move required evidence to its
+canonical owner. At task end, close even after a failed open. Successful close deletes
+its output and ordinary profile, or clears shared HTTP/code/GPU caches while
+preserving login and application storage. A failed empty launch is discarded;
+uncertain browser state is preserved. `delete-data` and `close-all` stay within
+the selected route; global `kill-all` remains unavailable.
