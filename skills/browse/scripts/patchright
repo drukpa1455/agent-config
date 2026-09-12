@@ -1,3 +1,22 @@
-#!/bin/sh
-set -eu
-exec node "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/run.js" patchright "$@"
+#!/usr/bin/env node
+'use strict';
+
+const os = require('node:os');
+const path = require('node:path');
+
+const runtime = process.env.PERSISTENT_BROWSER_RUNTIME ||
+  path.join(os.homedir(), '.local/share/pi-browser/patchright-runtime');
+let program;
+let version;
+try {
+  const core = path.join(runtime, 'node_modules/patchright-core');
+  ({ program } = require(path.join(core, 'lib/tools/cli-client/program')));
+  ({ version } = require(path.join(core, 'package.json')));
+} catch (error) {
+  console.error(`Patchright agent CLI unavailable in ${runtime}; read references/setup.md.\n${error.message}`);
+  process.exit(1);
+}
+program({ embedderVersion: version }).catch(error => {
+  console.error(error.message);
+  process.exitCode = 1;
+});
