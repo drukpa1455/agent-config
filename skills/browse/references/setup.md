@@ -1,47 +1,32 @@
 # Setup
 
-Setup requires Node.js 20+, npm, stable Google Chrome, and the platform's file
-lock utility (`lockf` on macOS or `flock` on Linux). It downloads exact npm
-dependencies and the official Chrome for Testing build into user-local storage:
+Use installed CLIs when available. Setup downloads npm packages and browser
+binaries; disclose that before running it. Keep installations outside repositories.
+
+For Playwright CLI, use Node.js 20+ and the upstream installer:
 
 ```sh
-$SKILL_DIR/scripts/setup
+npm install -g @playwright/cli
+playwright-cli --help
+playwright-cli install-browser
 ```
 
-Default local paths, retained across the skill rename so existing profiles keep
-their identity:
+The Patchright adapter expects `patchright-core` in the existing user-local
+runtime. Install it only if missing:
 
-- persistent profiles and leases: `~/.local/share/persistent-browser/`
-- disposable task profiles: `~/.local/share/persistent-browser/tasks/`
-- disposable output: `~/.cache/persistent-browser/`
-- optional overrides: `~/.config/persistent-browser/config.json`
-
-The optional JSON configuration accepts these absolute paths:
-
-```json
-{
-  "dataDir": "/path/to/state",
-  "outputDir": "/path/to/output",
-  "runtimeDir": "/path/to/runtime",
-  "officialCli": "/path/to/playwright-cli",
-  "patchrightRuntime": "/path/to/patchright-runtime",
-  "officialProfile": "/path/to/official-profile",
-  "patchrightProfile": "/path/to/patchright-profile"
-}
+```sh
+npm install --prefix "$HOME/.local/share/pi-browser/patchright-runtime" --save-exact patchright-core@1.61.1
+"$SKILL_DIR/scripts/patchright" --help
 ```
 
-Environment variables override JSON: `PERSISTENT_BROWSER_DATA_DIR`, `PERSISTENT_BROWSER_OUTPUT_DIR`, `PERSISTENT_BROWSER_RUNTIME_DIR`, `PERSISTENT_BROWSER_OFFICIAL_CLI`, `PERSISTENT_BROWSER_PATCHRIGHT_RUNTIME`, `PERSISTENT_BROWSER_OFFICIAL_PROFILE`, and `PERSISTENT_BROWSER_PATCHRIGHT_PROFILE`.
+Patchright uses installed stable Google Chrome with `open --browser=chrome`.
+`PERSISTENT_BROWSER_RUNTIME` may select another runtime directory. The adapter
+loads an internal agent CLI entrypoint; verify `--help`, open, and close when
+upgrading Patchright. Its ordinary `patchright` binary is a different CLI.
 
-Set `BROWSE_TASK_ID` once per task, including cleanup. Otherwise the wrapper
-derives it from the Codex thread or owning Pi/Claude/Codex process, plus the
-working directory; a restricted harness without either identifier requires an
-explicit task ID. Shared-profile leases expire after 15 minutes without an owner
-command or active-command keepalive and can then be reclaimed with `open`.
+Former wrapper configuration files, generated configs, and leases are no longer
+read. Do not carry their `userDataDir` into ordinary sessions.
+Retire old profiles and output only after checking ownership and retained evidence.
 
-Never put profiles, cookies, storage state, credentials, screenshots, traces, downloads, or generated configuration in the skill repository.
-
-Successful close removes task output and ordinary profiles. Shared close removes
-HTTP, compiled-code, and GPU caches; cookies and application storage remain.
-Shared output is separated by task under `official/` and `patchright/`. Older
-output and extra profiles require an ownership check before one-time cleanup;
-the wrapper does not sweep other tasks or impose a total disk quota.
+See the [upstream CLI guide](https://github.com/microsoft/playwright-cli#readme)
+for sessions, persistent profiles, dashboard, and command details.
