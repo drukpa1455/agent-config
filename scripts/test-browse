@@ -262,7 +262,7 @@ check "failed shared open releases its lease" test ! -e "$official_lease"
 
 before=$(wc -l <"$BROWSE_TEST_LOG" | tr -d ' ')
 set +e
-BROWSE_TEST_DELAY=0.3 BROWSE_TEST_EXIT=7 BROWSE_TASK_ID=overlap \
+BROWSE_TEST_DELAY=1 BROWSE_TEST_EXIT=7 BROWSE_TASK_ID=overlap \
   "$browser" --shared open about:blank >"$temporary/overlap.out" 2>"$temporary/overlap.err" &
 overlap_pid=$!
 set -e
@@ -462,6 +462,71 @@ check "shared close-all targets only its session" \
   test "$(tail -n 1 "$BROWSE_TEST_LOG" | awk -F '|' '{print $4}')" = close
 run_patchright beta close
 check "final Patchright close releases its lease" test ! -e "$patchright_lease"
+
+# Failed opens must not strand newly created, unused task directories.
+failed_key=$(node -e 'process.stdout.write(require(process.argv[1]).actor({ BROWSE_TASK_ID: "empty-failure" }).key)' "$root/skills/browse/scripts/lease.js")
+if BROWSE_TEST_EXIT=7 BROWSE_TASK_ID=empty-failure "$browser" open about:blank >"$temporary/out" 2>"$temporary/error"; then
+  fail "failed task open reports failure"
+else
+  pass "failed task open reports failure"
+fi
+check "failed empty open removes task state" test ! -e "$PERSISTENT_BROWSER_DATA_DIR/tasks/$failed_key"
+check "failed empty open removes task output" test ! -e "$PERSISTENT_BROWSER_OUTPUT_DIR/tasks/$failed_key"
+
+run_browser trim --shared open about:blank
+shared_config=$(tail -n 1 "$BROWSE_TEST_LOG" | cut -d '|' -f 2)
+shared_profile=$(json_field "$shared_config" browser.userDataDir)
+shared_output=$(json_field "$shared_config" outputDir)
+mkdir -p "$shared_profile/Default/Cache" "$shared_profile/Default/Code Cache" "$shared_profile/Default/Local Storage"
+printf 'login state' >"$shared_profile/Default/Cookies"
+printf 'application state' >"$shared_profile/Default/Local Storage/data"
+printf 'cached response' >"$shared_profile/Default/Cache/data"
+printf 'compiled code' >"$shared_profile/Default/Code Cache/data"
+printf 'temporary screenshot' >"$shared_output/screenshot.png"
+cp "$shared_config" "$temporary/owned-config"
+if run_browser contender --shared open about:blank >"$temporary/out" 2>"$temporary/error"; then
+  fail "contender is rejected"
+fi
+check "rejected contender cannot rewrite configuration" cmp -s "$shared_config" "$temporary/owned-config"
+if BROWSE_TEST_EXIT=7 BROWSE_TASK_ID=trim "$browser" --shared close >"$temporary/out" 2>"$temporary/error"; then
+  fail "failed close reports failure"
+fi
+check "failed close preserves cache" test -f "$shared_profile/Default/Cache/data"
+check "failed close preserves output" test -f "$shared_output/screenshot.png"
+ln -s 'test-host-12345' "$shared_profile/SingletonLock"
+if run_browser trim --shared close >"$temporary/out" 2>"$temporary/error"; then
+  fail "a browser lock prevents cache removal"
+fi
+check "locked profile preserves cache" test -f "$shared_profile/Default/Cache/data"
+check "locked profile preserves output" test -f "$shared_output/screenshot.png"
+check "cleanup failure retains ownership without an active command" run_browser trim --shared snapshot
+rm "$shared_profile/SingletonLock"
+run_browser trim --shared close
+check "shared close removes response cache" test ! -e "$shared_profile/Default/Cache"
+check "shared close removes compiled code cache" test ! -e "$shared_profile/Default/Code Cache"
+check "shared close preserves cookies" test -f "$shared_profile/Default/Cookies"
+check "shared close preserves application storage" test -f "$shared_profile/Default/Local Storage/data"
+check "shared close removes only its disposable output" test ! -e "$shared_output"
+run_browser next --shared open about:blank
+next_output=$(json_field "$shared_config" outputDir)
+check "shared tasks have distinct output owners" test "$next_output" != "$shared_output"
+run_browser next --shared close
+
+node - "$root/skills/browse/scripts/state.js" "$temporary" <<'NODE'
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const state = require(process.argv[2]);
+const root = process.argv[3];
+const external = path.join(root, 'external');
+const redirected = path.join(root, 'redirected');
+fs.mkdirSync(path.join(external, 'Cache'), { recursive: true });
+fs.mkdirSync(redirected);
+fs.symlinkSync(external, path.join(redirected, 'Default'));
+assert.throws(() => state.clearCache(redirected), /redirected profile/);
+assert(fs.existsSync(path.join(external, 'Cache')));
+console.log('ok   cache cleanup refuses redirected application storage');
+NODE
 
 if [ "$failures" -gt 0 ]; then
   printf '%s check(s) failed\n' "$failures" >&2

@@ -29,24 +29,24 @@ function resolve() {
   };
 }
 
-function official(paths) {
+function official(paths, task = '') {
   return route(
     'persistent-official',
     paths.officialProfile,
     paths.workspace,
     path.join(paths.dataDir, 'config', 'official.json'),
-    path.join(paths.outputDir, 'official'),
+    path.join(paths.outputDir, 'official', task),
     'chrome-for-testing',
   );
 }
 
-function patchright(paths) {
+function patchright(paths, task = '') {
   return route(
     'persistent-patchright',
     paths.patchrightProfile,
     paths.workspace,
     path.join(paths.dataDir, 'config', 'patchright.json'),
-    path.join(paths.outputDir, 'patchright'),
+    path.join(paths.outputDir, 'patchright', task),
     'chrome',
   );
 }
@@ -107,6 +107,28 @@ function remove(route) {
   fs.rmSync(route.transient.output, { recursive: true, force: true });
 }
 
+function clearCache(profile) {
+  if (fs.lstatSync(path.join(profile, 'SingletonLock'), { throwIfNoEntry: false }))
+    throw new Error(`Browser may still be running; preserving ${profile}`);
+  if (fs.lstatSync(path.join(profile, 'Default'), { throwIfNoEntry: false })?.isSymbolicLink())
+    throw new Error(`Refusing redirected profile storage: ${profile}`);
+  for (const relative of [
+    'ShaderCache', 'GrShaderCache', 'GraphiteDawnCache',
+    'Default/Cache', 'Default/Code Cache', 'Default/GPUCache',
+    'Default/DawnWebGPUCache', 'Default/DawnGraphiteCache',
+  ]) fs.rmSync(path.join(profile, relative), { recursive: true, force: true });
+}
+
+function close(route) {
+  if (route.transient) return remove(route);
+  clearCache(route.profile);
+  fs.rmSync(route.output, { recursive: true, force: true });
+}
+
+function discardEmpty(route) {
+  if (route.transient && fs.readdirSync(route.profile).length === 0) remove(route);
+}
+
 function browserConfig(route) {
   return {
     browser: {
@@ -161,5 +183,6 @@ function writeJson(file, value) {
 }
 
 module.exports = {
-  official, patchright, prepare, prepareRoute, prepareSetup, prepareWorkspace, remove, resolve, task,
+  clearCache, close, discardEmpty, official, patchright, prepare, prepareRoute,
+  prepareSetup, prepareWorkspace, remove, resolve, task,
 };

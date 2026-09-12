@@ -43,14 +43,14 @@ function official(paths, rawArgs) {
 
   const args = shared ? rawArgs.slice(1) : rawArgs;
   const owner = leases.actor();
-  const route = shared ? state.official(paths) : state.task(paths, owner.key);
+  const route = shared ? state.official(paths, owner.key) : state.task(paths, owner.key);
   const file = shared ? path.join(paths.dataDir, 'leases', 'official.json') : null;
   execute(paths.officialCli, args, paths, route, owner, file);
 }
 
 function patchright(paths, args) {
   const owner = leases.actor();
-  const route = state.patchright(paths);
+  const route = state.patchright(paths, owner.key);
   const command = process.execPath;
   const commandArgs = [path.join(__dirname, 'patchright-cli.js'), ...args];
   const additions = { PERSISTENT_BROWSER_RUNTIME: paths.patchrightRuntime };
@@ -69,10 +69,9 @@ function execute(command, commandArgs, paths, route, owner, leaseFile, additions
     throw new Error('kill-all crosses browser task ownership; close each selected route instead');
   const terminal = ['close', 'close-all', 'delete-data'].includes(action);
   const cleanup = terminal && !diagnostic;
-  const globalDiagnostic = diagnostic && route.transient && !['list', 'show'].includes(action);
-  if (globalDiagnostic) state.prepareWorkspace(paths);
-  else if (diagnostic && route.transient) state.prepareRoute(route);
-  else state.prepare(route);
+  const fresh = !fs.existsSync(route.config);
+  const globalDiagnostic = diagnostic && route.transient &&
+    (fresh || !['list', 'show'].includes(action));
 
   let commandLease;
   if (leaseFile && !diagnostic) {
@@ -81,6 +80,18 @@ function execute(command, commandArgs, paths, route, owner, leaseFile, additions
     } else {
       commandLease = leases.own(leaseFile, label(route), owner);
     }
+  }
+
+  try {
+    if (globalDiagnostic) state.prepareWorkspace(paths);
+    else if (diagnostic) state.prepareRoute(route);
+    else state.prepare(route);
+  } catch (error) {
+    if (commandLease) {
+      if (commandLease.acquired) leases.release(leaseFile, owner, commandLease.operation);
+      else leases.finish(leaseFile, owner, commandLease.operation);
+    }
+    throw error;
   }
 
   const environment = {
@@ -94,13 +105,16 @@ function execute(command, commandArgs, paths, route, owner, leaseFile, additions
   const cwd = globalDiagnostic ? paths.workspace : route.workspace;
   const invocation = normalize(commandArgs, action, route, cleanup);
   launch(command, invocation, cwd, environment, outcome => {
-    if (commandLease) {
-      if ((outcome.ok && cleanup) || (!outcome.ok && commandLease.acquired))
-        leases.release(leaseFile, owner, commandLease.operation);
-      else leases.finish(leaseFile, owner, commandLease.operation);
-    }
-    if (!leaseFile && outcome.ok && cleanup) {
-      state.remove(route);
+    let closed = false;
+    try {
+      if (outcome.ok && cleanup) { state.close(route); closed = true; }
+      else if (!outcome.ok && fresh && action === 'open') state.discardEmpty(route);
+    } finally {
+      if (commandLease) {
+        if (closed || (!outcome.ok && commandLease.acquired))
+          leases.release(leaseFile, owner, commandLease.operation);
+        else leases.finish(leaseFile, owner, commandLease.operation);
+      }
     }
   }, maintain);
 }
