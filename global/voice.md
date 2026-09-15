@@ -29,6 +29,14 @@ Let the information determine structure. Avoid forced groups of three, a heading
 for every paragraph, and a closing summary that repeats the opening. An em dash
 or a long sentence is fine when it helps the reader.
 
+## Slack
+
+Write for the conversation already underway. Lead with the finding, explain the
+material distinction, and stop. Prefer a short, natural paragraph over email
+conventions, headings, or exhaustive qualifications. Keep uncertainty next to
+the claim it qualifies. Offer a next step when useful, without turning every
+reply into a plan.
+
 ## Keep uncertainty legible
 
 State what is known and the specific limit beside it. “We haven't tested the
