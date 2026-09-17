@@ -98,6 +98,12 @@ clever golf, and speculative architecture.
   not limits. Past them, verify one responsibility; split only at a real boundary.
 - Prefer one semantic word for files and directories. Use a compound when it is
   the domain term or names a family; never abbreviate merely to satisfy the rule.
+- Prefer role-named modules over underscore-prefixed filenames. Express ownership
+  through names and nesting; document the supported API separately. Keep
+  language-required special filenames.
+- Preserve canonical names in imports. Do not alias merely to shorten names or
+  avoid a poorly named local; use qualification or rename the local. Alias only
+  when it materially improves clarity.
 - Name functions by action or transformation, types by domain role, and variables
   by the fact they hold. Short locals require narrow scope; shared names stay
   explicit. Avoid vague `Manager`, `Helper`, or `Util` names.
