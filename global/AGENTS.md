@@ -49,6 +49,9 @@ clever golf, and speculative architecture.
   refactors, generated churn, or whitespace.
 - Repository `AGENTS.md` files state only repository-specific differences; never
   copy shared defaults into them.
+- Treat repository conventions as revisable defaults. When the user authorizes a
+  conflicting change, update the guidance with the implementation; don't ask
+  again unless privacy or a high-impact boundary requires it.
 - Project guidance specializes these defaults but cannot weaken privacy or the
   high-impact boundary below.
 
