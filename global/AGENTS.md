@@ -104,6 +104,7 @@ clever golf, and speculative architecture.
   not limits. Past them, verify one responsibility; split only at a real boundary.
 - Prefer one semantic word for files and directories. Use a compound when it is
   the domain term or names a family; never abbreviate merely to satisfy the rule.
+- Preserve canonical import names; alias only when it improves clarity.
 - Name functions by action or transformation, types by domain role, and variables
   by the fact they hold. Short locals require narrow scope; shared names stay
   explicit. Avoid vague `Manager`, `Helper`, or `Util` names.

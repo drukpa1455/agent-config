@@ -29,6 +29,9 @@ Let the information determine structure. Avoid forced groups of three, a heading
 for every paragraph, and a closing summary that repeats the opening. An em dash
 or a long sentence is fine when it helps the reader.
 
+In Slack, write for the conversation already underway; omit repeated context and
+email conventions. Offer next steps only when useful.
+
 ## Keep uncertainty legible
 
 State what is known and the specific limit beside it. “We haven't tested the
