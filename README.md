@@ -139,13 +139,11 @@ after each stage lands. Coverage checks connect every contract to delivery and
 proof without creating another status system. The skill stops before
 product-code edits.
 
-`implement` consumes a decided issue, stage, epic, spec, plan, findings block, or
-brief. It studies relevant prior art, re-grounds each stage against fresh trunk,
-uses isolated worktrees, delivers the selected scope through review and merge,
-then performs a fresh-trunk stage closeout and removes merged branches and
-worktrees. For a full epic it repeats that loop, refining each next stage from
-what implementation revealed, and finishes with a cross-stage contract and
-architecture audit. Production mutation remains outside the skill's authority.
+`implement` delivers a decided scope, resolving implementation mechanics and
+refining stages as evidence changes. It reinforces simple design and checks the
+requested outcome while following shared review and delivery policy. Its scripts
+provide fallback workspace creation and cleanup when the repository has none.
+Production mutation remains outside the skill's authority.
 
 Install either explicit-only skill directly:
 

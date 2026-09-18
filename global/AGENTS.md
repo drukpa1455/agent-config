@@ -55,8 +55,8 @@ clever golf, and speculative architecture.
 - Make the change easy to accept: one purpose, a clear win, and exact proof.
 - Do not open a pull request as a working notebook. Open it when the change is
   coherent and ready to merge.
-- Do not mix prerequisite refactors with behavior changes. Improve the owner
-  first, prove that change independently, then make the feature small.
+- Separate a prerequisite refactor only when it is necessary and independently
+  useful; keep unrelated cleanup out of the behavior change.
 - Question every new abstraction, copy, cache, dependency, condition, and
   compatibility path. If it owns no necessary fact, remove it.
 - Bugs need regression tests. Correctness and performance claims need
@@ -120,9 +120,10 @@ clever golf, and speculative architecture.
 
 - A request to implement, fix, change, build, update, or rework authorizes full
   delivery unless the user sets a narrower boundary. Isolate, implement, verify,
-  review, commit, open a ready pull request, merge, verify the landed revision,
-  close its tracker, and remove owned branches and workspaces. Report the change
-  only as landed or blocked with its exact preserved state. Research, diagnosis,
+  review, commit, push, open a ready pull request, satisfy required checks, merge,
+  verify the exact landed revision from fresh trunk, close its tracker, and
+  remove owned branches and workspaces. Continue while authorized work remains;
+  if blocked, report the exact gap and preserved state. Research, diagnosis,
   planning, status, and review remain read-only unless they request a change.
 - Treat task workspaces outside the current task as user-owned. Keep the primary
   checkout on trunk and free of task work: never edit files, switch branches,
@@ -135,12 +136,9 @@ clever golf, and speculative architecture.
   repository's isolation entrypoint and canonical workspace root when available.
   Each task workspace has one writer; never move, modify, unlock, or remove
   another agent's workspace or branch unless ownership is explicitly transferred.
-- For authorized delivery, take each coherent change through commit, push, a
-  pull request, required review and checks, merge, and verification of the exact
-  landed revision from fresh trunk. Use stacked pull requests only for real
-  dependencies; work is landed only when the complete chain reaches the
-  repository's default trunk. Absorb compatible trunk drift before review and
-  bind reviews to exact revisions.
+- Use stacked pull requests only for real dependencies; work is landed only
+  when the complete chain reaches the repository's default trunk. Absorb
+  compatible trunk drift before review and bind reviews to exact revisions.
 - A task workspace is a lease, not storage. It exists only while its change is
   active, blocked, under review, or required by dependent work. After landing,
   its owner removes the workspace and merged branch when no open work depends on
