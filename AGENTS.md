@@ -11,9 +11,10 @@ and Codex. Read `README.md` before changing either surface.
 - `scripts/link` owns local projection into `~/.agents`, `~/.pi`, `~/.codex`, and
   `~/.claude`. `scripts/test-link` proves that projection against a throwaway home.
 - `scripts/work` owns this repository's task lifecycle. It delegates isolation to
-  the shared fallback and refreshes the landed projection before cleanup.
+  the shared fallback, which synchronizes clean trunk and removes merged task
+  state before installing links. Installation failure reports a retry command.
   `scripts/test-work` proves that order against isolated commands.
-- `scripts/update` is the sole owner of lock-serialized, fast-forward refresh of
+- `scripts/update` owns standalone lock-serialized, fast-forward refresh of
   the clean local trunk and its links. `scripts/test-update` proves that lifecycle
   against isolated repositories and a throwaway home.
 - Installed links and user-local runtime/profile state are projections, not
@@ -39,4 +40,4 @@ existing line-length exception. Validate local links, skill discovery, and the
 exact changed-path scope. Changes to `scripts/link`, `scripts/work`, or
 `scripts/update` require their isolated projection tests before applying them to
 a real home or repository. After an agent-config change lands and passes
-fresh-trunk verification, run `scripts/update` from that exact landed revision.
+fresh-trunk verification, use `scripts/work done` to synchronize and install it.

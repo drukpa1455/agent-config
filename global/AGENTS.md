@@ -100,8 +100,8 @@ clever golf, and speculative architecture.
 
 - Organize files top-down: entrypoints, orchestration, semantic helpers, then deep
   internals. Keep the happy path straight.
-- Treat ~27 lines per function and ~270 per file as design-review thresholds,
-  not limits. Past them, verify one responsibility; split only at a real boundary.
+- Split functions and files at responsibility boundaries when it improves clarity,
+  not to meet a line count.
 - Prefer one semantic word for files and directories. Use a compound when it is
   the domain term or names a family; never abbreviate merely to satisfy the rule.
 - Preserve canonical import names; alias only when it improves clarity.
@@ -110,9 +110,8 @@ clever golf, and speculative architecture.
   explicit. Avoid vague `Manager`, `Helper`, or `Util` names.
 - Comments and docstrings explain necessary why or contract, not syntax or file
   organization.
-- Treat optional fields and same-shaped identifiers as design warnings. Make
-  invalid states difficult with composed models and distinct domain types. Keep
-  dependencies visible with explicit imports and exports.
+- Use composed models or distinct domain types when they prevent a concrete
+  invalid state or identifier mix-up. Keep imports and exports explicit.
 - Keep passes bounded, conversions centralized, failures explicit, and public
   and dependency surfaces small and visible.
 
@@ -159,9 +158,9 @@ clever golf, and speculative architecture.
   required checks or raise spending limits to finish delivery.
 - Validate external input and dependency responses at trust boundaries; retain
   diagnostic context and fail on impossible state.
-- Test behavior, expected failures, and key invariants; stress the boundary most
-  likely to break. Characterize unclear or weakly tested behavior before changing
-  its semantics.
+- Test behavior, expected failures, and key invariants; avoid tests that mirror
+  implementation or duplicate the same proof. Characterize unclear behavior
+  before changing its semantics; scale checks to the affected contracts.
 - Review the complete diff from first principles before committing and the exact
   candidate before merging. Evaluate available tool feedback, fix valid findings,
   and resolve threads; tool failure or absence does not block merging. Re-review

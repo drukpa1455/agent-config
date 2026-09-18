@@ -77,6 +77,11 @@ dirty, divergent, non-trunk, or unlanded state. Unattended updates remain
 excluded because skills and global instructions can execute policy and code.
 The command requires Git, Python 3.9 or newer, and standard `tar`.
 
+For task delivery, `scripts/work done` proves landing, synchronizes clean primary
+trunk, and removes the owned task before installing links. If installation fails,
+it reports the primary `scripts/link` command to retry; merged work need not stay
+in a task workspace solely to preserve an installation error.
+
 ## Optional compact command output
 
 Install [RTK](https://github.com/rtk-ai/rtk) with `brew install rtk`; update with

@@ -4,26 +4,49 @@ set -eu
 source_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 temporary=$(mktemp -d)
 trap 'rm -rf "$temporary"' EXIT HUP INT TERM
-root="$temporary/root"
-mkdir -p "$root/scripts" "$root/skills/implement/scripts"
+root="$temporary/task"
+primary="$temporary/primary"
+mkdir -p "$root/scripts" "$root/skills/implement/scripts" "$primary/scripts"
 cp "$source_root/scripts/work" "$root/scripts/work"
 
 cat >"$root/skills/implement/scripts/work" <<'SH'
 #!/bin/sh
 printf 'fallback %s %s\n' "${WORK_PRIMARY_UPDATER:-none}" "$*" >>"$WORK_TEST_LOG"
-SH
-chmod +x "$root/skills/implement/scripts/work"
-
-log="$temporary/log"
-WORK_TEST_LOG="$log" "$root/scripts/work" new example
-[ "$(cat "$log")" = "fallback none new example" ]
-
-: >"$log"
-WORK_TEST_LOG="$log" "$root/scripts/work" done
-[ "$(cat "$log")" = "fallback scripts/update done" ]
-
-if WORK_TEST_LOG="$log" "$root/scripts/work" done extra >/dev/null 2>&1; then
-  exit 1
+[ "${WORK_TEST_BLOCKED:-0}" = 0 ] || exit 1
+if [ "$1" = done ]; then
+  [ "${WORK_TEST_REMOVE:-0}" = 0 ] || rm -rf "$WORK_TEST_TASK"
+  printf '%s\n' "$WORK_TEST_PRIMARY"
 fi
+SH
+cat >"$primary/scripts/link" <<'SH'
+#!/bin/sh
+[ "$PWD" = "$WORK_TEST_PRIMARY" ] || exit 2
+printf 'link\n' >>"$WORK_TEST_LOG"
+[ "${WORK_TEST_LINK_FAIL:-0}" = 0 ]
+SH
+chmod +x "$root/skills/implement/scripts/work" "$primary/scripts/link"
+export WORK_TEST_LOG="$temporary/log" WORK_TEST_PRIMARY="$primary" WORK_TEST_TASK="$root"
 
+"$root/scripts/work" new example
+[ "$(cat "$WORK_TEST_LOG")" = "fallback none new example" ]
+
+: >"$WORK_TEST_LOG"
+if WORK_TEST_BLOCKED=1 "$root/scripts/work" done >"$temporary/out" 2>&1; then exit 1; fi
+[ "$(cat "$WORK_TEST_LOG")" = "fallback none done" ]
+
+: >"$WORK_TEST_LOG"
+if "$root/scripts/work" done extra >"$temporary/out" 2>&1; then exit 1; fi
+[ ! -s "$WORK_TEST_LOG" ]
+
+: >"$WORK_TEST_LOG"
+WORK_PRIMARY_UPDATER=obsolete "$root/scripts/work" done >"$temporary/out"
+[ "$(cat "$WORK_TEST_LOG")" = "$(printf 'fallback none done\nlink')" ]
+[ "$(cat "$temporary/out")" = "$primary" ]
+
+: >"$WORK_TEST_LOG"
+if WORK_TEST_REMOVE=1 WORK_TEST_LINK_FAIL=1 "$root/scripts/work" done >"$temporary/out" 2>"$temporary/err"; then exit 1; fi
+[ ! -e "$root" ]
+[ "$(cat "$WORK_TEST_LOG")" = "$(printf 'fallback none done\nlink')" ]
+grep -F "task cleaned; configuration installation pending: $primary/scripts/link" "$temporary/err" >/dev/null
+(cd "$primary" && scripts/link)
 printf 'all checks passed\n'
