@@ -77,6 +77,19 @@ dirty, divergent, non-trunk, or unlanded state. Unattended updates remain
 excluded because skills and global instructions can execute policy and code.
 The command requires Git, Python 3.9 or newer, and standard `tar`.
 
+## Optional compact command output
+
+Install [RTK](https://github.com/rtk-ai/rtk) with `brew install rtk`; update with
+`brew upgrade rtk` and remove with `brew uninstall rtk`. Shared policy directs
+agents to call it explicitly for routine summaries, so no `rtk init`, hooks, or
+additional skill is needed. Examples: `rtk git status`, `rtk gh pr list`, and
+`rtk test <test command>`. Keep native structured field filters and full review
+diffs. On failure, follow the printed `rtk recall <hash>` hint for omitted details.
+
+RTK owns local metrics and diagnostic recovery data; keep them out of Git.
+`rtk gain` reports estimated output reduction, not actual billing savings.
+Telemetry is opt-in; leave it disabled. New sessions load the shared guidance.
+
 ## Wiki
 
 `wiki` enters a user-owned Markdown knowledge repository without imposing a

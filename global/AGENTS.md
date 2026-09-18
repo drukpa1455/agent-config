@@ -89,6 +89,10 @@ clever golf, and speculative architecture.
 - Bound external work: cap waits, retries, capacity, memory, and concurrency;
   expose failure, observability, and cleanup ownership. Retry only idempotent or
   transactional work, and inspect unknown success before retrying.
+- Request only decision-relevant output and reuse unchanged evidence. When
+  installed, use `rtk` for supported routine Git, GitHub, and test summaries;
+  prefer native field filters for structured data. Read full diffs for review;
+  use `rtk recall` for omitted diagnostics before rerunning a command.
 
 ## Code shape
 
