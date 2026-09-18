@@ -10,7 +10,14 @@ case ${1:-} in
     ;;
   done)
     [ "$#" -eq 1 ] || { echo "usage: work new <task> | work done" >&2; exit 1; }
-    WORK_PRIMARY_UPDATER=scripts/update exec "$fallback" done
+    unset WORK_PRIMARY_UPDATER
+    primary=$("$fallback" done)
+    cd "$primary"
+    if ! "$primary/scripts/link"; then
+      echo "work: task cleaned; configuration installation pending: $primary/scripts/link" >&2
+      exit 1
+    fi
+    printf '%s\n' "$primary"
     ;;
   *)
     echo "usage: work new <task> | work done" >&2

@@ -3,14 +3,13 @@
 Make one thing clearly better.
 
 If the change needs a long argument to establish its value, it is probably not
-ready. Improve the owner first, prove that improvement independently, then make
-the final change small.
+ready. Keep the change focused on its intended outcome.
 
 ## Before a pull request
 
 - Read `README.md`, `AGENTS.md`, and the owning source.
 - Explain the observed failure or missing capability.
-- Keep refactors separate from behavior changes.
+- Separate prerequisite refactors only when necessary and independently useful.
 - Remove incidental formatting, generated churn, and unrelated cleanup.
 - Disclose material AI assistance and review every resulting line and claim.
 
@@ -27,8 +26,8 @@ the user's authority, and its source evidence revision-bound. Prefer explicit
 invocation when a skill changes normal task flow or imposes an architectural
 lens.
 
-Projection scripts may link repository truth. Only `scripts/update` may fetch
-and fast-forward this repository's clean local trunk under its update lock. They
+Projection scripts may link repository truth. `scripts/update` and the task
+lifecycle may fast-forward clean local trunk under their shared locks. They
 do not stage changes, commit, push, or silently mutate unrelated state.
 
 ## Proof
