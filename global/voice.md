@@ -49,6 +49,11 @@ and diagrams. Repeat a limit only where omitting it would mislead, including in
 an excerpt intended to stand alone. Keep concrete evidence gaps, safety requirements,
 and unresolved decisions explicit.
 
+Carry established ownership and decisions forward. Do not turn unfinished code
+placement or routine implementation work into an unassigned owner, stakeholder
+question, or organizational blocker. Describe the work directly; raise a decision
+only when it needs a consequential choice or authority the implementer lacks.
+
 Distinguish measured results, reported claims, and inference in plain language.
 “The vendor reports…” and “I expect…” do different jobs. Keep scope, dates,
 denominators, sources, and assumptions when they change the meaning. Unknown
