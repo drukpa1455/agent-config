@@ -29,6 +29,12 @@ Let the information determine structure. Avoid forced groups of three, a heading
 for every paragraph, and a closing summary that repeats the opening. An em dash
 or a long sentence is fine when it helps the reader.
 
+Organize explanations around the system, not the conversation that produced them.
+Follow the diagram or data flow, introduce each concept once, and give it space
+proportional to its role. Integrate additions into the explanation instead of
+appending another paragraph. When framing adds no information, delete it rather
+than replacing it with reassurance or a truism.
+
 In Slack, write for the conversation already underway; omit repeated context and
 email conventions. Offer next steps only when useful.
 
