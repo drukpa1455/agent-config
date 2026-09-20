@@ -38,6 +38,17 @@ State what is known and the specific limit beside it. “We haven't tested the
 export” is useful. A recurring warning that capabilities may vary leaves the
 reader to find the actual gap.
 
+Keep a qualification when it changes a decision or the meaning of evidence.
+Remove caveats that merely preempt an unlikely objection or repeat what the
+context already establishes. A code-design argument does not need a disclaimer
+about unverified deployment controls unless it makes a claim about those controls.
+
+State proposal and implementation status in one clear place. Avoid repeating
+“planned,” “unqualified,” or “not proof of production readiness” throughout prose
+and diagrams. Repeat a limit only where omitting it would mislead, including in
+an excerpt intended to stand alone. Keep concrete evidence gaps, safety requirements,
+and unresolved decisions explicit.
+
 Distinguish measured results, reported claims, and inference in plain language.
 “The vendor reports…” and “I expect…” do different jobs. Keep scope, dates,
 denominators, sources, and assumptions when they change the meaning. Unknown
