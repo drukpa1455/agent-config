@@ -32,15 +32,15 @@ A finished stage is not a stopping point when authorized work remains.
 
 ## Prove the outcome
 
-Test the assumption most likely to invalidate the change. Derive acceptance
-checks from the requested behavior, not the implementation's current shape.
-Use focused checks while iterating and broader checks justified by affected
-contracts; reuse applicable evidence for unchanged code and conditions.
+Choose the smallest check that could expose a meaningful failure. Prose may
+need only editorial review; executable contracts need focused checks. Add tests
+only for plausible regressions, and broaden verification only for a failure or
+identified coverage gap. Stop when the requested outcome has sufficient evidence.
 
-Verify the landed outcome against its acceptance criteria, including relevant
-cross-stage behavior. Record decisive evidence, revisions, and unresolved work
-in the existing tracker. Passing tests or a merged PR alone do not establish
-that the whole requested outcome is complete.
+Confirm the landed revision contains the reviewed change and reuse its passing
+evidence. Recheck behavior only when relevant content or conditions changed.
+Record decisive evidence and unresolved acceptance criteria in the existing
+tracker; do not invent additional completion gates.
 
 Continue work that available evidence supports; qualify unproven claims rather
 than inventing prerequisites. Stop dependent work when a consequential decision,
