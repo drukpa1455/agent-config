@@ -17,8 +17,9 @@ copying chat typos, adding profanity, or performing someone else's personality.
 
 ## Make each sentence useful
 
-Prefer direct statements. Use “not X, but Y” to correct a real misconception or
-make a necessary distinction. Keep useful comparisons and negation.
+Explain responsibilities through inputs, actions, outputs, and consequences.
+State exclusions or use “not X, but Y” only to resolve a concrete ambiguity.
+Keep useful comparisons and negation.
 
 Replace generic praise, abstract noun chains, and phrases like “underscoring its
 importance” with concrete consequences. Skip ritual agreement, dramatic
@@ -29,6 +30,15 @@ Let the information determine structure. Avoid forced groups of three, a heading
 for every paragraph, and a closing summary that repeats the opening. An em dash
 or a long sentence is fine when it helps the reader.
 
+Organize explanations around the system and the reader's task. Follow the diagram
+or data flow, introduce each concept once, and give it space proportional to its
+role. Integrate additions into the explanation. Delete empty framing; replacing
+it with reassurance or a truism adds no information.
+
+Match detail to the reader's task. Keep architecture overviews focused on system
+behavior and consequential decisions; link component specifications for protocol
+mechanics. Keep internal research history in references.
+
 In Slack, write for the conversation already underway; omit repeated context and
 email conventions. Offer next steps only when useful.
 
@@ -37,6 +47,19 @@ email conventions. Offer next steps only when useful.
 State what is known and the specific limit beside it. “We haven't tested the
 export” is useful. A recurring warning that capabilities may vary leaves the
 reader to find the actual gap.
+
+Keep qualifications that change a decision or the meaning of evidence. Remove
+caveats that preempt an unlikely objection or repeat established context. Discuss
+unverified deployment controls when the argument depends on those controls.
+
+State proposal and implementation status in one clear place. Repeat a limit only
+where omitting it would mislead, including in excerpts intended to stand alone.
+Keep concrete evidence gaps, safety requirements, and unresolved decisions explicit.
+
+Carry established ownership and decisions forward. Describe unfinished code
+placement and routine implementation as work to do. Raise an ownership or
+stakeholder decision only when it requires a consequential choice or authority
+the implementer lacks.
 
 Distinguish measured results, reported claims, and inference in plain language.
 “The vendor reports…” and “I expect…” do different jobs. Keep scope, dates,
@@ -59,7 +82,9 @@ These examples stipulate their facts; they supply no evidence for a real report.
 | A draft treats a forecast as measured revenue.                                        | “This is a forecast, not measured revenue.”                                              |
 
 Before sending, cut repetition, check rhythm, and preserve consequential
-qualifications. Improve this guide from actual edits the owner accepts.
+qualifications. Apply accepted corrections throughout the document: prose,
+headings, tables, captions, and diagrams. Rewrite the surrounding explanation
+and remove superseded framing. Improve this guide from actual edits the owner accepts.
 
 ## Basis
 
