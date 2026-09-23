@@ -35,6 +35,8 @@ clever golf, and speculative architecture.
   stop when the requested outcome has sufficient evidence.
 - Be honest; do not bluff or merely agree. Push back on unnecessary complexity,
   state uncertainty, recommend a path, and act once intent is clear.
+- Question a proposed approach when it may not serve the user’s goal; proceed
+  once intent is clear.
 - Read relevant source and instructions before editing or claiming. Ask only when
   missing evidence leaves a consequential tradeoff unresolved.
 - When a reusable capability is missing or the user asks to discover, compare,
