@@ -64,8 +64,9 @@ clever golf, and speculative architecture.
   useful; keep unrelated cleanup out of the behavior change.
 - Question every new abstraction, copy, cache, dependency, condition, and
   compatibility path. If it owns no necessary fact, remove it.
-- Add regression coverage when it meaningfully detects recurrence. Correctness
-  and performance claims need reproducible evidence.
+- Add tests only for plausible regressions or meaningful contracts; do not test
+  prose, implementation shape, or duplicate existing proof. Correctness and
+  performance claims need reproducible evidence.
 - Disclose material AI assistance. You remain responsible for every line and
   claim.
 - Read the repository's `CONTRIBUTING.md` before changing it when one exists.
@@ -134,14 +135,18 @@ clever golf, and speculative architecture.
   the repository's isolation entrypoint and canonical workspace root when
   available. Each workspace has one writer; treat other workspaces and branches
   as user-owned unless ownership is explicitly transferred.
+- A task worktree and branch exist only while its task is active; after landing
+  or explicit discard, remove both. Preserve work only by promoting it to the
+  repository's canonical branch, an open pull request, or an explicitly named
+  archive.
 - Use stacked pull requests only for real dependencies; work is landed only
   when the complete chain reaches the repository's default trunk. Absorb
   compatible trunk drift before review and bind reviews to exact revisions.
 - After landing, fast-forward clean primary trunk to the verified revision using
   the repository updater when available, then remove owned task workspaces and
   merged branches when no open work depends on them. If primary is dirty,
-  off-trunk, or diverged, preserve it and report the exact state. Never infer
-  abandonment from age or modify another owner's workspace or branch.
+  off-trunk, or diverged, preserve it and report the exact state. Never delete
+  another owner's active workspace or branch without explicit ownership.
 - Keep disposable logs, screenshots, traces, builds, and experiments in
   task-scoped scratch and delete them when the task ends. Do not create generic
   run archives. Retain output only in its canonical product, issue, pull request,
@@ -158,17 +163,20 @@ clever golf, and speculative architecture.
   Never bypass required checks or raise spending limits to finish delivery.
 - Validate external input and dependency responses at trust boundaries; retain
   diagnostic context and fail on impossible state.
-- Test behavior, expected failures, and key invariants; avoid tests that mirror
-  implementation or duplicate the same proof. Characterize unclear behavior
-  before changing its semantics; scale checks to the affected contracts.
+- Run the smallest check that addresses the change’s risk. Broaden only for a
+  failure or identified coverage gap; stop when the affected contracts have
+  sufficient evidence. Characterize unclear behavior before changing semantics.
+- For prose-only changes, review meaning and affected links. Do not add tests,
+  run application suites, or trigger hosted CI. Executable examples and
+  machine-consumed contracts may need focused validation.
 - Review the complete candidate diff from first principles before committing.
   Before merging, confirm the candidate matches the reviewed revision; review
   subsequent changes and new feedback. Fix valid findings and resolve threads;
   tool failure or absence does not block merging. Request human review only when
   explicitly required.
-- Verify changed state before claiming success; reuse applicable evidence for
-  unchanged code and conditions. Benchmark performance claims and check affected
-  behavior when refactoring.
+- Verify landing by revision identity or content equivalence and checkout
+  status; reuse passing evidence unless relevant content or conditions changed.
+  Benchmark performance claims and check affected behavior when refactoring.
 
 ## High-impact boundary
 

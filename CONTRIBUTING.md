@@ -32,14 +32,8 @@ do not stage changes, commit, push, or silently mutate unrelated state.
 
 ## Proof
 
-Run the narrow proof for the surface you changed:
-
-```sh
-scripts/test-link
-scripts/test-update
-scripts/test-browse
-```
-
-Changes to prose still require editorial review of meaning and links. Changes to
-skills require discovery and trigger checks. A wording diff is not proof of a
-behavioral policy change.
+Choose proof for the changed behavior. Run script tests only when their owned
+behavior changes. For prose, review meaning and affected links; for skill
+metadata or path changes, also check discovery and triggers. Review policy
+wording against the observed failure and a relevant safety scenario without
+creating a test harness for the wording.

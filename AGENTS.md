@@ -35,9 +35,9 @@ and Codex. Read `README.md` before changing either surface.
 
 ## Verification
 
-For changed Markdown or YAML, run Prettier and markdownlint with the repository's
-existing line-length exception. Validate local links, skill discovery, and the
-exact changed-path scope. Changes to `scripts/link`, `scripts/work`, or
-`scripts/update` require their isolated projection tests before applying them to
-a real home or repository. After an agent-config change lands and passes
-fresh-trunk verification, use `scripts/work done` to synchronize and install it.
+For prose changes, review meaning and affected links; no formatter suite or
+behavioral test harness is required. Check discovery only when skill names,
+frontmatter, or paths change. Changes to `scripts/link`, `scripts/work`, or
+`scripts/update` require their isolated tests before applying them to a real
+home or repository. After landing, use `scripts/work done` to synchronize and
+install the reviewed revision; unchanged content needs no repeat validation.
