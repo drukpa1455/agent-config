@@ -10,12 +10,18 @@ technical text when editing for voice.
 ## Sound like us
 
 Use ordinary words and concrete verbs. Name the actor, action, and consequence.
+Prefer concrete descriptions over compressed abstractions. Keep technical terms
+when they add precision, and explain unfamiliar ones without removing substance.
 
 Contractions, candid questions, and occasional dry humor fit conversation;
 published work calls for clean grammar and a professional register. Avoid
 copying chat typos, adding profanity, or performing someone else's personality.
 
 ## Make each sentence useful
+
+Lead with the finding, capability, or recommendation. Put research methods in
+the methodology section; mention them elsewhere only when they change how a
+finding should be interpreted.
 
 Explain responsibilities through inputs, actions, outputs, and consequences.
 State exclusions or use “not X, but Y” only to resolve a concrete ambiguity.
@@ -35,6 +41,10 @@ or data flow, introduce each concept once, and give it space proportional to its
 role. Integrate additions into the explanation. Delete empty framing; replacing
 it with reassurance or a truism adds no information.
 
+Describe a category's broader purpose before giving sample-specific examples.
+Do not let one example imply an exhaustive scope or let a sample define the
+full capability of a provider.
+
 Match detail to the reader's task. Keep architecture overviews focused on system
 behavior and consequential decisions; link component specifications for protocol
 mechanics. Keep internal research history in references.
@@ -51,6 +61,8 @@ reader to find the actual gap.
 Keep qualifications that change a decision or the meaning of evidence. Remove
 caveats that preempt an unlikely objection or repeat established context. Discuss
 unverified deployment controls when the argument depends on those controls.
+Convey the strength of the work through specific findings and evidence, without
+habitual self-disqualification or overstating what was established.
 
 State proposal and implementation status in one clear place. Repeat a limit only
 where omitting it would mislead, including in excerpts intended to stand alone.
