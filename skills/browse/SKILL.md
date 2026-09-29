@@ -21,7 +21,7 @@ cleanup. Use native `--help` for commands; do not invent another wrapper or copy
 its command catalog here.
 
 ```sh
-playwright-cli -s=<task> open about:blank --headed --idle-timeout=900000
+playwright-cli -s=<task> open about:blank --headed
 playwright-cli -s=<task> snapshot
 playwright-cli -s=<task> close
 playwright-cli -s=<task> delete-data
@@ -31,10 +31,10 @@ Ordinary sessions are ephemeral: omit `--persistent`, `--profile`, and custom
 `userDataDir`. Cookies survive calls within a session, then disappear on close.
 Use `playwright-cli show` for the native dashboard.
 
-Pass `--idle-timeout=900000` on every Playwright `open`, including saved profiles.
-Headed browsers otherwise have no idle shutdown. This bounds abandoned browser
-processes; explicit close and metadata cleanup are still required. For Patchright,
-check its native help for timeout support; do not assume identical options.
+Ephemeral describes storage, not process lifetime: browsers can outlive the
+agent turn. When the installed CLI help supports it, add
+`--idle-timeout=900000` to `open`, including saved profiles. Otherwise rely on
+explicit cleanup; never pass unsupported flags. Check each engine separately.
 
 ## Saved profiles
 
@@ -83,10 +83,15 @@ can alter those surfaces. Do not rotate or spoof browser identity.
 
 ## Finish
 
+Close the task’s browser when browser work ends, including before handoff or
+waiting for further instructions. Keep it open only for an explicit user request
+or an ongoing user interaction such as login; name the retained session and why.
+
 Resolve unknown side effects and move required evidence to its canonical owner.
-Close only the task's session, then use its `delete-data` command to remove CLI
-session metadata. Delete disposable scratch after cleanup succeeds; report
-failures with the preserved session and paths. No age-based sweeps of other work.
+Close only the task’s session, then use its `delete-data` command and confirm
+cleanup succeeded before reporting completion. Delete disposable scratch after
+cleanup; report failures with the session and paths. On resumption, resolve any
+retained session before opening another. No age-based sweeps of other work.
 
 Saved profiles retain login and application data after close;
 the CLI's `delete-data` does not erase these custom paths. Reset them only when

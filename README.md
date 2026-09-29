@@ -175,8 +175,9 @@ See [`skills/debug/SKILL.md`](skills/debug/SKILL.md).
 ## Browse
 
 `browse` uses Playwright CLI directly for ordinary tasks and its native dashboard.
-Tasks reuse one named session with an idle timeout and explicit cleanup. Saved
-logins use one canonical automation profile, separate from everyday Chrome;
+Tasks reuse one named session with explicit cleanup and, where supported, an idle
+timeout. Saved logins use one canonical automation profile, separate from
+everyday Chrome;
 native browser locks serialize access. Clean testing sessions remain ephemeral.
 
 A small adapter exposes Patchright's agent CLI when explicitly requested, with
