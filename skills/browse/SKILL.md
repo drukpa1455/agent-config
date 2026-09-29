@@ -1,21 +1,24 @@
 ---
 name: browse
-description: Use for interactive browser automation, visual web testing, persistent logins, or authorized social-media work. Use Playwright CLI directly, or the Patchright adapter for social media.
+description: Use for interactive browser automation, visual web testing, or persistent logins. Prefer configured service integrations; use Playwright CLI for browser work and Patchright only when explicitly requested.
 ---
 
 # Browse
 
-Use `playwright-cli` directly for ordinary browsing and visual testing. For
-user-authorized social-media work, use `$SKILL_DIR/scripts/patchright`, which
-exposes the same agent CLI from Patchright. Resolve `$SKILL_DIR` from this file.
+Use `playwright-cli` directly when the task needs a browser. Use Patchright only
+when explicitly requested, through `$SKILL_DIR/scripts/patchright`, which exposes
+its agent CLI. Resolve `$SKILL_DIR` from this file.
 Honor an explicit engine choice; never switch silently or share a profile
-between engines. Read [setup](references/setup.md) only if a CLI is missing.
+between engines. Read [setup](references/setup.md) if a CLI is missing or an older
+saved profile needs migration.
 
 ## Sessions
 
 Run from task-scoped scratch, with one unique session name for the whole task.
-Pass `-s=<task>` on every command, including cleanup. Use native `--help` for
-commands; do not invent another wrapper or copy its command catalog here.
+Reuse that session and its tabs across calls and resumed turns; inspect its state
+before opening another browser. Pass `-s=<task>` on every command, including
+cleanup. Use native `--help` for commands; do not invent another wrapper or copy
+its command catalog here.
 
 ```sh
 playwright-cli -s=<task> open about:blank --headed
@@ -28,14 +31,34 @@ Ordinary sessions are ephemeral: omit `--persistent`, `--profile`, and custom
 `userDataDir`. Cookies survive calls within a session, then disappear on close.
 Use `playwright-cli show` for the native dashboard.
 
-Only when a saved login is needed, add the engine's existing profile to `open`:
+Ephemeral describes storage, not process lifetime: browsers can outlive the
+agent turn. When the installed CLI help supports it, add
+`--idle-timeout=900000` to `open`, including saved profiles. Otherwise rely on
+explicit cleanup; never pass unsupported flags. Check each engine separately.
+
+## Saved profiles
+
+A profile stores logins across tasks; a session is its running browser. Reuse one
+canonical Playwright automation profile when saved login is needed:
 
 - Playwright: `--profile="$HOME/.local/share/pi-browser/profile"`
-- Patchright: `--browser=chrome --profile="$HOME/.local/share/pi-browser/patchright-profile"`
+- Explicit Patchright exception: `--browser=chrome --profile="$HOME/.local/share/pi-browser/patchright-profile"`
+
+Check that the profile exists before opening it: `--profile` can create a new
+directory. If absent, explain that a fresh profile requires login; create it only
+as part of user-authorized saved-login setup. Do not silently recreate a deleted
+profile. Keep the path stable across upgrades; if an older saved profile exists,
+resolve its migration before creating another. Never copy authentication state
+without explicit authorization.
+
+Keep automation separate from the user's everyday Chrome profile: Playwright
+does not support automating Chrome's default user data directory. Do not create
+profiles per task, site, or retry, or create a Patchright profile speculatively.
 
 Keep the unique task session name for saved profiles too. Native browser locks
 prevent simultaneous use of a profile; if busy, wait for its owner or continue
-independent work. Never attach to, stop, or delete another task's session, use
+independent work. Do not create a substitute profile to evade the lock.
+Never attach to, stop, or delete another task's session, use
 `close-all` or `kill-all`, or create extra persistent profiles unless requested.
 
 ## Work
@@ -60,12 +83,17 @@ can alter those surfaces. Do not rotate or spoof browser identity.
 
 ## Finish
 
-Resolve unknown side effects and move required evidence to its canonical owner.
-Close only the task's session, then use its `delete-data` command to remove CLI
-session metadata. Delete disposable scratch after cleanup succeeds; report
-failures with the preserved session and paths. No age-based sweeps of other work.
+Close the task’s browser when browser work ends, including before handoff or
+waiting for further instructions. Keep it open only for an explicit user request
+or an ongoing user interaction such as login; name the retained session and why.
 
-The two explicit saved profiles retain login and application data after close;
+Resolve unknown side effects and move required evidence to its canonical owner.
+Close only the task’s session, then use its `delete-data` command and confirm
+cleanup succeeded before reporting completion. Delete disposable scratch after
+cleanup; report failures with the session and paths. On resumption, resolve any
+retained session before opening another. No age-based sweeps of other work.
+
+Saved profiles retain login and application data after close;
 the CLI's `delete-data` does not erase these custom paths. Reset them only when
 requested, after their browsers close. No automatic cache pruning or disk quota
 is provided. Ordinary tasks should not leave persistent profiles behind.

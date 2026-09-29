@@ -175,10 +175,14 @@ See [`skills/debug/SKILL.md`](skills/debug/SKILL.md).
 ## Browse
 
 `browse` uses Playwright CLI directly for ordinary tasks and its native dashboard.
-Each task gets a named ephemeral session. Two optional, separate profiles retain
-Playwright and Patchright logins; native browser locks protect concurrent use.
+Tasks reuse one named session with explicit cleanup and, where supported, an idle
+timeout. Saved logins use one canonical automation profile, separate from
+everyday Chrome;
+native browser locks serialize access. Clean testing sessions remain ephemeral.
 
-A small adapter exposes Patchright's agent CLI for authorized social-media work.
+A small adapter exposes Patchright's agent CLI when explicitly requested, with
+its own saved profile only when needed. Configured MCP/API connections are checked
+before browser fallback, and missing saved profiles are never silently recreated.
 The skill describes authentication, evidence retention, and session cleanup;
 it adds no command router, lease service, or generated browser configuration.
 
