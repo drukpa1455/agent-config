@@ -1,13 +1,13 @@
 ---
 name: browse
-description: Use for interactive browser automation, visual web testing, or persistent logins. Prefer configured service integrations; use Playwright CLI for browser work and Patchright only when explicitly requested.
+description: Use for interactive browser automation, visual web testing, or persistent logins. Use Playwright CLI directly or the Patchright adapter when appropriate.
 ---
 
 # Browse
 
-Use `playwright-cli` directly when the task needs a browser. Use Patchright only
-when explicitly requested, through `$SKILL_DIR/scripts/patchright`, which exposes
-its agent CLI. Resolve `$SKILL_DIR` from this file.
+Use `playwright-cli` directly for browser work, or
+`$SKILL_DIR/scripts/patchright` when the authorized task benefits from Patchright.
+Resolve `$SKILL_DIR` from this file.
 Honor an explicit engine choice; never switch silently or share a profile
 between engines. Read [setup](references/setup.md) if a CLI is missing or an older
 saved profile needs migration.
@@ -38,22 +38,19 @@ explicit cleanup; never pass unsupported flags. Check each engine separately.
 
 ## Saved profiles
 
-A profile stores logins across tasks; a session is its running browser. Reuse one
-canonical Playwright automation profile when saved login is needed:
+For saved login, reuse the chosen engine’s canonical automation profile:
 
 - Playwright: `--profile="$HOME/.local/share/pi-browser/profile"`
-- Explicit Patchright exception: `--browser=chrome --profile="$HOME/.local/share/pi-browser/patchright-profile"`
+- Patchright: `--browser=chrome --profile="$HOME/.local/share/pi-browser/patchright-profile"`
 
-Check that the profile exists before opening it: `--profile` can create a new
-directory. If absent, explain that a fresh profile requires login; create it only
-as part of user-authorized saved-login setup. Do not silently recreate a deleted
-profile. Keep the path stable across upgrades; if an older saved profile exists,
-resolve its migration before creating another. Never copy authentication state
-without explicit authorization.
+Keep profile paths stable across upgrades. An authorized task needing saved
+login includes ordinary setup of a missing canonical profile; explain that login
+may be needed and respect an explicit request to keep profiles deleted. Resolve
+legacy profiles before creating duplicates. Copying authentication state needs
+explicit authorization.
 
-Keep automation separate from the user's everyday Chrome profile: Playwright
-does not support automating Chrome's default user data directory. Do not create
-profiles per task, site, or retry, or create a Patchright profile speculatively.
+Keep automation separate from everyday Chrome. Do not create profiles per task,
+site, retry, or speculatively for an unused engine.
 
 Keep the unique task session name for saved profiles too. Native browser locks
 prevent simultaneous use of a profile; if busy, wait for its owner or continue

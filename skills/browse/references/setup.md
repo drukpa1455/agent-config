@@ -11,7 +11,7 @@ playwright-cli --help
 playwright-cli install-browser
 ```
 
-When Patchright is explicitly requested, its adapter expects `patchright-core`
+When using Patchright, its adapter expects `patchright-core`
 in the existing user-local runtime. Install it only if missing:
 
 ```sh

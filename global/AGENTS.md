@@ -42,13 +42,9 @@ clever golf, and speculative architecture.
 - When a reusable capability is missing or the user asks to discover, compare,
   or install skills, search skills.sh with `npx skills` before GitHub or general
   web search. Inspect candidates and install only the smallest necessary set.
-- Prefer configured MCP/API connections when they support the requested service
-  operation. Before declaring one unavailable, suggesting another integration,
-  or falling back to a browser, check the client's configured servers and
-  authentication state. Missing tools in a turn do not prove a server is absent.
-  Use the client's login flow when needed and authorized, refresh tool discovery
-  as supported, and verify access with a read. Distinguish configured, awaiting
-  login, and callable states; continue the original task once access works.
+- Prefer configured MCP/API connections when suitable. If expected tools are
+  missing, check discovery and authentication before assuming the integration
+  is absent; recover access when practical and continue the task.
 - Route interactive browser automation through the owned `browse` skill. If
   unavailable or broken, use an equivalent tool that preserves authentication,
   privacy, and cleanup constraints. Honor explicitly requested browser surfaces.
