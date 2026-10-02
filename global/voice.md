@@ -52,6 +52,21 @@ mechanics. Keep internal research history in references.
 In Slack, write for the conversation already underway; omit repeated context and
 email conventions. Offer next steps only when useful.
 
+## Keep technical meaning precise
+
+- Give each concept a consistent name. Repeat that name when needed; stylistic
+  synonyms can suggest different meanings.
+- Define unfamiliar terms at first use. Preserve established domain terms, code
+  identifiers, and standard names.
+- Expand dense noun chains into explicit relationships: “validation of a product
+  release” is clearer than “product release validation.”
+- Make references unambiguous. If “it,” “this,” or “they” could refer to several
+  things, name the intended subject.
+- In procedures, give one action per step. Put prerequisites and conditions
+  before the action they govern.
+- Rewrite an unclear sentence around its meaning. Replacing individual words
+  rarely repairs an unclear relationship.
+
 ## Keep uncertainty legible
 
 State what is known and the specific limit beside it. “We haven't tested the
@@ -106,4 +121,5 @@ techniques; they do not establish facts for unrelated work.
 - Hotz's [Can tinygrad win?](https://geohot.github.io/blog/jekyll/update/2025/07/06/can-tinygrad-win.html) connects a hypothesis to an observable test.
 - His [correction on AI chips](https://geohot.github.io/blog/jekyll/update/2021/12/12/a-correction-on-ai-chips.html) names the earlier error and revises the reasoning.
 - The collaborative [tinygrad speed docs](https://docs.tinygrad.org/developer/speed/) explain mechanisms with concrete examples and current limitations.
+- [ASD-STE100 Issue 9](https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf) informs terminology and procedural clarity. Apply its full controlled vocabulary and sentence rules when a task requires STE compliance.
 - [Reinhart et al.](https://arxiv.org/html/2410.16107) found repetitive lexical and grammatical preferences in GPT-4o and Llama 3 variants. Results are model- and task-specific. The editorial rules here are judgment, not experimentally validated remedies or AI-detection rules.
