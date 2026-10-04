@@ -69,9 +69,14 @@ clever golf, and speculative architecture.
   useful; keep unrelated cleanup out of the behavior change.
 - Question every new abstraction, copy, cache, dependency, condition, and
   compatibility path. If it owns no necessary fact, remove it.
-- Add tests only for plausible regressions or meaningful contracts; do not test
-  prose, implementation shape, or duplicate existing proof. Correctness and
-  performance claims need reproducible evidence.
+- Use the smallest suite proving important public behavior, invariants, and
+  consequential failures. Reuse existing tests and fixtures; avoid trivial,
+  implementation-mirroring, or redundant tests. Organize tests by the repository's
+  concepts, names, and module ownership; follow its tree without mechanically
+  mirroring every source file or inventing a parallel architecture. Preserve
+  essential authorization, financial correctness, recovery, and integration
+  guarantees; avoid arbitrary test-count targets or mass deletion. Correctness
+  and performance claims need reproducible evidence.
 - Disclose material AI assistance. You remain responsible for every line and
   claim.
 - Read the repository's `CONTRIBUTING.md` before changing it when one exists.
@@ -127,13 +132,17 @@ clever golf, and speculative architecture.
 
 ## Delivery
 
+- Give each outcome one owner and a clear finish line. Bound active work and
+  make blockers and dependencies explicit.
 - A request to implement, fix, change, build, update, or rework authorizes full
   delivery unless the user sets a narrower boundary, including local-only work.
   In maintained repositories, isolate, implement, verify, review, commit, push,
   open a ready pull request, satisfy required checks, merge, and verify the exact
   landed revision from fresh trunk. Close a linked tracker only when its
-  acceptance criteria are satisfied. Continue while authorized work remains;
-  if blocked, report the exact gap and preserved state.
+  acceptance criteria are satisfied. Completion includes a useful demonstration,
+  necessary consumer adoption, reconciled docs and tracking, and safe cleanup
+  of owned work. Continue while authorized work remains; if blocked, report the
+  exact gap and preserved state.
 - Keep the primary checkout on trunk and free of task work: never edit files,
   switch branches, reset, clean, generate files, install dependencies, or run
   services there. Use a uniquely named task branch and leased worktree through
@@ -141,7 +150,8 @@ clever golf, and speculative architecture.
   available. Each workspace has one writer; treat other workspaces and branches
   as user-owned unless ownership is explicitly transferred.
 - A task worktree and branch exist only while its task is active; after landing
-  or explicit discard, remove both. Preserve work only by promoting it to the
+  or explicit discard, remove both when safe. Cleanup must preserve others' work,
+  dirty files, and unrecoverable data. Preserve work only by promoting it to the
   repository's canonical branch, an open pull request, or an explicitly named
   archive.
 - Use stacked pull requests only for real dependencies; work is landed only
@@ -168,9 +178,10 @@ clever golf, and speculative architecture.
   Never bypass required checks or raise spending limits to finish delivery.
 - Validate external input and dependency responses at trust boundaries; retain
   diagnostic context and fail on impossible state.
-- Run the smallest check that addresses the change’s risk. Broaden only for a
-  failure or identified coverage gap; stop when the affected contracts have
-  sufficient evidence. Characterize unclear behavior before changing semantics.
+- Run focused checks first; broaden for a failure, identified coverage gap, or
+  actual cross-boundary risk. Avoid repeated full runs after unrelated changes;
+  stop when affected contracts have sufficient evidence. Characterize unclear
+  behavior before changing semantics.
 - For prose-only changes, review meaning and affected links. Do not add tests,
   run application suites, or trigger hosted CI. Executable examples and
   machine-consumed contracts may need focused validation.
