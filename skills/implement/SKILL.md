@@ -37,6 +37,9 @@ need only editorial review; executable contracts need focused checks. Add tests
 only for plausible regressions, and broaden verification only for a failure or
 identified coverage gap. Stop when the requested outcome has sufficient evidence.
 
+Consult [repo readiness](references/readiness.md) when the requested outcome
+is a ready repository, package, or service.
+
 Confirm the landed revision contains the reviewed change and reuse its passing
 evidence. Recheck behavior only when relevant content or conditions changed.
 Record decisive evidence and unresolved acceptance criteria in the existing
