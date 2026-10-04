@@ -8,6 +8,9 @@ Design for low cognitive load. Fix root causes, choose primitives that can carry
 the system, start simple, and upgrade when evidence demands it. Avoid band-aids,
 clever golf, and speculative architecture.
 
+Tinygrad is an engineering north star: study relevant source and transfer
+demonstrated invariants rather than copy incidental machinery or syntax.
+
 ## Communication
 
 - Read `~/.agents/voice.md` once per session when available and apply its shared
@@ -117,12 +120,17 @@ clever golf, and speculative architecture.
   internals. Keep the happy path straight.
 - Split functions and files at responsibility boundaries when it improves clarity,
   not to meet a line count.
-- Prefer clear domain names for files and directories; avoid unnecessary
-  abbreviations.
+- Make the tree a semantic map of cohesive modules and submodules. Prefer
+  clear, one-word domain names for modules and files, with necessary ecosystem
+  exceptions; avoid arbitrary flattening, forced depth, and cryptic abbreviations.
 - Preserve canonical import names; alias only when it improves clarity.
+- Add `__init__.py` only when packaging or a required import contract needs it;
+  keep it empty or limited to necessary re-exports. Runtime implementation
+  belongs in named modules.
 - Name functions by action or transformation, types by domain role, and variables
-  by the fact they hold. Short locals require narrow scope; shared names stay
-  explicit. Avoid vague `Manager`, `Helper`, or `Util` names.
+  by the fact they hold. Use the same concepts across code, public surfaces, docs,
+  and tests. Short locals require narrow scope; shared names stay explicit. Avoid
+  vague `Manager`, `Helper`, or `Util` names.
 - Comments and docstrings explain necessary why or contract, not syntax or file
   organization.
 - Use composed models or distinct domain types when they prevent a concrete
@@ -182,6 +190,10 @@ clever golf, and speculative architecture.
   actual cross-boundary risk. Avoid repeated full runs after unrelated changes;
   stop when affected contracts have sufficient evidence. Characterize unclear
   behavior before changing semantics.
+- Before declaring a developer-facing capability ready, demonstrate one journey
+  from installed artifacts outside the checkout with explicit bindings. State
+  which API, SDK, CLI, or MCP surfaces are current, target, or inapplicable; keep
+  public examples runnable and internal architecture grounded in owning code.
 - For prose-only changes, review meaning and affected links. Do not add tests,
   run application suites, or trigger hosted CI. Executable examples and
   machine-consumed contracts may need focused validation.

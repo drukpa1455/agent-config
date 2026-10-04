@@ -150,6 +150,9 @@ requested outcome while following shared review and delivery policy. Its scripts
 provide fallback workspace creation and cleanup when the repository has none.
 Production mutation remains outside the skill's authority.
 
+For a repository-readiness review, see the
+[reusable checklist](skills/implement/references/readiness.md).
+
 Install either explicit-only skill directly:
 
 ```sh
