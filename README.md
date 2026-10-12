@@ -24,12 +24,18 @@ skills/debug/                 evidence-first root-cause diagnosis
 skills/gws/                   Google Workspace CLI routing
 ```
 
-Project-level `AGENTS.md` files contain only project-specific differences and
-layer after the shared global policy. Omit one when there are no differences.
+Project-level `AGENTS.md` files layer project conventions over the shared policy.
+Keep them useful to contributors who do not have this configuration installed.
 
 ## Use the shared configuration
 
-Clone once, then link the shared files:
+Cloning is separate from installation. Review the files before running the linker;
+`link --check` checks compatibility without installing projections. Task completion
+through `scripts/work done` also installs links: when installation is explicitly
+excluded, run `env -u WORK_PRIMARY_UPDATER skills/implement/scripts/work done`
+from the task worktree for cleanup without installation.
+
+To install after review, clone once, then link the shared files:
 
 ```sh
 git clone https://github.com/drukpa1455/agent-config.git ~/src/agent-config
@@ -38,9 +44,9 @@ git clone https://github.com/drukpa1455/agent-config.git ~/src/agent-config
 
 The linker creates a real skills directory per harness and links every owned
 skill into each. It removes stale links to skills deleted from this checkout and
-refuses unmanaged entries, so globally active prompt content remains versioned
-and reviewable. Install project-specific or third-party skills in their owning
-repository instead of the global directory.
+preserves unrelated entries, including Omarchy’s stock skills. A collision with
+one of this repository’s skill names or policy files is refused without replacing
+the existing entry. Install project-specific skills in their owning repository.
 
 Only harnesses whose `pi`, `codex`, or `claude` executable is available on
 `PATH` receive projections. Re-running the linker after removing a harness
@@ -85,8 +91,8 @@ in a task workspace solely to preserve an installation error.
 ## Optional compact command output
 
 Install [RTK](https://github.com/rtk-ai/rtk) with `brew install rtk`; update with
-`brew upgrade rtk` and remove with `brew uninstall rtk`. Shared policy directs
-agents to call it explicitly for routine summaries, so no `rtk init`, hooks, or
+`brew upgrade rtk` and remove with `brew uninstall rtk`. Shared policy permits
+its use when a summary preserves the needed evidence, so no `rtk init`, hooks, or
 additional skill is needed. Examples: `rtk git status`, `rtk gh pr list`, and
 `rtk test <test command>`. Keep native structured field filters and full review
 diffs. On failure, follow the printed `rtk recall <hash>` hint for omitted details.

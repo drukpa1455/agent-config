@@ -190,9 +190,40 @@ check "leaves that file byte-identical" \
   "$(cat "$HOME/.claude/CLAUDE.md")" "hand written policy"
 
 isolated_home
-mkdir -p "$HOME/.claude/skills/not-ours"
-check "refuses an unmanaged skill entry" "$(exit_status_of_link)" "1"
-check "leaves that entry in place" "$(path_state ".claude/skills/not-ours")" "present"
+mkdir -p "$HOME/.claude/skills/not-ours" "$HOME/.agents/skills"
+# Stock Omarchy links may coexist, including a currently unavailable target.
+ln -s /usr/share/omarchy/default/agents/skills/omarchy "$HOME/.agents/skills/omarchy"
+ln -s /unavailable/diagnose-crash "$HOME/.claude/skills/diagnose-crash"
+status=0
+"$link" --check >/dev/null 2>&1 || status=$?
+check "check mode accepts unrelated skills" "$status" "0"
+check "check mode does not install owned skills" "$(path_state ".agents/skills/debug")" "missing"
+check "links alongside unrelated skills" "$(exit_status_of_link)" "0"
+assert_every_projection_linked "coexisting skills"
+check "preserves unrelated directory" "$(path_state ".claude/skills/not-ours")" "present"
+check "preserves Omarchy link" "$(link_target ".agents/skills/omarchy")" "/usr/share/omarchy/default/agents/skills/omarchy"
+check "preserves broken unrelated link" "$(link_target ".claude/skills/diagnose-crash")" "/unavailable/diagnose-crash"
+enable_harnesses
+check "removing owned projections alongside others succeeds" "$(exit_status_of_link)" "0"
+check "cleanup preserves unrelated directory" "$(path_state ".claude/skills/not-ours")" "present"
+check "cleanup preserves Omarchy link" "$(link_target ".agents/skills/omarchy")" "/usr/share/omarchy/default/agents/skills/omarchy"
+check "cleanup preserves broken unrelated link" "$(link_target ".claude/skills/diagnose-crash")" "/unavailable/diagnose-crash"
+enable_harnesses pi codex claude
+
+isolated_home
+mkdir -p "$HOME/.agents/skills/debug"
+printf 'independent skill\n' >"$HOME/.agents/skills/debug/SKILL.md"
+status=0
+"$link" --check >/dev/null 2>&1 || status=$?
+check "check mode refuses a skill name collision" "$status" "1"
+check "refuses a skill name collision" "$(exit_status_of_link)" "1"
+check "preserves colliding skill content" "$(cat "$HOME/.agents/skills/debug/SKILL.md")" "independent skill"
+
+isolated_home
+mkdir -p "$HOME/.agents/skills"
+ln -s /unavailable/debug "$HOME/.agents/skills/debug"
+check "refuses a colliding broken link" "$(exit_status_of_link)" "1"
+check "preserves colliding broken link" "$(link_target ".agents/skills/debug")" "/unavailable/debug"
 
 HOME=$linked_home
 export HOME

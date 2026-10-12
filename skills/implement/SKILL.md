@@ -53,8 +53,10 @@ mutation or bypass the shared high-impact boundary.
 
 ## Workspace fallback
 
-Use the repository's isolation and cleanup entrypoints. When absent, resolve
-`$SKILL_DIR` from this loaded file and use `$SKILL_DIR/scripts/work new <task>`
+Use the repository’s isolation and cleanup entrypoints when isolation is needed
+for the task or required by that repository. Do not create a worktree solely
+because this skill is loaded. When isolation is needed and no entrypoint exists,
+resolve `$SKILL_DIR` from this loaded file and use `$SKILL_DIR/scripts/work new <task>`
 and `$SKILL_DIR/scripts/work done`. Creation requires Git and Python 3.9+;
 cleanup also requires authenticated `gh`.
 

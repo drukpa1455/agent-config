@@ -1,19 +1,22 @@
 ---
 name: gws
-description: Use for Gmail, Google Calendar, Drive, Docs, Sheets, Forms, Chat, Meet, Contacts, Tasks, Classroom, Keep, Apps Script, or Google Workspace administration. Route the task through the installed Google Workspace CLI and its live schema.
+description: Use when the Google Workspace CLI (gws) is requested or selected for Gmail, Calendar, Drive, Docs, Sheets, or Workspace administration. Prefer an existing suitable authorized connector when the user has not requested the CLI.
 ---
 
 # Google Workspace
 
-Use `gws` as the canonical Google Workspace interface. Do not substitute a
-browser, start a separate agent session, or copy a generated API catalog.
+Use the user’s requested interface. Otherwise prefer a suitable existing
+authorized connector; these CLI instructions apply when `gws` is selected or
+provides a needed capability. Do not create a second login or agent session just
+to satisfy this route, and do not copy a generated API catalog.
 
 ## Route
 
 Confirm the local capability with `command -v gws`, then inspect the active
 identity with `gws auth status`. If the CLI or required authorization is absent,
-report that exact requirement; never inspect, print, export, or store credentials
-or tokens.
+use another suitable authorized interface unless the user requires `gws`.
+If none can perform the task, report the missing capability or authorization.
+Never inspect, print, export, or store credentials or tokens.
 
 Prefer the CLI's semantic `+` helpers. Discover them with `gws <service> --help`
 and inspect a helper with `gws <service> <helper> --help`. For an operation with

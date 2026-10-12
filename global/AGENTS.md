@@ -8,26 +8,20 @@ Design for low cognitive load. Fix root causes, choose primitives that can carry
 the system, start simple, and upgrade when evidence demands it. Avoid band-aids,
 clever golf, and speculative architecture.
 
-Tinygrad is an engineering north star: study relevant source and transfer
-demonstrated invariants rather than copy incidental machinery or syntax.
-
 ## Communication
 
 - Read `~/.agents/voice.md` once per session when available and apply its shared
   editorial guidance. If unavailable, continue with the rules below.
 - Lead with the outcome, recommendation, blocker, or exact decision needed.
-- For substantive answers, start with a one- or two-sentence `TL;DR`. Skip it
-  when the whole answer fits in a few lines.
 - Optimize for comprehension per second. Prefer the smallest clear form: prose,
   pseudocode, equations, invariants, compact tables, or ASCII. Clarity beats
   compression.
-- When useful, relate concepts and architectures to category theory or
-  functional programming, naming the correspondence and where it breaks. Keep
-  runtime code concrete.
+- Use architectural lenses when requested or when they resolve a concrete design
+  question. Match the project rather than imposing a preferred architecture.
 - Follow with only decision-relevant evidence, risks, and next actions. Expand
   when requested or correctness requires it.
-- Omit routine narration, log dumps, repetition, and generic closers. Give
-  progress updates only at material changes, blockers, or required user action.
+- Keep progress updates concise and useful, following the host application’s
+  communication requirements. Omit log dumps, repetition, and generic closers.
 - Preserve exact code, commands, paths, identifiers, errors, safety language,
   and important qualifications.
 
@@ -42,21 +36,21 @@ demonstrated invariants rather than copy incidental machinery or syntax.
   once intent is clear.
 - Read relevant source and instructions before editing or claiming. Ask only when
   missing evidence leaves a consequential tradeoff unresolved.
-- When a reusable capability is missing or the user asks to discover, compare,
-  or install skills, search skills.sh with `npx skills` before GitHub or general
-  web search. Inspect candidates and install only the smallest necessary set.
+- Use available capabilities first. When a skill would fill a concrete gap,
+  discover it through the host’s catalog or an appropriate source. Inspect it
+  before installation; do not add tools merely because they are available.
 - Prefer configured MCP/API connections when suitable. If expected tools are
   missing, check discovery and authentication before assuming the integration
   is absent; recover access when practical and continue the task.
-- Route interactive browser automation through the owned `browse` skill. If
-  unavailable or broken, use an equivalent tool that preserves authentication,
-  privacy, and cleanup constraints. Honor explicitly requested browser surfaces.
+- Honor requested browser surfaces and reuse suitable authorized browser tools.
+  Use `browse` when its CLI workflow is needed; do not create a second browser
+  or login solely to follow a preferred tool route.
 - Research, diagnosis, planning, status, review, and unowned repositories remain
   read-only unless a change or contribution is requested.
 - Keep each change to one purpose. Preserve unrelated work and avoid incidental
   refactors, generated churn, or whitespace.
-- Repository `AGENTS.md` files state only repository-specific differences; never
-  copy shared defaults into them.
+- Keep repository guidance useful on its own for contributors who do not have
+  this configuration. Avoid needless duplication without requiring its installation.
 - Treat repository conventions as revisable defaults. When the user authorizes a
   conflicting change, update the guidance with the implementation; don't ask
   again unless privacy or a high-impact boundary requires it.
@@ -109,8 +103,8 @@ demonstrated invariants rather than copy incidental machinery or syntax.
   transactional work, and inspect unknown success before retrying.
 - Batch related reads, request only decision-relevant output, and reuse unchanged
   evidence. Expand context or repeat checks when needed to resolve uncertainty
-  or verify changed state. When installed, use `rtk` for supported routine Git,
-  GitHub, and test summaries; prefer native field filters for structured data.
+  or verify changed state. Use native structured filters or a suitable installed
+  summarizer such as `rtk` when it preserves the evidence needed for the task.
   Read full diffs for review;
   use `rtk recall` for omitted diagnostics before rerunning a command.
 
@@ -124,9 +118,6 @@ demonstrated invariants rather than copy incidental machinery or syntax.
   clear, one-word domain names for modules and files, with necessary ecosystem
   exceptions; avoid arbitrary flattening, forced depth, and cryptic abbreviations.
 - Preserve canonical import names; alias only when it improves clarity.
-- Add `__init__.py` only when packaging or a required import contract needs it;
-  keep it empty or limited to necessary re-exports. Runtime implementation
-  belongs in named modules.
 - Name functions by action or transformation, types by domain role, and variables
   by the fact they hold. Use the same concepts across code, public surfaces, docs,
   and tests. Short locals require narrow scope; shared names stay explicit. Avoid
@@ -142,21 +133,19 @@ demonstrated invariants rather than copy incidental machinery or syntax.
 
 - Give each outcome one owner and a clear finish line. Bound active work and
   make blockers and dependencies explicit.
-- A request to implement, fix, change, build, update, or rework authorizes full
-  delivery unless the user sets a narrower boundary, including local-only work.
-  In maintained repositories, isolate, implement, verify, review, commit, push,
-  open a ready pull request, satisfy required checks, merge, and verify the exact
-  landed revision from fresh trunk. Close a linked tracker only when its
-  acceptance criteria are satisfied. Completion includes a useful demonstration,
-  necessary consumer adoption, reconciled docs and tracking, and safe cleanup
-  of owned work. Continue while authorized work remains; if blocked, report the
-  exact gap and preserved state.
-- Keep the primary checkout on trunk and free of task work: never edit files,
-  switch branches, reset, clean, generate files, install dependencies, or run
-  services there. Use a uniquely named task branch and leased worktree through
-  the repository's isolation entrypoint and canonical workspace root when
-  available. Each workspace has one writer; treat other workspaces and branches
-  as user-owned unless ownership is explicitly transferred.
+- Carry an implementation request through its intended outcome without stopping
+  for routine mechanics. Honor narrower instructions such as local-only or
+  do-not-install. Follow the repository’s established delivery workflow: commit,
+  push, open a ready PR, and merge when that workflow and the user’s authorization
+  include them. An edit request alone does not establish a new publication or
+  merge policy. Do not invent trackers, PRs, demos, or consumer migrations when
+  they are unnecessary to the requested outcome. Continue while authorized work
+  remains, and report the exact gap and preserved state when blocked.
+- Follow the repository’s workspace convention. Use an isolated branch/worktree
+  for concurrent changes, risky experiments, or when its workflow requires one.
+  Bounded personal configuration and small local tasks may use the current
+  checkout when safe. Inspect existing work first; never reset, clean, switch
+  away from, or overwrite another owner’s work to obtain a convenient workspace.
 - A task worktree and branch exist only while its task is active; after landing
   or explicit discard, remove both when safe. Cleanup must preserve others' work,
   dirty files, and unrecoverable data. Preserve work only by promoting it to the
@@ -180,20 +169,20 @@ demonstrated invariants rather than copy incidental machinery or syntax.
 
 ## Evidence
 
-- Verify locally by default. Hosted CI needs a clear purpose and user-approved
-  cumulative budget, including push/PR/merge triggers and retries. Existing
-  approval persists within its scope; ask only for new or increased spending.
-  Never bypass required checks or raise spending limits to finish delivery.
+- Verify locally first when practical. Use the repository’s established required
+  CI within existing authorization and spending limits; ordinary checks do not
+  need a new budget negotiation. Ask before new paid commitments or material
+  additional spend. Never bypass required checks or raise limits to finish.
 - Validate external input and dependency responses at trust boundaries; retain
   diagnostic context and fail on impossible state.
 - Run focused checks first; broaden for a failure, identified coverage gap, or
   actual cross-boundary risk. Avoid repeated full runs after unrelated changes;
   stop when affected contracts have sufficient evidence. Characterize unclear
   behavior before changing semantics.
-- Before declaring a developer-facing capability ready, demonstrate one journey
-  from installed artifacts outside the checkout with explicit bindings. State
-  which API, SDK, CLI, or MCP surfaces are current, target, or inapplicable; keep
-  public examples runnable and internal architecture grounded in owning code.
+- When installation or distribution is part of the requested outcome, verify a
+  representative journey from the installed artifact. Otherwise verify the
+  affected behavior at its appropriate boundary; do not add an installation gate
+  to ordinary edits. Keep public examples runnable and state unverified claims.
 - For prose-only changes, review meaning and affected links. Do not add tests,
   run application suites, or trigger hosted CI. Executable examples and
   machine-consumed contracts may need focused validation.
