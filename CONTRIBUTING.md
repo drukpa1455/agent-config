@@ -1,39 +1,22 @@
 # Contributing
 
-Make one thing clearly better.
+Keep changes focused on a clear benefit. Read `README.md`, `AGENTS.md`, and the
+owning source. Explain the missing capability, failure, or personal preference
+being addressed; avoid incidental formatting and unrelated cleanup.
 
-If the change needs a long argument to establish its value, it is probably not
-ready. Keep the change focused on its intended outcome.
+Shared instructions should add context the agent cannot reasonably infer. Skills
+should provide distinct knowledge or tool conventions, with precise triggers and
+self-contained references. Preserve user scope, established authorization, and
+existing invocation metadata. Keep source studies revision-bound and make their
+transfer limits clear.
 
-## Before a pull request
+Installation belongs to `scripts/link`. Checkout updates and worktree cleanup
+share locks and preserve unrelated state. Cleanup may delete its verified merged
+task branch; these tools never create commits or push code.
 
-- Read `README.md`, `AGENTS.md`, and the owning source.
-- Explain the observed failure or missing capability.
-- Separate prerequisite refactors only when necessary and independently useful.
-- Remove incidental formatting, generated churn, and unrelated cleanup.
-- Disclose material AI assistance and review every resulting line and claim.
+Review prose for meaning and script changes through their isolated tests. Prefer
+observable behavior and ownership checks over tests of wording. Do not add a
+policy evaluation framework for routine edits.
 
-Open a pull request only when the change is coherent and ready to merge.
-
-## What belongs here
-
-Global policy changes must be useful across ordinary repositories and harnesses.
-Name the pressure case that requires the rule and the safe behavior it must
-preserve.
-
-A skill owns one bounded capability. Keep its trigger precise, its effects within
-the user's authority, and its source evidence revision-bound. Prefer explicit
-invocation when a skill changes normal task flow or imposes an architectural
-lens.
-
-Projection scripts may link repository truth. `scripts/update` and the task
-lifecycle may fast-forward clean local trunk under their shared locks. They
-do not stage changes, commit, push, or silently mutate unrelated state.
-
-## Proof
-
-Choose proof for the changed behavior. Run script tests only when their owned
-behavior changes. For prose, review meaning and affected links; for skill
-metadata or path changes, also check discovery and triggers. Review policy
-wording against the observed failure and a relevant safety scenario without
-creating a test harness for the wording.
+Open a pull request when the change is coherent and ready to review. Describe the
+result, relevant validation, and any material AI assistance.

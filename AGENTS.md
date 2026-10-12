@@ -1,43 +1,25 @@
 # Agent Config
 
-This repository owns the shared policy and portable skills installed into Pi
-and Codex. Read `README.md` before changing either surface.
+Read `README.md` before changing this repository.
 
-## Ownership
+- `global/AGENTS.md` owns the optional shared working agreement.
+- `skills/<name>/` owns one self-contained, on-demand capability.
+- `references/voice.md` is optional editorial material.
+- `scripts/link` owns explicit component installation and removal.
+- `scripts/work` owns optional worktree creation and merged-task cleanup.
+- `scripts/update` owns guarded, fast-forward checkout updates.
 
-- `global/AGENTS.md` owns always-loaded behavior.
-- `skills/<name>/SKILL.md` owns one on-demand capability; references and scripts
-  stay inside that package.
-- `scripts/link` owns local projection into `~/.agents`, `~/.pi`, `~/.codex`, and
-  `~/.claude`. `scripts/test-link` proves that projection against a throwaway home.
-- `scripts/work` owns this repository's task lifecycle. It delegates isolation to
-  the shared fallback, which synchronizes clean trunk and removes merged task
-  state before installing links. Installation failure reports a retry command.
-  `scripts/test-work` proves that order against isolated commands.
-- `scripts/update` owns standalone lock-serialized, fast-forward refresh of
-  the clean local trunk and its links. `scripts/test-update` proves that lifecycle
-  against isolated repositories and a throwaway home.
-- Installed links and user-local runtime/profile state are projections, not
-  repository truth.
+Keep personal preferences distinct from generic coding advice. Add instructions
+when they convey useful context or address a concrete failure; avoid turning a
+local incident into a universal workflow. Preserve skill invocation metadata and
+keep each package's references inside it. Installed links are projections, not
+source files.
 
-## Change discipline
+For prose, review meaning, triggers, and affected links. For changes to `link`,
+`work`, or `update`, run the corresponding `scripts/test-<name>` in isolation.
+`scripts/test-browse` checks the browser adapter. Do not create tests that merely
+assert instruction wording.
 
-- Give each policy change one observed failure and one behavioral purpose.
-- Keep globally implicit skills rare. Make a capability explicit-only when
-  loading it imposes an architectural lens, changes ordinary task flow, or adds
-  human gates. Automatic discovery never authorizes effects or bypasses resource
-  ownership and the high-impact boundary.
-- Review policy changes against concrete failure and safety scenarios; keep
-  verification proportional to the change.
-- Preserve cross-harness invocation metadata when adding or renaming a skill.
-- Do not add hooks, background services, telemetry, automatic model selection,
-  or session state to enforce prose policy.
-
-## Verification
-
-For prose changes, review meaning and affected links; no formatter suite or
-behavioral test harness is required. Check discovery only when skill names,
-frontmatter, or paths change. Changes to `scripts/link`, `scripts/work`, or
-`scripts/update` require their isolated tests before applying them to a real
-home or repository. After landing, use `scripts/work done` to synchronize and
-install the reviewed revision; unchanged content needs no repeat validation.
+Installation is a separate user choice. Repository updates and task cleanup must
+never invoke the linker or install configuration. Do not add background services,
+hooks, telemetry, or session state to enforce prose.

@@ -4,20 +4,20 @@ set -eu
 root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 temporary=$(mktemp -d)
 trap 'rm -rf "$temporary"' EXIT HUP INT TERM
-home="$temporary/home"
+test_home="$temporary/home"
 remote="$temporary/remote.git"
 seed="$temporary/seed"
 primary="$temporary/primary"
 active="$temporary/active"
 landed="$temporary/landed"
 side="$temporary/side"
-mkdir -p "$home" "$seed/scripts" "$seed/global" "$seed/skills/demo"
+mkdir -p "$test_home/.agents/skills/foreign" "$seed/scripts" "$seed/global"
+printf 'local instructions\n' >"$test_home/.agents/skills/foreign/SKILL.md"
 
 cp "$root/scripts/update" "$seed/scripts/update"
-cp "$root/scripts/link" "$seed/scripts/link"
+printf '%s\n' '#!/bin/sh' 'touch "$HOME/implicit-install"; exit 99' >"$seed/scripts/link"
+chmod +x "$seed/scripts/link"
 printf 'version one\n' >"$seed/global/AGENTS.md"
-printf 'voice one\n' >"$seed/global/voice.md"
-printf '%s\n' '---' 'name: demo' '---' >"$seed/skills/demo/SKILL.md"
 printf 'secret\n' >"$seed/.gitignore"
 git init --quiet --initial-branch=main "$seed"
 git -C "$seed" config user.email test@example.com
@@ -31,7 +31,6 @@ git clone --quiet "$remote" "$primary"
 primary=$(CDPATH= cd -- "$primary" && pwd -P)
 git -C "$primary" config user.email test@example.com
 git -C "$primary" config user.name Test
-HOME="$home" "$primary/scripts/link" >/dev/null
 git -C "$primary" worktree add --quiet --detach "$active" HEAD
 
 ok() {
@@ -49,22 +48,20 @@ rejects() {
 }
 
 run_update() {
-  HOME="$home" "$landed/scripts/update"
+  HOME="$test_home" "$landed/scripts/update"
 }
 
 run_primary_update() {
-  HOME="$home" "$primary/scripts/update"
+  HOME="$test_home" "$primary/scripts/update"
 }
 
 run_timed_update() {
-  HOME="$home" PATH="$temporary/bin:$PATH" UPDATE_TIMEOUT=0.05 \
+  HOME="$test_home" PATH="$temporary/bin:$PATH" UPDATE_TIMEOUT=0.05 \
     "$landed/scripts/update"
 }
 
 old=$(git -C "$primary" rev-parse HEAD)
 printf 'version two\n' >"$seed/global/AGENTS.md"
-printf 'voice two\n' >"$seed/global/voice.md"
-printf '%s\n' '[ ! -e "$HOME/target-conflict" ] || exit 1' >>"$seed/scripts/link"
 git -C "$seed" commit --quiet -am two
 git -C "$seed" push --quiet
 git -C "$primary" fetch --quiet origin main
@@ -77,45 +74,14 @@ printf '%s\n' '#!/bin/sh' \
 chmod +x "$temporary/bin/git"
 rejects "remote timeouts release the update lock" run_timed_update
 for name in agent-config-update.lock agent-primary-update.lock; do
-  lock="$primary/.git/$name"
-  exec 8>"$lock"
+  exec 8>"$primary/.git/$name"
   python3 -c 'import fcntl; fcntl.flock(8, fcntl.LOCK_EX | fcntl.LOCK_NB)'
   exec 8>&-
 done
 touch "$landed/dirty"
 rejects "a dirty invoking worktree preserves the primary" run_update
+[ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
 rm "$landed/dirty"
-mkdir "$home/.agents/skills/foreign"
-rm "$home/.agents/skills/demo"
-mkdir "$home/.agents/skills/demo"
-rejects "skill name collisions preserve the primary" run_update
-[ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
-rmdir "$home/.agents/skills/demo"
-HOME="$home" "$primary/scripts/link" >/dev/null
-rm "$home/.agents/voice.md"
-printf 'personal voice\n' >"$home/.agents/voice.md"
-rejects "voice conflicts preserve the primary" run_update
-[ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
-[ "$(cat "$home/.agents/voice.md")" = "personal voice" ]
-rm "$home/.agents/voice.md"
-HOME="$home" "$primary/scripts/link" >/dev/null
-rm "$home/.codex/AGENTS.md"
-rmdir "$home/.codex"
-touch "$home/.codex"
-rejects "invalid projection parents preserve the primary" run_update
-[ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
-rm "$home/.codex"
-HOME="$home" "$primary/scripts/link" >/dev/null
-rm "$home/.codex/AGENTS.md"
-chmod 555 "$home/.codex"
-rejects "unwritable projection parents preserve the primary" run_update
-[ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
-chmod 755 "$home/.codex"
-HOME="$home" "$primary/scripts/link" >/dev/null
-touch "$home/target-conflict"
-rejects "target linker conflicts preserve the primary" run_update
-[ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
-rm "$home/target-conflict"
 marker="$temporary/hook-ran"
 printf '%s\n' '#!/bin/sh' "touch '$marker'" >"$primary/.git/hooks/reference-transaction"
 chmod +x "$primary/.git/hooks/reference-transaction"
@@ -123,20 +89,30 @@ result=$(run_update)
 [ "$result" = "updated agent config to $(git -C "$primary" rev-parse --short HEAD)" ]
 [ "$(git -C "$primary" rev-parse HEAD)" = "$(git -C "$seed" rev-parse HEAD)" ]
 [ "$(git -C "$active" rev-parse HEAD)" = "$old" ]
-[ "$(readlink "$home/.codex/AGENTS.md")" = "$primary/global/AGENTS.md" ]
-[ "$(cat "$home/.codex/AGENTS.md")" = "version two" ]
-[ "$(readlink "$home/.agents/voice.md")" = "$primary/global/voice.md" ]
-[ "$(cat "$home/.agents/voice.md")" = "voice two" ]
 [ ! -e "$marker" ]
-[ -d "$home/.agents/skills/foreign" ]
-ok "a landed invocation fast-forwards and relinks while preserving unrelated skills"
+[ ! -e "$test_home/implicit-install" ]
+[ ! -e "$test_home/.codex" ]
+[ "$(cat "$test_home/.agents/skills/foreign/SKILL.md")" = "local instructions" ]
+ok "a landed invocation fast-forwards without hooks, installation, or home changes"
+rm "$primary/.git/hooks/reference-transaction"
 
+mkdir "$test_home/.codex"
+ln -s "$primary/global/AGENTS.md" "$test_home/.codex/AGENTS.md"
 mkdir -p "$seed/skills/new"
 printf '%s\n' '---' 'name: new' '---' >"$seed/skills/new/SKILL.md"
-printf '%s\n' '[ ! -e "$HOME/newer-conflict" ] || exit 1' >>"$seed/scripts/link"
-git -C "$seed" add skills/new/SKILL.md
-git -C "$seed" commit --quiet -am three
+printf 'version three\n' >"$seed/global/AGENTS.md"
+git -C "$seed" add .
+git -C "$seed" commit --quiet -m three
 git -C "$seed" push --quiet
+before=$(git -C "$primary" rev-parse HEAD)
+run_update >/dev/null
+[ "$(git -C "$primary" rev-parse HEAD)" = "$before" ]
+ok "a landed invocation does not advance to newer remote changes"
+run_primary_update >/dev/null
+[ "$(cat "$test_home/.codex/AGENTS.md")" = "version three" ]
+[ ! -e "$test_home/.agents/skills/new" ]
+[ ! -e "$test_home/implicit-install" ]
+ok "existing symlinks reflect updated content without installing new components"
 
 git -C "$seed" switch --quiet -c side
 git -C "$seed" commit --quiet --allow-empty -m side
@@ -146,24 +122,14 @@ git -C "$seed" merge --quiet --no-ff side -m merge
 git -C "$seed" push --quiet
 git -C "$primary" fetch --quiet origin main
 git -C "$primary" worktree add --quiet --detach "$side" "$side_head"
-rejects "a merged side-branch revision is not installed as trunk" \
-  env HOME="$home" "$side/scripts/update"
+rejects "a merged side-branch revision cannot become primary trunk" \
+  env HOME="$test_home" "$side/scripts/update"
 git -C "$primary" merge --quiet --ff-only "$side_head"
 rejects "a side-branch primary is not treated as trunk" run_primary_update
 git -C "$primary" merge --quiet --ff-only origin/main
 
-common=$(git -C "$primary" rev-parse --git-common-dir)
-exec 7>"$primary/$common/agent-config-update.lock"
-exec 8>"$primary/$common/agent-primary-update.lock"
-python3 -c 'import fcntl; fcntl.flock(7, fcntl.LOCK_EX); fcntl.flock(8, fcntl.LOCK_EX)'
-env UPDATE_LOCK_FDS=7,8 HOME="$home" "$landed/scripts/update" >/dev/null
-exec 7>&-
-exec 8>&-
-ok "an inherited lifecycle lock remains authoritative"
-
 for name in agent-config-update.lock agent-primary-update.lock; do
-  lock="$primary/$common/$name"
-  exec 8>"$lock"
+  exec 8>"$primary/.git/$name"
   python3 -c 'import fcntl; fcntl.flock(8, fcntl.LOCK_EX | fcntl.LOCK_NB)'
   rejects "an active update lock preserves the primary" run_update
   exec 8>&-
@@ -177,17 +143,9 @@ rm "$primary/private"
 printf 'ignored\n' >"$primary/secret"
 rejects "ignored work preserves the primary" run_update
 rm "$primary/secret"
-
 git -C "$primary" switch --quiet -c feature
 rejects "a non-trunk primary is preserved" run_update
 git -C "$primary" switch --quiet main
-
-run_primary_update >/dev/null
-[ -L "$home/.agents/skills/new" ]
-ok "a successful update links newly landed skills"
-touch "$home/newer-conflict"
-rejects "an older invocation preflights the final primary linker" run_update
-rm "$home/newer-conflict"
 
 git -C "$primary" commit --quiet --allow-empty -m ahead
 rejects "primary commits absent from origin are preserved" run_primary_update
@@ -199,7 +157,7 @@ git -C "$seed" push --quiet
 before=$(git -C "$primary" rev-parse HEAD)
 run_update >/dev/null
 [ "$(git -C "$primary" rev-parse HEAD)" = "$before" ]
-ok "a landed invocation does not install a newer revision"
+ok "an older invocation does not rewind a newer clean primary"
 
 git -C "$primary" commit --quiet --allow-empty -m local
 rejects "a landed invocation rejects an unlanded primary" run_update

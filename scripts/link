@@ -1,205 +1,132 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env python3
+"""Link an explicitly selected set of components; never replace foreign files."""
 
-root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd -P)
-mode=${1:-link}
-case $mode in
-  link) projection=$root ;;
-  --check) projection=${2:-$root} ;;
-  *) echo "usage: link [--check [projection-root]]" >&2; exit 1 ;;
-esac
-policy="$projection/global/AGENTS.md"
+import argparse
+import os
+from pathlib import Path
+import shutil
+import sys
 
-same_link() {
-  source=$1
-  destination=$2
-  target=$(readlink "$destination") || return 1
-  [ "$target" = "$source" ] && return
-  case $target in
-    /*) ;;
-    *) target="$(dirname "$destination")/$target" ;;
-  esac
-  [ -d "$(dirname "$target")" ] || return 1
-  target=$(CDPATH= cd -- "$(dirname "$target")" && pwd -P)/$(basename "$target")
-  [ "$target" = "$source" ]
-}
 
-harness_available() {
-  harness=$1
-  harness_path=${AGENT_CONFIG_HARNESS_PATH:-$PATH}
-  (PATH=$harness_path; command -v "$harness" >/dev/null 2>&1)
-}
+ROOT = Path(__file__).resolve().parent.parent
 
-check_parent() {
-  parent=$(dirname "$1")
-  while [ ! -e "$parent" ] && [ ! -L "$parent" ]; do
-    parent=$(dirname "$parent")
-  done
-  [ -d "$parent" ] || {
-    echo "refusing non-directory projection parent $parent" >&2
-    exit 1
-  }
-}
 
-check_write() {
-  check_parent "$1"
-  [ -w "$parent" ] && [ -x "$parent" ] || {
-    echo "refusing unwritable projection parent $parent" >&2
-    exit 1
-  }
-}
+def owned(destination, source):
+    return destination.is_symlink() and destination.resolve() == source.resolve()
 
-link_file() {
-  source=$1
-  destination=$2
 
-  if [ -L "$destination" ]; then
-    same_link "$source" "$destination" || {
-      echo "refusing to replace $destination" >&2
-      exit 1
-    }
-    return
-  fi
+def writable_parent(destination):
+    parent = destination.parent
+    while not parent.exists() and not parent.is_symlink():
+        parent = parent.parent
+    if not parent.is_dir():
+        raise ValueError(f"not a directory: {parent}")
+    if not os.access(parent, os.W_OK | os.X_OK):
+        raise ValueError(f"not writable: {parent}")
 
-  [ ! -e "$destination" ] || {
-    echo "refusing to replace $destination" >&2
-    exit 1
-  }
 
-  check_write "$destination"
-  [ "$mode" != --check ] || return 0
-  mkdir -p "$(dirname "$destination")"
-  ln -s "$source" "$destination"
-}
+def main():
+    available = sorted(path.name for path in (ROOT / "skills").iterdir()
+                       if (path / "SKILL.md").is_file())
+    parser = argparse.ArgumentParser(
+        description="Select the complete set to link: policy and/or named skills. "
+                    "Omitted components owned by this checkout are unlinked.",
+        epilog="Available components: policy, " + ", ".join(available),
+    )
+    parser.add_argument("--check", action="store_true", help="preview without changing files")
+    parser.add_argument("--none", action="store_true", help="unlink all components owned by this checkout")
+    parser.add_argument("components", nargs="*", metavar="COMPONENT")
+    args = parser.parse_args()
+    selected = set(args.components)
+    if args.none == bool(selected):
+        parser.error("name components to install, or use --none to remove owned links")
+    unknown = selected - {"policy", *available}
+    if unknown:
+        parser.error("unknown components: " + ", ".join(sorted(unknown)))
 
-unlink_file() {
-  source=$1
-  destination=$2
+    harness_path = os.environ.get("AGENT_CONFIG_HARNESS_PATH", os.environ.get("PATH", ""))
+    harnesses = {name for name in ("pi", "codex", "claude")
+                 if shutil.which(name, path=harness_path)}
+    if selected and not harnesses:
+        parser.error("no supported harness on PATH (pi, codex, claude)")
+    user_dir = Path.home()
+    actions = []
+    replacing = set()
 
-  [ -L "$destination" ] && same_link "$source" "$destination" || return 0
-  check_write "$destination"
-  [ "$mode" = --check ] || rm "$destination"
-}
+    def remove(destination, source):
+        if owned(destination, source):
+            actions.append(("unlink", destination, source))
 
-link_skills() {
-  skills_dir=$1
+    def link(destination, source, fresh=False):
+        if not source.exists():
+            raise ValueError(f"missing source: {source}")
+        if not fresh:
+            if owned(destination, source):
+                return
+            if destination.exists() or destination.is_symlink():
+                raise ValueError(f"refusing to replace {destination}")
+        actions.append(("link", destination, source))
 
-  if [ -L "$skills_dir" ]; then
-    same_link "$projection/skills" "$skills_dir" || {
-      echo "refusing to replace $skills_dir" >&2
-      exit 1
-    }
-    if [ "$mode" = --check ]; then
-      check_write "$skills_dir"
-      return 0
-    fi
-    rm "$skills_dir"
-  fi
+    def skills(destination, names):
+        fresh = False
+        if destination.is_symlink():
+            if owned(destination, ROOT / "skills"):
+                remove(destination, ROOT / "skills")
+                replacing.add(destination)
+                fresh = True
+            elif names:
+                raise ValueError(f"refusing foreign skills directory link: {destination}")
+            else:
+                return
+        elif destination.exists() and not destination.is_dir():
+            if names:
+                raise ValueError(f"not a directory: {destination}")
+            return
+        if not fresh and destination.is_dir():
+            for entry in sorted(destination.iterdir()):
+                if entry.name not in names:
+                    remove(entry, ROOT / "skills" / entry.name)
+        for name in sorted(names):
+            link(destination / name, ROOT / "skills" / name, fresh)
 
-  if [ ! -e "$skills_dir" ]; then
-    check_write "$skills_dir"
-    [ "$mode" != --check ] || return 0
-  fi
-  mkdir -p "$skills_dir"
+    names = selected - {"policy"}
+    skills(user_dir / ".agents/skills", names if harnesses & {"pi", "codex"} else set())
+    skills(user_dir / ".claude/skills", names if "claude" in harnesses else set())
+    for harness, relative in (
+        ("pi", ".pi/agent/AGENTS.md"),
+        ("codex", ".codex/AGENTS.md"),
+        ("claude", ".claude/CLAUDE.md"),
+    ):
+        destination = user_dir / relative
+        source = ROOT / "global/AGENTS.md"
+        if "policy" in selected and harness in harnesses:
+            link(destination, source)
+        else:
+            remove(destination, source)
+    # Retire the old session-wide voice projection; preserve anyone else's file.
+    remove(user_dir / ".agents/voice.md", ROOT / "global/voice.md")
 
-  for destination in "$skills_dir"/*; do
-    [ -e "$destination" ] || [ -L "$destination" ] || continue
-    skill=$(basename "$destination")
-    source="$projection/skills/$skill"
+    # Validate the whole plan before mutating any destination.
+    for _, destination, _ in actions:
+        parent_target = destination.parent if destination.parent in replacing else destination
+        writable_parent(parent_target)
+    for operation, destination, source in actions:
+        print(f"{operation} {destination}" + (f" -> {source}" if operation == "link" else ""))
+        if args.check:
+            continue
+        if operation == "unlink":
+            if not owned(destination, source):
+                raise ValueError(f"destination changed during installation: {destination}")
+            destination.unlink()
+        else:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.symlink_to(source)
+    if not actions:
+        print("selected configuration is already in place")
 
-    if [ -L "$destination" ] && same_link "$source" "$destination"; then
-      if [ -f "$root/skills/$skill/SKILL.md" ]; then
-        continue
-      fi
-      if [ "$mode" = --check ]; then
-        check_write "$destination"
-        continue
-      fi
-      rm "$destination"
-      continue
-    fi
 
-    # Other tools (including Omarchy) own entries in these shared directories.
-    # Preserve them; link_file below still refuses a collision with our names.
-    continue
-  done
-
-  for source in "$root"/skills/*; do
-    [ -f "$source/SKILL.md" ] || continue
-    skill=$(basename "$source")
-    link_file "$projection/skills/$skill" "$skills_dir/$skill"
-  done
-}
-
-unlink_skills() {
-  skills_dir=$1
-
-  if [ -L "$skills_dir" ]; then
-    unlink_file "$projection/skills" "$skills_dir"
-    return
-  fi
-  [ -d "$skills_dir" ] || return 0
-  for destination in "$skills_dir"/*; do
-    [ -e "$destination" ] || [ -L "$destination" ] || continue
-    skill=$(basename "$destination")
-    unlink_file "$projection/skills/$skill" "$skills_dir/$skill"
-  done
-  [ "$mode" = --check ] || rmdir "$skills_dir" 2>/dev/null || :
-}
-
-pi=false
-codex=false
-claude=false
-harness_available pi && pi=true
-harness_available codex && codex=true
-harness_available claude && claude=true
-
-if $pi || $codex; then
-  link_skills "$HOME/.agents/skills"
-else
-  unlink_skills "$HOME/.agents/skills"
-  [ "$mode" = --check ] || rmdir "$HOME/.agents" 2>/dev/null || :
-fi
-
-if $claude; then
-  link_skills "$HOME/.claude/skills"
-else
-  unlink_skills "$HOME/.claude/skills"
-fi
-
-if $pi || $codex || $claude; then
-  link_file "$projection/global/voice.md" "$HOME/.agents/voice.md"
-else
-  unlink_file "$projection/global/voice.md" "$HOME/.agents/voice.md"
-  [ "$mode" = --check ] || rmdir "$HOME/.agents" 2>/dev/null || :
-fi
-
-if $pi; then
-  link_file "$policy" "$HOME/.pi/agent/AGENTS.md"
-else
-  unlink_file "$policy" "$HOME/.pi/agent/AGENTS.md"
-  if [ "$mode" != --check ]; then
-    rmdir "$HOME/.pi/agent" 2>/dev/null || :
-    rmdir "$HOME/.pi" 2>/dev/null || :
-  fi
-fi
-
-if $codex; then
-  link_file "$policy" "$HOME/.codex/AGENTS.md"
-else
-  unlink_file "$policy" "$HOME/.codex/AGENTS.md"
-  [ "$mode" = --check ] || rmdir "$HOME/.codex" 2>/dev/null || :
-fi
-
-if $claude; then
-  link_file "$policy" "$HOME/.claude/CLAUDE.md"
-else
-  unlink_file "$policy" "$HOME/.claude/CLAUDE.md"
-  [ "$mode" = --check ] || rmdir "$HOME/.claude" 2>/dev/null || :
-fi
-
-if [ "$mode" = --check ]; then
-  echo "checked agent config links for $projection"
-else
-  echo "linked agent config from $root"
-fi
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, ValueError) as error:
+        sys.exit(f"link: {error}")
