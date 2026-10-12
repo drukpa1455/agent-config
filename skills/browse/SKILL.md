@@ -1,29 +1,24 @@
 ---
 name: browse
-description: Use when browser work requires Playwright CLI or the Patchright adapter, or when explicitly requested. Prefer a suitable authorized browser already provided by the host for ordinary interaction.
+description: Use Playwright CLI or the Patchright adapter when requested or needed for browser work. Prefer suitable authorized browser control already provided by the host for ordinary interaction.
 ---
 
 # Browse
 
-First honor the requested browser surface. If the host already provides suitable
-authorized browser control, use its own instructions and session lifecycle; the
-CLI-specific setup and cleanup below do not apply to host-managed browsers.
-Do not create another profile or request another login solely to use this skill.
+Honor the requested browser surface. Host-managed browsers follow their own
+instructions and lifecycle. Use this CLI route when it supplies a needed
+capability; it does not require another login or profile merely to use the skill.
 
-When CLI automation is needed, use `playwright-cli` directly, or
-`$SKILL_DIR/scripts/patchright` when the authorized task benefits from Patchright.
-Resolve `$SKILL_DIR` from this file.
-Honor an explicit engine choice; never switch silently or share a profile
-between engines. Read [setup](references/setup.md) if a CLI is missing or an older
-saved profile needs migration.
+Use `playwright-cli` or `$SKILL_DIR/scripts/patchright`, resolving `$SKILL_DIR`
+from this file. Honor the chosen engine and keep engine profiles separate. Read
+[setup](references/setup.md) only for missing tools or legacy-profile migration.
+Discover commands through the installed CLI's help.
 
-## Sessions
+## Sessions and profiles
 
-Run from task-scoped scratch, with one unique session name for the whole task.
-Reuse that session and its tabs across calls and resumed turns; inspect its state
-before opening another browser. Pass `-s=<task>` on every command, including
-cleanup. Use native `--help` for commands; do not invent another wrapper or copy
-its command catalog here.
+Run from task-scoped scratch. Use one unique session name, pass `-s=<task>` on
+every command, and reuse its tabs across calls and resumed turns. Inspect the
+session before opening another browser.
 
 ```sh
 playwright-cli -s=<task> open about:blank --headed
@@ -33,69 +28,37 @@ playwright-cli -s=<task> delete-data
 ```
 
 Ordinary sessions are ephemeral: omit `--persistent`, `--profile`, and custom
-`userDataDir`. Cookies survive calls within a session, then disappear on close.
-Use `playwright-cli show` for the native dashboard.
+`userDataDir`. Ephemeral storage does not end the browser process. If the chosen
+CLI's help supports it, add `--idle-timeout=900000` to `open`; otherwise use
+explicit cleanup.
 
-Ephemeral describes storage, not process lifetime: browsers can outlive the
-agent turn. When the installed CLI help supports it, add
-`--idle-timeout=900000` to `open`, including saved profiles. Otherwise rely on
-explicit cleanup; never pass unsupported flags. Check each engine separately.
-
-## Saved profiles
-
-For saved login, reuse the chosen engine’s canonical automation profile:
+When the task needs saved login, reuse the engine's canonical automation profile:
 
 - Playwright: `--profile="$HOME/.local/share/pi-browser/profile"`
 - Patchright: `--browser=chrome --profile="$HOME/.local/share/pi-browser/patchright-profile"`
 
-Keep profile paths stable across upgrades. An authorized task needing saved
-login includes ordinary setup of a missing canonical profile; explain that login
-may be needed and respect an explicit request to keep profiles deleted. Resolve
-legacy profiles before creating duplicates. Copying authentication state needs
-explicit authorization.
+These stay separate from everyday Chrome. Keep paths stable; resolve legacy
+profiles before creating duplicates. A missing profile may need user login.
+Copying authentication state requires explicit authorization. Respect native
+profile locks; wait for the owner instead of bypassing the lock with a duplicate
+profile. Never stop or delete another task's session.
 
-Keep automation separate from everyday Chrome. Do not create profiles per task,
-site, retry, or speculatively for an unused engine.
+## Operate and finish
 
-Keep the unique task session name for saved profiles too. Native browser locks
-prevent simultaneous use of a profile; if busy, wait for its owner or continue
-independent work. Do not create a substitute profile to evade the lock.
-Never attach to, stop, or delete another task's session, use
-`close-all` or `kill-all`, or create extra persistent profiles unless requested.
+Use fresh snapshot references or accessible locators and verify the visible
+result. `run-code` uses a restricted VM: access browser globals through
+`page.evaluate` and remove temporary listeners in `finally`. Inspect uncertain
+success before retrying an external action.
 
-## Work
+Pause browser inspection during user authentication. Keep credentials out of
+commands, logs, screenshots, and Git. Do not bypass CAPTCHA or access controls.
+Use official Playwright when testing CSP, security headers, response bytes,
+console, or service-worker behavior; Patchright can alter these surfaces.
 
-Observe, act, and verify the visible result. Prefer accessible locators or fresh
-snapshot refs; refresh them after navigation or material DOM changes. Use bounded
-scripts when they simplify repeated work. `run-code` uses a restricted VM:
-use `page.evaluate` for browser globals and remove temporary listeners in
-`finally`. Inspect unknown success before retrying an external action.
+When browser work ends, retain required evidence, close the task's session, and
+run its `delete-data`. Confirm cleanup and remove disposable scratch. Keep a
+session open for ongoing user interaction or an explicit request, and identify
+it at handoff. Report cleanup failures instead of sweeping other sessions.
 
-Use existing sessions or credentials authorized for the account. Ask for help
-only when authentication fails or needs user participation; avoid repeated
-attempts that could lock the account. Pause inspection while the user
-authenticates. Never expose credentials in commands, logs, screenshots, or Git,
-or extract authentication state without explicit authorization. Non-secret
-application state may be inspected when the task requires it.
-
-Do not bypass CAPTCHA, access controls, account limits, or site policy. Stage
-only task-authorized uploads in scratch. Use official Playwright to verify CSP,
-security headers, response bytes, console, or service-worker behavior: Patchright
-can alter those surfaces. Do not rotate or spoof browser identity.
-
-## Finish
-
-Close the task’s browser when browser work ends, including before handoff or
-waiting for further instructions. Keep it open only for an explicit user request
-or an ongoing user interaction such as login; name the retained session and why.
-
-Resolve unknown side effects and move required evidence to its canonical owner.
-Close only the task’s session, then use its `delete-data` command and confirm
-cleanup succeeded before reporting completion. Delete disposable scratch after
-cleanup; report failures with the session and paths. On resumption, resolve any
-retained session before opening another. No age-based sweeps of other work.
-
-Saved profiles retain login and application data after close;
-the CLI's `delete-data` does not erase these custom paths. Reset them only when
-requested, after their browsers close. No automatic cache pruning or disk quota
-is provided. Ordinary tasks should not leave persistent profiles behind.
+Custom saved profiles survive `close` and `delete-data`; reset them only when
+requested, after their browsers close.

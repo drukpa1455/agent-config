@@ -1,21 +1,11 @@
-# Pull request
-
-## Why
-
-<!-- Why should this merge? -->
-
 ## Change
 
-<!-- What one behavior changes? What remains unchanged? -->
+<!-- What changes, and why does it help? -->
 
-## Proof
+## Validation
 
-<!-- Exact pressure cases, tests, or reproduction commands. -->
-
-## Reach
-
-<!-- Why is this global, or which one skill or projection owns it? -->
+<!-- Relevant checks and any remaining uncertainty. -->
 
 ## Assistance
 
-<!-- Material tools or models used and their role, or "None." -->
+<!-- Material AI assistance and its role, or "None." -->

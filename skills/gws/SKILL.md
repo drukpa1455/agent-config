@@ -1,46 +1,23 @@
 ---
 name: gws
-description: Use when the Google Workspace CLI (gws) is requested or selected for Gmail, Calendar, Drive, Docs, Sheets, or Workspace administration. Prefer an existing suitable authorized connector when the user has not requested the CLI.
+description: Use the Google Workspace CLI when gws is requested or provides a needed Workspace capability. Prefer a suitable existing authorized connector when no interface is specified.
 ---
 
-# Google Workspace
+# Google Workspace CLI
 
-Use the user’s requested interface. Otherwise prefer a suitable existing
-authorized connector; these CLI instructions apply when `gws` is selected or
-provides a needed capability. Do not create a second login or agent session just
-to satisfy this route, and do not copy a generated API catalog.
+Check availability with `command -v gws` and the active account with
+`gws auth status`. Use existing authorization; do not expose or copy credentials.
+If another suitable authorized interface can do the work, no second login is
+needed solely for this skill.
 
-## Route
+Discover semantic `+` helpers through `gws <service> --help` and inspect the
+chosen helper's help. For raw API operations, read the live contract with
+`gws schema <service.resource.method>`. Pass query parameters through `--params`
+and bodies through `--json`; bound pagination with `--page-limit`.
 
-Confirm the local capability with `command -v gws`, then inspect the active
-identity with `gws auth status`. If the CLI or required authorization is absent,
-use another suitable authorized interface unless the user requires `gws`.
-If none can perform the task, report the missing capability or authorization.
-Never inspect, print, export, or store credentials or tokens.
-
-Prefer the CLI's semantic `+` helpers. Discover them with `gws <service> --help`
-and inspect a helper with `gws <service> <helper> --help`. For an operation with
-no helper, inspect the live contract before acting:
-
-```sh
-gws schema <service.resource.method>
-```
-
-Pass raw query parameters through `--params` and request bodies through `--json`.
-Bound pagination with `--page-limit`; do not fetch an entire mailbox or drive
-when a narrower query answers the request.
-
-## Preserve intent
-
-Let the user's verb determine the effect:
-
-- read, find, list, summarize, or inspect: do not mutate;
-- draft or compose: save a draft, such as `gws gmail +send --draft`;
-- send, reply, reply-all, or forward: use the matching helper and send only when
-  that effect is explicit;
-- create, update, share, move, archive, or delete: mutate only the named target.
-
-Resolve the active account, target, content, recipients, and attachments before
-an external effect. Use `--dry-run` when supported and request construction is
-uncertain or the operation is destructive. Inspect unknown success before
-retrying. Follow the governing high-impact boundary for confirmation.
+Match the requested effect: queries read, drafts remain drafts, and sending
+requires an explicit send request. For Gmail, `gws gmail +send --draft` saves
+without sending. Resolve the account, target, recipients,
+content, and attachments before an external change. Use a supported `--dry-run`
+when request construction is uncertain. Inspect an uncertain result before
+retrying an action that could duplicate a send or mutation.

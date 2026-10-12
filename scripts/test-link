@@ -1,298 +1,226 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env python3
+"""Exercise installation in disposable homes; never touch the caller's config."""
 
-root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
-link="$root/scripts/link"
-policy="$root/global/AGENTS.md"
-policy_destinations=".pi/agent/AGENTS.md .codex/AGENTS.md .claude/CLAUDE.md"
-skills_destinations=".agents/skills .claude/skills"
-failures=0
-harness_path=$(mktemp -d)
-AGENT_CONFIG_HARNESS_PATH=$harness_path
-export AGENT_CONFIG_HARNESS_PATH
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
 
-enable_harnesses() {
-  rm -f "$harness_path"/*
-  for harness in "$@"; do
-    printf '#!/bin/sh\nexit 0\n' >"$harness_path/$harness"
-    chmod +x "$harness_path/$harness"
-  done
-}
 
-enable_harnesses pi codex claude
+ROOT = Path(__file__).resolve().parent.parent
 
-managed_skills=$(
-  for source in "$root"/skills/*; do
-    [ -f "$source/SKILL.md" ] || continue
-    basename "$source"
-  done
-)
 
-isolated_home() {
-  HOME=$(mktemp -d)
-  export HOME
-}
+class LinkTests(unittest.TestCase):
+    def setUp(self):
+        scratch = tempfile.TemporaryDirectory(prefix="agent-config-link-")
+        self.addCleanup(scratch.cleanup)
+        self.scratch = Path(scratch.name)
+        self.test_home = self.scratch / "home"
+        self.test_home.mkdir()
+        self.bin_dir = self.scratch / "bin"
+        self.bin_dir.mkdir()
+        self.enable("pi", "codex", "claude")
 
-check() {
-  if [ "$2" = "$3" ]; then
-    echo "ok   $1"
-  else
-    echo "FAIL $1: expected [$3], got [$2]" >&2
-    failures=$((failures + 1))
-  fi
-}
+    def enable(self, *names):
+        for executable in self.bin_dir.iterdir():
+            executable.unlink()
+        for name in names:
+            executable = self.bin_dir / name
+            executable.write_text("#!/bin/sh\nexit 0\n")
+            executable.chmod(0o755)
 
-exit_status_of_link() {
-  status=0
-  "$link" >/dev/null 2>&1 || status=$?
-  echo "$status"
-}
+    def run_link(self, *args, succeeds=True):
+        result = subprocess.run(
+            [str(ROOT / "scripts/link"), *args],
+            env={**os.environ, "HOME": str(self.test_home),
+                 "AGENT_CONFIG_HARNESS_PATH": str(self.bin_dir)},
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(result.returncode == 0, succeeds, result.stdout + result.stderr)
+        return result
 
-link_target() {
-  readlink "$HOME/$1" 2>/dev/null || echo missing
-}
+    def put(self, name, content="foreign"):
+        destination = self.test_home / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(content)
+        return destination
 
-path_state() {
-  [ -e "$HOME/$1" ] && echo present || echo missing
-}
+    def symlink(self, name, target):
+        destination = self.test_home / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.symlink_to(target)
+        return destination
 
-assert_every_projection_linked() {
-  label=$1
+    def snapshot(self):
+        return [(str(path.relative_to(self.test_home)),
+                 os.readlink(path) if path.is_symlink() else
+                 path.read_bytes() if path.is_file() else None)
+                for path in sorted(self.test_home.rglob("*"))]
 
-  for destination in $policy_destinations; do
-    check "$label: $destination links the shared policy" \
-      "$(link_target "$destination")" "$policy"
-  done
+    def assert_link(self, name, source):
+        self.assertEqual(os.readlink(self.test_home / name), str(ROOT / source))
 
-  check "$label: shared voice links its source" \
-    "$(link_target ".agents/voice.md")" "$root/global/voice.md"
+    def test_explicit_selection_required(self):
+        for args in ((), ("--check",), ("--none", "wiki"), ("typo",), ("../wiki",)):
+            self.run_link(*args, succeeds=False)
+        self.assertEqual(self.snapshot(), [])
 
-  for skills_dir in $skills_destinations; do
-    for skill in $managed_skills; do
-      check "$label: $skills_dir/$skill links its package" \
-        "$(link_target "$skills_dir/$skill")" "$root/skills/$skill"
-    done
-  done
-}
+    def test_check_does_not_create_directories(self):
+        result = self.run_link("--check", "policy", "wiki")
+        self.assertIn(".codex/AGENTS.md", result.stdout)
+        self.assertEqual(self.snapshot(), [])
 
-assert_codex_only() {
-  label=$1
+    def test_policy_only_and_idempotence(self):
+        self.run_link("policy")
+        for name in (".pi/agent/AGENTS.md", ".codex/AGENTS.md", ".claude/CLAUDE.md"):
+            self.assert_link(name, "global/AGENTS.md")
+        self.assertFalse((self.test_home / ".agents/skills").exists())
+        self.assertFalse((self.test_home / ".agents/voice.md").exists())
+        before = self.snapshot()
+        self.run_link("policy")
+        self.assertEqual(self.snapshot(), before)
 
-  check "$label: Codex policy is linked" \
-    "$(link_target ".codex/AGENTS.md")" "$policy"
-  check "$label: shared voice is linked" \
-    "$(link_target ".agents/voice.md")" "$root/global/voice.md"
-  check "$label: Pi policy is absent" \
-    "$(path_state ".pi/agent/AGENTS.md")" "missing"
-  check "$label: Claude policy is absent" \
-    "$(path_state ".claude/CLAUDE.md")" "missing"
-  check "$label: Claude skills are absent" \
-    "$(path_state ".claude/skills")" "missing"
-  for skill in $managed_skills; do
-    check "$label: .agents/skills/$skill links its package" \
-      "$(link_target ".agents/skills/$skill")" "$root/skills/$skill"
-  done
-}
+    def test_skills_without_policy(self):
+        self.run_link("wiki", "lens")
+        for directory in (".agents/skills", ".claude/skills"):
+            self.assertEqual(sorted(path.name for path in (self.test_home / directory).iterdir()),
+                             ["lens", "wiki"])
+            self.assert_link(f"{directory}/wiki", "skills/wiki")
+        self.assertFalse((self.test_home / ".codex/AGENTS.md").exists())
 
-isolated_home
-"$link" --check >/dev/null
-check "check mode leaves policy absent" \
-  "$(path_state ".codex/AGENTS.md")" "missing"
-check "check mode leaves skills absent" \
-  "$(path_state ".agents/skills")" "missing"
-check "check mode leaves voice absent" \
-  "$(path_state ".agents/voice.md")" "missing"
+    def test_selection_replaces_owned_set(self):
+        self.run_link("policy", "wiki", "lens")
+        self.run_link("browse")
+        for directory in (".agents/skills", ".claude/skills"):
+            self.assertEqual([path.name for path in (self.test_home / directory).iterdir()], ["browse"])
+        self.assertFalse((self.test_home / ".codex/AGENTS.md").is_symlink())
 
-isolated_home
-touch "$HOME/.codex"
-status=0
-"$link" --check >/dev/null 2>&1 || status=$?
-check "check mode rejects a non-directory parent" "$status" "1"
-check "check mode preserves that parent" \
-  "$(path_state ".codex")" "present"
+    def test_host_skills_and_foreign_policy_survive(self):
+        self.symlink(".agents/skills/omarchy", "/usr/share/omarchy/default/agents/skills/omarchy")
+        self.symlink(".claude/skills/diagnose-crash", "/unavailable/diagnose-crash")
+        foreign = self.put(".claude/skills/custom/SKILL.md")
+        policy = self.put(".codex/AGENTS.md")
+        self.run_link("wiki")
+        self.run_link("--none")
+        self.assertEqual(os.readlink(self.test_home / ".agents/skills/omarchy"),
+                         "/usr/share/omarchy/default/agents/skills/omarchy")
+        self.assertEqual(os.readlink(self.test_home / ".claude/skills/diagnose-crash"),
+                         "/unavailable/diagnose-crash")
+        self.assertEqual(foreign.read_text(), "foreign")
+        self.assertEqual(policy.read_text(), "foreign")
+        self.assertFalse((self.test_home / ".agents/skills/wiki").is_symlink())
 
-isolated_home
-mkdir "$HOME/.codex"
-chmod 555 "$HOME/.codex"
-status=0
-"$link" --check >/dev/null 2>&1 || status=$?
-chmod 755 "$HOME/.codex"
-check "check mode rejects an unwritable parent" "$status" "1"
-check "check mode leaves that parent empty" \
-  "$(path_state ".codex/AGENTS.md")" "missing"
+    def test_unselected_name_collision_is_harmless(self):
+        foreign = self.put(".agents/skills/lens/SKILL.md")
+        self.run_link("wiki")
+        self.assertEqual(foreign.read_text(), "foreign")
 
-isolated_home
-check "first run succeeds" "$(exit_status_of_link)" "0"
-assert_every_projection_linked "first run"
-check "second run succeeds" "$(exit_status_of_link)" "0"
-assert_every_projection_linked "second run"
-linked_home=$HOME
+    def test_selected_collision_rejected_before_any_mutation(self):
+        self.put(".claude/skills/wiki/SKILL.md")
+        before = self.snapshot()
+        self.run_link("--check", "policy", "wiki", succeeds=False)
+        self.run_link("policy", "wiki", succeeds=False)
+        self.assertEqual(self.snapshot(), before)
 
-enable_harnesses codex
-check "relinking for Codex only succeeds" "$(exit_status_of_link)" "0"
-assert_codex_only "Codex-only relink"
+    def test_policy_collision_does_not_partially_install_skills(self):
+        self.put(".claude/CLAUDE.md")
+        before = self.snapshot()
+        self.run_link("policy", "wiki", succeeds=False)
+        self.assertEqual(self.snapshot(), before)
 
-mkdir -p "$HOME/.pi" "$HOME/.claude"
-printf 'local Pi state\n' >"$HOME/.pi/local"
-printf 'local Claude state\n' >"$HOME/.claude/settings.json"
-ln -s "$root/skills/retired" "$HOME/.agents/skills/retired"
-mkdir -p "$HOME/.claude/skills"
-ln -s "$root/skills/retired" "$HOME/.claude/skills/retired"
-enable_harnesses
-check "relinking with no harness succeeds" "$(exit_status_of_link)" "0"
-for destination in $policy_destinations; do
-  check "no harness: $destination is absent" \
-    "$(path_state "$destination")" "missing"
-done
-check "no harness: shared skills are absent" \
-  "$(path_state ".agents/skills")" "missing"
-check "no harness: shared voice is absent" \
-  "$(path_state ".agents/voice.md")" "missing"
-check "no harness: Claude skills are absent" \
-  "$(path_state ".claude/skills")" "missing"
-check "no harness: retired shared skill is absent" \
-  "$(path_state ".agents/skills/retired")" "missing"
-check "no harness: retired Claude skill is absent" \
-  "$(path_state ".claude/skills/retired")" "missing"
-check "no harness: unrelated Pi state remains" \
-  "$(cat "$HOME/.pi/local")" "local Pi state"
-check "no harness: unrelated Claude state remains" \
-  "$(cat "$HOME/.claude/settings.json")" "local Claude state"
+    def test_broken_foreign_link_collision(self):
+        self.symlink(".agents/skills/wiki", "/unavailable/wiki")
+        before = self.snapshot()
+        self.run_link("wiki", succeeds=False)
+        self.assertEqual(self.snapshot(), before)
 
-enable_harnesses claude
-check "linking for Claude only succeeds" "$(exit_status_of_link)" "0"
-check "Claude-only: shared voice is linked" \
-  "$(link_target ".agents/voice.md")" "$root/global/voice.md"
-check "Claude-only: shared skills remain absent" \
-  "$(path_state ".agents/skills")" "missing"
-enable_harnesses pi codex claude
+    def test_non_directory_parent(self):
+        self.put(".codex")
+        before = self.snapshot()
+        self.run_link("policy", "wiki", succeeds=False)
+        self.assertEqual(self.snapshot(), before)
 
-isolated_home
-mkdir -p "$HOME/.agents"
-printf 'hand written voice\n' >"$HOME/.agents/voice.md"
-status=0
-"$link" --check >/dev/null 2>&1 || status=$?
-check "check mode rejects an unmanaged voice file" "$status" "1"
-check "refuses an unmanaged voice file" "$(exit_status_of_link)" "1"
-check "leaves that voice byte-identical" \
-  "$(cat "$HOME/.agents/voice.md")" "hand written voice"
-enable_harnesses
-check "no harness: preserves an unmanaged voice" "$(exit_status_of_link)" "0"
-check "no harness: unmanaged voice is unchanged" \
-  "$(cat "$HOME/.agents/voice.md")" "hand written voice"
-enable_harnesses pi codex claude
+    @unittest.skipIf(os.geteuid() == 0, "root bypasses directory write permissions")
+    def test_unwritable_parent(self):
+        parent = self.test_home / ".codex"
+        parent.mkdir(mode=0o555)
+        self.addCleanup(parent.chmod, 0o755)
+        before = self.snapshot()
+        self.run_link("--check", "policy", "wiki", succeeds=False)
+        self.run_link("policy", "wiki", succeeds=False)
+        self.assertEqual(self.snapshot(), before)
 
-isolated_home
-mkdir -p "$HOME/.claude"
-printf 'hand written policy\n' >"$HOME/.claude/CLAUDE.md"
-check "refuses a pre-existing CLAUDE.md" "$(exit_status_of_link)" "1"
-check "leaves that file byte-identical" \
-  "$(cat "$HOME/.claude/CLAUDE.md")" "hand written policy"
+    def test_installs_only_available_harnesses(self):
+        self.enable("codex")
+        self.run_link("policy", "wiki")
+        self.assert_link(".codex/AGENTS.md", "global/AGENTS.md")
+        self.assert_link(".agents/skills/wiki", "skills/wiki")
+        self.assertFalse((self.test_home / ".pi").exists())
+        self.assertFalse((self.test_home / ".claude").exists())
+        self.enable("claude")
+        self.run_link("policy", "wiki")
+        self.assert_link(".claude/CLAUDE.md", "global/AGENTS.md")
+        self.assert_link(".claude/skills/wiki", "skills/wiki")
+        self.assertFalse((self.test_home / ".codex/AGENTS.md").is_symlink())
+        self.assertFalse((self.test_home / ".agents/skills/wiki").is_symlink())
 
-isolated_home
-mkdir -p "$HOME/.claude/skills/not-ours" "$HOME/.agents/skills"
-# Stock Omarchy links may coexist, including a currently unavailable target.
-ln -s /usr/share/omarchy/default/agents/skills/omarchy "$HOME/.agents/skills/omarchy"
-ln -s /unavailable/diagnose-crash "$HOME/.claude/skills/diagnose-crash"
-status=0
-"$link" --check >/dev/null 2>&1 || status=$?
-check "check mode accepts unrelated skills" "$status" "0"
-check "check mode does not install owned skills" "$(path_state ".agents/skills/debug")" "missing"
-check "links alongside unrelated skills" "$(exit_status_of_link)" "0"
-assert_every_projection_linked "coexisting skills"
-check "preserves unrelated directory" "$(path_state ".claude/skills/not-ours")" "present"
-check "preserves Omarchy link" "$(link_target ".agents/skills/omarchy")" "/usr/share/omarchy/default/agents/skills/omarchy"
-check "preserves broken unrelated link" "$(link_target ".claude/skills/diagnose-crash")" "/unavailable/diagnose-crash"
-enable_harnesses
-check "removing owned projections alongside others succeeds" "$(exit_status_of_link)" "0"
-check "cleanup preserves unrelated directory" "$(path_state ".claude/skills/not-ours")" "present"
-check "cleanup preserves Omarchy link" "$(link_target ".agents/skills/omarchy")" "/usr/share/omarchy/default/agents/skills/omarchy"
-check "cleanup preserves broken unrelated link" "$(link_target ".claude/skills/diagnose-crash")" "/unavailable/diagnose-crash"
-enable_harnesses pi codex claude
+    def test_no_harness_requires_explicit_uninstall(self):
+        self.run_link("policy", "wiki")
+        self.enable()
+        before = self.snapshot()
+        self.run_link("wiki", succeeds=False)
+        self.assertEqual(self.snapshot(), before)
+        self.run_link("--none")
+        self.assertFalse(any(path.is_symlink() for path in self.test_home.rglob("*")))
 
-isolated_home
-mkdir -p "$HOME/.agents/skills/debug"
-printf 'independent skill\n' >"$HOME/.agents/skills/debug/SKILL.md"
-status=0
-"$link" --check >/dev/null 2>&1 || status=$?
-check "check mode refuses a skill name collision" "$status" "1"
-check "refuses a skill name collision" "$(exit_status_of_link)" "1"
-check "preserves colliding skill content" "$(cat "$HOME/.agents/skills/debug/SKILL.md")" "independent skill"
+    def test_retires_owned_old_skills_and_voice(self):
+        for directory in (".agents/skills", ".claude/skills"):
+            for name in ("implement", "debug", "retired"):
+                self.symlink(f"{directory}/{name}", ROOT / "skills" / name)
+        self.symlink(".agents/voice.md", ROOT / "global/voice.md")
+        self.run_link("wiki")
+        self.assertFalse((self.test_home / ".agents/voice.md").is_symlink())
+        for directory in (".agents/skills", ".claude/skills"):
+            self.assertEqual([path.name for path in (self.test_home / directory).iterdir()], ["wiki"])
 
-isolated_home
-mkdir -p "$HOME/.agents/skills"
-ln -s /unavailable/debug "$HOME/.agents/skills/debug"
-check "refuses a colliding broken link" "$(exit_status_of_link)" "1"
-check "preserves colliding broken link" "$(link_target ".agents/skills/debug")" "/unavailable/debug"
+    def test_foreign_voice_preserved(self):
+        voice = self.put(".agents/voice.md", "personal voice")
+        self.run_link("policy")
+        self.assertEqual(voice.read_text(), "personal voice")
 
-HOME=$linked_home
-export HOME
-"$link" >/dev/null
-ln -s "$root/skills/implementation" "$HOME/.agents/skills/implementation"
-ln -s "$root/skills/implementation" "$HOME/.claude/skills/implementation"
-ln -s "$root/skills/systematic-debugging" "$HOME/.agents/skills/systematic-debugging"
-ln -s "$root/skills/systematic-debugging" "$HOME/.claude/skills/systematic-debugging"
-ln -s "$root/skills/persistent-browser" "$HOME/.agents/skills/persistent-browser"
-ln -s "$root/skills/persistent-browser" "$HOME/.claude/skills/persistent-browser"
-ln -s "$root/skills/curated-wiki" "$HOME/.agents/skills/curated-wiki"
-ln -s "$root/skills/curated-wiki" "$HOME/.claude/skills/curated-wiki"
-ln -s "$root/skills/genius" "$HOME/.agents/skills/genius"
-ln -s "$root/skills/genius" "$HOME/.claude/skills/genius"
-ln -s "$root/skills/operator-crm" "$HOME/.agents/skills/operator-crm"
-ln -s "$root/skills/operator-crm" "$HOME/.claude/skills/operator-crm"
-check "relinking an existing tree succeeds" "$(exit_status_of_link)" "0"
-assert_every_projection_linked "after relink"
-check "removes retired .agents implementation link" \
-  "$(path_state ".agents/skills/implementation")" "missing"
-check "removes retired .claude implementation link" \
-  "$(path_state ".claude/skills/implementation")" "missing"
-check "removes retired .agents systematic-debugging link" \
-  "$(path_state ".agents/skills/systematic-debugging")" "missing"
-check "removes retired .claude systematic-debugging link" \
-  "$(path_state ".claude/skills/systematic-debugging")" "missing"
-check "removes retired .agents persistent-browser link" \
-  "$(path_state ".agents/skills/persistent-browser")" "missing"
-check "removes retired .claude persistent-browser link" \
-  "$(path_state ".claude/skills/persistent-browser")" "missing"
-check "removes retired .agents curated-wiki link" \
-  "$(path_state ".agents/skills/curated-wiki")" "missing"
-check "removes retired .claude curated-wiki link" \
-  "$(path_state ".claude/skills/curated-wiki")" "missing"
-check "removes retired .agents genius link" \
-  "$(path_state ".agents/skills/genius")" "missing"
-check "removes retired .claude genius link" \
-  "$(path_state ".claude/skills/genius")" "missing"
-check "removes retired .agents operator-crm link" \
-  "$(path_state ".agents/skills/operator-crm")" "missing"
-check "removes retired .claude operator-crm link" \
-  "$(path_state ".claude/skills/operator-crm")" "missing"
+    def test_legacy_directory_link_converted_to_selected_entries(self):
+        directory = self.symlink(".agents/skills", ROOT / "skills")
+        self.run_link("--check", "wiki")
+        self.assertTrue(directory.is_symlink())
+        self.run_link("wiki")
+        self.assertFalse(directory.is_symlink())
+        self.assertEqual([path.name for path in directory.iterdir()], ["wiki"])
+        self.assert_link(".agents/skills/wiki", "skills/wiki")
 
-isolated_home
-logical="$HOME/source"
-ln -s "$root" "$logical"
-for destination in $policy_destinations; do
-  mkdir -p "$HOME/$(dirname "$destination")"
-  ln -s "$logical/global/AGENTS.md" "$HOME/$destination"
-done
-for skills_dir in $skills_destinations; do
-  mkdir -p "$HOME/$skills_dir"
-  for skill in $managed_skills; do
-    ln -s "$logical/skills/$skill" "$HOME/$skills_dir/$skill"
-  done
-  ln -s "$logical/skills/retired" "$HOME/$skills_dir/retired"
-done
-ln -s "$logical/global/voice.md" "$HOME/.agents/voice.md"
-check "accepts links through a logical checkout path" "$(exit_status_of_link)" "0"
-check "preserves the logical voice link" \
-  "$(link_target ".agents/voice.md")" "$logical/global/voice.md"
-check "removes a retired logical .agents link" \
-  "$(path_state ".agents/skills/retired")" "missing"
-check "removes a retired logical .claude link" \
-  "$(path_state ".claude/skills/retired")" "missing"
+    def test_legacy_link_unchanged_when_other_destination_conflicts(self):
+        self.symlink(".agents/skills", ROOT / "skills")
+        self.put(".claude/CLAUDE.md")
+        before = self.snapshot()
+        self.run_link("policy", "wiki", succeeds=False)
+        self.assertEqual(self.snapshot(), before)
 
-if [ "$failures" -gt 0 ]; then
-  echo "$failures check(s) failed" >&2
-  exit 1
-fi
+    def test_foreign_directory_link_is_preserved(self):
+        destination = self.symlink(".agents/skills", self.scratch)
+        self.run_link("wiki", succeeds=False)
+        self.run_link("--none")
+        self.assertTrue(destination.is_symlink())
 
-echo "all checks passed"
+    def test_logical_and_relative_owned_links(self):
+        alias = self.scratch / "source"
+        alias.symlink_to(ROOT)
+        policy = self.symlink(".codex/AGENTS.md", "../../source/global/AGENTS.md")
+        self.symlink(".agents/skills/wiki", alias / "skills/wiki")
+        retired = self.symlink(".agents/skills/retired", alias / "skills/retired")
+        self.run_link("policy", "wiki")
+        self.assertEqual(os.readlink(policy), "../../source/global/AGENTS.md")
+        self.assertFalse(retired.is_symlink())
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

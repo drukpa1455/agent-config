@@ -1,221 +1,96 @@
 # Agent Config
 
-Shared global policy and portable skills for coding agents.
+A small personal working agreement and optional skills for Pi, Codex, and Claude
+Code. The aim is less friction: preserve useful preferences and knowledge while
+leaving ordinary coding judgment to the agent and project.
 
-## Layout
+## Choose what to use
 
-```text
-AGENTS.md                    repository-local change contract
-global/AGENTS.md             always-loaded working policy
-global/voice.md              shared editorial guidance
-scripts/link                 idempotent local linker
-scripts/test-link            projection proof against a throwaway home
-scripts/test-browse          Patchright adapter proof
-scripts/work                 repository task lifecycle
-scripts/test-work            lifecycle delegation proof
-scripts/update               guarded local checkout and link refresh
-scripts/test-update          update proof against throwaway repositories
-skills/wiki/                 owner-controlled knowledge curation
-skills/lens/                 source-backed engineering lenses
-skills/spec/                 grounded specifications and delivery graphs
-skills/implement/            scoped execution and verification
-skills/browse/               portable headed browser control
-skills/debug/                 evidence-first root-cause diagnosis
-skills/gws/                   Google Workspace CLI routing
-```
+Nothing is installed by cloning, updating, or finishing work in this repository.
+Read the [shared policy](global/AGENTS.md), then choose only useful components.
 
-Project-level `AGENTS.md` files layer project conventions over the shared policy.
-Keep them useful to contributors who do not have this configuration installed.
+| Component | Purpose | Invocation |
+| --- | --- | --- |
+| `policy` | Personal engineering and communication preferences | Loaded by the harness when installed |
+| [wiki](skills/wiki/SKILL.md) | Query or curate an owner's Markdown knowledge repository | Matching wiki work |
+| [lens](skills/lens/SKILL.md) | Pinned Tinygrad, MQuickJS, and DaoFP design studies | Explicit only |
+| [spec](skills/spec/SKILL.md) | Ground a specification in outcomes, decisions, and acceptance criteria | Explicit only |
+| [browse](skills/browse/SKILL.md) | Playwright CLI and Patchright session/profile conventions | CLI browser work |
+| [gws](skills/gws/SKILL.md) | Google Workspace CLI discovery and operations | Workspace CLI work |
 
-## Use the shared configuration
+The [writing reference](references/voice.md) is available for substantial editing
+when useful. It is neither installed nor requested on every session. Source
+studies and worked traces live inside `skills/lens/references/` and are read on
+demand. Generic implementation and debugging guides have been retired; their
+history remains in Git.
 
-Cloning is separate from installation. Review the files before running the linker;
-`link --check` checks compatibility without installing projections. Task completion
-through `scripts/work done` also installs links: when installation is explicitly
-excluded, run `env -u WORK_PRIMARY_UPDATER skills/implement/scripts/work done`
-from the task worktree for cleanup without installation.
+Each skill is self-contained and can also be installed individually, for example
+with `npx skills add drukpa1455/agent-config --skill wiki`. `spec` and `lens` retain
+explicit invocation metadata for Codex and Claude Code. Use the harness's skill
+command when invoking them. A wiki can be located through the request, its own
+checkout, or `KNOWLEDGE_BASE_PATH`.
 
-To install after review, clone once, then link the shared files:
+## Install explicitly
+
+The linker requires Python 3.9 or newer. From a stable checkout:
 
 ```sh
 git clone https://github.com/drukpa1455/agent-config.git ~/src/agent-config
-~/src/agent-config/scripts/link
+cd ~/src/agent-config
+scripts/link --check policy wiki lens
+scripts/link policy wiki lens
 ```
 
-The linker creates a real skills directory per harness and links every owned
-skill into each. It removes stale links to skills deleted from this checkout and
-preserves unrelated entries, including Omarchy’s stock skills. A collision with
-one of this repository’s skill names or policy files is refused without replacing
-the existing entry. Install project-specific skills in their owning repository.
+**Each invocation names the complete desired set.** These examples install the
+policy and two skills. `scripts/link policy` keeps only the shared policy;
+`scripts/link wiki` keeps only the wiki skill. There is no default bundle and no
+selection manifest. `--check` previews the same plan without changing files.
 
-Only harnesses whose `pi`, `codex`, or `claude` executable is available on
-`PATH` receive projections. Re-running the linker after removing a harness
-removes its owned links and leaves unrelated configuration untouched.
+Only harnesses available on `PATH` receive links:
 
-Pi, Codex, and Claude Code read the same skills and the same global policy. Each
-reads it under the name its own harness loads:
+| Harness | Global policy | Skills |
+| --- | --- | --- |
+| Pi | `~/.pi/agent/AGENTS.md` | `~/.agents/skills/` |
+| Codex | `~/.codex/AGENTS.md` | `~/.agents/skills/` |
+| Claude Code | `~/.claude/CLAUDE.md` | `~/.claude/skills/` |
 
-```text
-~/.pi/agent/AGENTS.md    ~/.agents/skills/
-~/.codex/AGENTS.md       ~/.claude/skills/
-~/.claude/CLAUDE.md
-```
+The linker preserves unrelated entries, including Omarchy's stock skills. It
+refuses selected name collisions and checks the full plan before writing. It
+removes only this checkout's omitted, retired, or no-longer-applicable links,
+including the old shared voice link. Legacy whole-directory skill links become
+individual selected links. Re-run with the complete selection after retiring a
+skill or removing a harness. If no harness is found, installation refuses to
+change anything.
 
-The shared policy asks agents to read [`global/voice.md`](global/voice.md) once
-per session through its common link at `~/.agents/voice.md`. Edit the repository
-file to change the voice across projects and harnesses. The guide covers direct
-prose, useful uncertainty, and audience-specific tone.
-
-Run `/reload` in Pi after changes; start a new Codex or Claude Code session to
-reload them.
-
-Update explicitly after review from any worktree:
+To remove this checkout's managed links explicitly:
 
 ```sh
-scripts/update
+scripts/link --check --none
+scripts/link --none
 ```
 
-The updater serializes concurrent calls, requires a clean primary checkout on
-the remote's live default branch, fast-forwards it without hooks, and refreshes
-all links. From the primary it installs current remote trunk; from another
-worktree it advances no farther than that worktree's landed revision. It refuses
-dirty, divergent, non-trunk, or unlanded state. Unattended updates remain
-excluded because skills and global instructions can execute policy and code.
-The command requires Git, Python 3.9 or newer, and standard `tar`.
+Links point directly into the checkout. Editing or updating an already installed
+file changes what those links expose; start a new Codex or Claude Code session,
+or use `/reload` in Pi, to load it. Updating does not create or reconcile links.
 
-For task delivery, `scripts/work done` proves landing, synchronizes clean primary
-trunk, and removes the owned task before installing links. If installation fails,
-it reports the primary `scripts/link` command to retry; merged work need not stay
-in a task workspace solely to preserve an installation error.
+## Repository tools
 
-## Optional compact command output
+`scripts/update` fast-forwards a clean primary checkout under shared locks, with
+Git hooks disabled. From another worktree it advances only to that worktree's
+landed first-parent revision, preserving a newer primary. It refuses dirty,
+divergent, non-trunk, or unlanded state. It never runs the linker.
 
-Install [RTK](https://github.com/rtk-ai/rtk) with `brew install rtk`; update with
-`brew upgrade rtk` and remove with `brew uninstall rtk`. Shared policy permits
-its use when a summary preserves the needed evidence, so no `rtk init`, hooks, or
-additional skill is needed. Examples: `rtk git status`, `rtk gh pr list`, and
-`rtk test <test command>`. Keep native structured field filters and full review
-diffs. On failure, follow the printed `rtk recall <hash>` hint for omitted details.
-
-RTK owns local metrics and diagnostic recovery data; keep them out of Git.
-`rtk gain` reports estimated output reduction, not actual billing savings.
-Telemetry is opt-in; leave it disabled. New sessions load the shared guidance.
-
-## Wiki
-
-`wiki` enters a user-owned Markdown knowledge repository without imposing a
-storage layout or note format. It activates for explicit wiki work and questions
-about the owner's accumulated knowledge, not merely because an ordinary task
-overlaps a wiki topic. The target repository's `AGENTS.md` remains its schema.
-
-The design follows the persistent, compounding [LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) while keeping each wiki's operating contract local.
-
-Set `KNOWLEDGE_BASE_PATH` when the wiki should be available outside its own checkout, or provide its path in the request.
-
-```sh
-npx skills add drukpa1455/agent-config --skill wiki
-```
-
-See [`skills/wiki/SKILL.md`](skills/wiki/SKILL.md).
-
-## Lens
-
-`lens` carries three deeply studied, revision-bound lenses: Tinygrad with George
-Hotz and contributors, MQuickJS with Fabrice Bellard, Charlie Gordon, and
-contributors, and DaoFP by Bartosz Milewski. Its small entrypoint selects one
-lens from target pressure, then
-loads only that profile. The profiles retain decision criteria, mechanics,
-source paths, limitations, and optional reproducible worked traces.
-
-The skill studies project mechanics rather than simulating personalities. It
-pins source evidence, preserves collaborators, separates observation from
-inference, honors a named lens or otherwise chooses from target pressure, and
-states where each analogy breaks. Future profiles are added one primary-source study at a time.
-
-```sh
-npx skills add drukpa1455/agent-config --skill lens
-```
-
-The skill is explicit-only. Use `/skill:lens <problem-or-design-question>`.
-See [`skills/lens/SKILL.md`](skills/lens/SKILL.md).
-
-## Specification and implementation
-
-`spec` turns a consequential repository discussion into an executable agreement:
-observable behavior, codebase-grounded design, and the smallest useful graph of
-stages, issues, and sub-issues. Complex designs and multi-stage epics include
-compact ASCII architecture and delivery maps. Later stages retain durable
-contracts without false implementation precision and are refined from evidence
-after each stage lands. Coverage checks connect every contract to delivery and
-proof without creating another status system. The skill stops before
-product-code edits.
-
-`implement` delivers a decided scope, resolving implementation mechanics and
-refining stages as evidence changes. It reinforces simple design and checks the
-requested outcome while following shared review and delivery policy. Its scripts
-provide fallback workspace creation and cleanup when the repository has none.
-Production mutation remains outside the skill's authority.
-
-For a repository-readiness review, see the
-[reusable checklist](skills/implement/references/readiness.md).
-
-Install either explicit-only skill directly:
-
-```sh
-npx skills add drukpa1455/agent-config --skill spec
-npx skills add drukpa1455/agent-config --skill implement
-```
-
-Use `/skill:spec <discussion-or-goal>` before implementation, then
-`/skill:implement <decided-issue-stage-or-epic>` when the work is ready. See
-[`skills/spec/SKILL.md`](skills/spec/SKILL.md) and
-[`skills/implement/SKILL.md`](skills/implement/SKILL.md).
-
-## Debug
-
-`debug` applies a proportional evidence loop to reproducible defects and unexplained required-check failures. It classifies expected baselines, read-only findings, command mistakes, and explained environment failures without turning each one into an implementation workflow.
-
-```sh
-npx skills add drukpa1455/agent-config --skill debug
-```
-
-See [`skills/debug/SKILL.md`](skills/debug/SKILL.md).
-
-## Browse
-
-`browse` uses Playwright CLI directly, or a small Patchright adapter when the
-authorized task benefits from it. Tasks reuse one named session with explicit
-cleanup and, where supported, an idle timeout. Saved logins use each engine’s
-canonical automation profile, separate from everyday Chrome; native locks
-serialize access. Ordinary sessions remain ephemeral.
-
-The skill owns authentication, profile setup, evidence retention, and cleanup;
-it adds no command router, lease service, or generated browser configuration.
-
-```sh
-npx skills add drukpa1455/agent-config --skill browse
-```
-
-See [`skills/browse/SKILL.md`](skills/browse/SKILL.md) and its conditional setup
-instructions. Existing local browser installations can be reused.
-
-## Google Workspace
-
-`gws` routes Gmail, Calendar, Drive, Docs, Sheets, and other Google Workspace
-work through the installed Google Workspace CLI. It prefers semantic helpers and
-live CLI schemas over copied API catalogs, distinguishes drafts from sends, and
-keeps authentication material private.
-
-```sh
-npx skills add drukpa1455/agent-config --skill gws
-```
-
-See [`skills/gws/SKILL.md`](skills/gws/SKILL.md).
+The optional `scripts/work new <task>` and `scripts/work done` manage isolated
+GitHub work without loading a coding skill. `new` creates a branch under
+`~/.worktrees/<host>/<owner>/<repo>/`; `WORKTREE_ROOT` overrides that root. Run
+`done` from that clean task worktree after merging. It verifies the exact merged
+head and fresh trunk, checks dependencies, synchronizes primary, and removes the
+owned worktree and branch. It never installs configuration or runs updater hooks.
+The tools require Git and Python 3.9+; cleanup also requires authenticated `gh`.
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+[AGENTS.md](AGENTS.md) maps ownership and checks.
+[CONTRIBUTING.md](CONTRIBUTING.md) describes the contribution conventions.
 
-## License
-
-MIT
+MIT licensed.

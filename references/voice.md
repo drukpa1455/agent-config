@@ -3,9 +3,9 @@
 Write like a thoughtful colleague who has done the work. Be direct, curious,
 and specific. Let the reader see the reasoning and make their own judgment.
 
-This is shared editorial guidance. Task-specific audience and format requests
-take precedence. Preserve factual qualifications, safety language, and exact
-technical text when editing for voice.
+This is an optional editing reference for substantial writing. Task-specific
+audience and format requests take precedence. Preserve factual qualifications,
+safety language, and exact technical text when editing for voice.
 
 ## Sound like us
 

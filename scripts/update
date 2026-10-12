@@ -60,36 +60,13 @@ case $common in
   *) common="$root/$common" ;;
 esac
 common=$(CDPATH= cd -- "$common" && pwd -P)
-if [ -n "${UPDATE_LOCK_FDS:-}" ]; then
-  lock_fds=$UPDATE_LOCK_FDS
-else
-  exec 9>"$common/agent-config-update.lock"
-  exec 8>"$common/agent-primary-update.lock"
-  lock_fds=9,8
-fi
-python3 - "$common" "$lock_fds" <<'PY' || fail "another update is active"
+exec 9>"$common/agent-config-update.lock"
+exec 8>"$common/agent-primary-update.lock"
+python3 - <<'LOCK' || fail "another update is active"
 import fcntl
-import os
-import sys
-
-root, raw = sys.argv[1:]
-fds = [int(value) for value in raw.split(",")]
-names = ("agent-config-update.lock", "agent-primary-update.lock")
-if len(fds) != len(names):
-    raise SystemExit(1)
-for descriptor, name in zip(fds, names):
-    actual = os.fstat(descriptor)
-    expected = os.stat(os.path.join(root, name))
-    if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
-        raise SystemExit(1)
+for descriptor in (9, 8):
     fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
-PY
-scratch=
-release() {
-  [ -z "$scratch" ] || rm -rf "$scratch"
-}
-trap release EXIT
-trap 'exit 1' HUP INT TERM
+LOCK
 
 primary=$(
   git -C "$root" worktree list --porcelain |
@@ -131,16 +108,10 @@ if ! git -C "$primary" merge-base --is-ancestor "$target" "$final"; then
     fail "primary checkout has diverged from $target"
   final=$target
 fi
-scratch=$(mktemp -d)
-git -C "$primary" archive "$final" | tar -x -C "$scratch"
-"$scratch/scripts/link" --check "$primary" >/dev/null
-rm -rf "$scratch"
-scratch=
 if [ "$final" != "$primary_head" ]; then
   git -C "$primary" -c core.hooksPath=/dev/null \
     merge --quiet --ff-only "$final"
 fi
-"$primary/scripts/link" >/dev/null
 
 revision=$(git -C "$primary" rev-parse --short HEAD)
 echo "updated agent config to $revision"
