@@ -14,18 +14,20 @@ checkout and distinguish recorded results from a fresh reproduction.
 
 ## Verify and isolate the source
 
+Run the selected blocks in one disposable shell or script so `BUILD` and its
+cleanup trap remain available until the probes finish. Export the pinned commit
+from an available clone; its checked-out branch and local edits can stay in place.
+
 ```sh
+set -eu
 MQUICKJS_PATH=${MQUICKJS_PATH:-$HOME/tmp/lens-study/mquickjs}
 REV=ee50431eac9b14b99f722b537ec4cac0c8dd75ab
 
-test "$(git -C "$MQUICKJS_PATH" remote get-url origin)" = \
-  https://github.com/bellard/mquickjs.git
-test "$(git -C "$MQUICKJS_PATH" rev-parse HEAD)" = "$REV"
-test -z "$(git -C "$MQUICKJS_PATH" status --short)"
-
 BUILD=$(mktemp -d)
 trap 'rm -rf "$BUILD"' EXIT
-git -C "$MQUICKJS_PATH" archive HEAD | tar -x -C "$BUILD"
+git -C "$MQUICKJS_PATH" archive --format=tar --output="$BUILD/source.tar" "$REV"
+tar -xf "$BUILD/source.tar" -C "$BUILD"
+rm "$BUILD/source.tar"
 make -C "$BUILD" -j4
 make -C "$BUILD" test
 ```
