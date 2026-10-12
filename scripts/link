@@ -119,8 +119,9 @@ link_skills() {
       continue
     fi
 
-    echo "refusing unmanaged skill entry $destination" >&2
-    exit 1
+    # Other tools (including Omarchy) own entries in these shared directories.
+    # Preserve them; link_file below still refuses a collision with our names.
+    continue
   done
 
   for source in "$root"/skills/*; do

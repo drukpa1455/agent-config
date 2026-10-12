@@ -1,11 +1,16 @@
 ---
 name: browse
-description: Use for interactive browser automation, visual web testing, or persistent logins. Use Playwright CLI directly or the Patchright adapter when appropriate.
+description: Use when browser work requires Playwright CLI or the Patchright adapter, or when explicitly requested. Prefer a suitable authorized browser already provided by the host for ordinary interaction.
 ---
 
 # Browse
 
-Use `playwright-cli` directly for browser work, or
+First honor the requested browser surface. If the host already provides suitable
+authorized browser control, use its own instructions and session lifecycle; the
+CLI-specific setup and cleanup below do not apply to host-managed browsers.
+Do not create another profile or request another login solely to use this skill.
+
+When CLI automation is needed, use `playwright-cli` directly, or
 `$SKILL_DIR/scripts/patchright` when the authorized task benefits from Patchright.
 Resolve `$SKILL_DIR` from this file.
 Honor an explicit engine choice; never switch silently or share a profile

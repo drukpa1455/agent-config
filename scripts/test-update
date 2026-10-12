@@ -86,9 +86,12 @@ touch "$landed/dirty"
 rejects "a dirty invoking worktree preserves the primary" run_update
 rm "$landed/dirty"
 mkdir "$home/.agents/skills/foreign"
-rejects "projection conflicts preserve the primary" run_update
+rm "$home/.agents/skills/demo"
+mkdir "$home/.agents/skills/demo"
+rejects "skill name collisions preserve the primary" run_update
 [ "$(git -C "$primary" rev-parse HEAD)" = "$old" ]
-rmdir "$home/.agents/skills/foreign"
+rmdir "$home/.agents/skills/demo"
+HOME="$home" "$primary/scripts/link" >/dev/null
 rm "$home/.agents/voice.md"
 printf 'personal voice\n' >"$home/.agents/voice.md"
 rejects "voice conflicts preserve the primary" run_update
@@ -125,7 +128,8 @@ result=$(run_update)
 [ "$(readlink "$home/.agents/voice.md")" = "$primary/global/voice.md" ]
 [ "$(cat "$home/.agents/voice.md")" = "voice two" ]
 [ ! -e "$marker" ]
-ok "a landed invocation fast-forwards and relinks the primary"
+[ -d "$home/.agents/skills/foreign" ]
+ok "a landed invocation fast-forwards and relinks while preserving unrelated skills"
 
 mkdir -p "$seed/skills/new"
 printf '%s\n' '---' 'name: new' '---' >"$seed/skills/new/SKILL.md"
