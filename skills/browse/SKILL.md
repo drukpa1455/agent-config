@@ -1,13 +1,13 @@
 ---
 name: browse
-description: Use Playwright CLI or the Patchright adapter when requested or needed for browser work. Prefer suitable authorized browser control already provided by the host for ordinary interaction.
+description: Manage Playwright CLI or Patchright sessions, saved profiles, and cleanup when one of these CLIs is selected or host browser control lacks a needed capability.
 ---
 
 # Browse
 
-Honor the requested browser surface. Host-managed browsers follow their own
-instructions and lifecycle. Use this CLI route when it supplies a needed
-capability; it does not require another login or profile merely to use the skill.
+Honor the requested browser surface. Prefer suitable authorized browser control
+already provided by the host; its own instructions and lifecycle apply. Use this
+CLI route when selected for a needed capability, reusing existing authorization.
 
 Use `playwright-cli` or `$SKILL_DIR/scripts/patchright`, resolving `$SKILL_DIR`
 from this file. Honor the chosen engine and keep engine profiles separate. Read
@@ -32,13 +32,15 @@ Ordinary sessions are ephemeral: omit `--persistent`, `--profile`, and custom
 CLI's help supports it, add `--idle-timeout=900000` to `open`; otherwise use
 explicit cleanup.
 
-When the task needs saved login, reuse the engine's canonical automation profile:
+Honor a requested automation profile. Otherwise, when the task needs saved
+login, reuse the engine's existing profile at these default locations:
 
 - Playwright: `--profile="$HOME/.local/share/pi-browser/profile"`
 - Patchright: `--browser=chrome --profile="$HOME/.local/share/pi-browser/patchright-profile"`
 
 These stay separate from everyday Chrome. Keep paths stable; resolve legacy
-profiles before creating duplicates. A missing profile may need user login.
+profiles before creating duplicates. A missing profile may need user login;
+explain that specific step when user participation is needed.
 Copying authentication state requires explicit authorization. Respect native
 profile locks; wait for the owner instead of bypassing the lock with a duplicate
 profile. Never stop or delete another task's session.
@@ -52,8 +54,9 @@ success before retrying an external action.
 
 Pause browser inspection during user authentication. Keep credentials out of
 commands, logs, screenshots, and Git. Do not bypass CAPTCHA or access controls.
-Use official Playwright when testing CSP, security headers, response bytes,
-console, or service-worker behavior; Patchright can alter these surfaces.
+Patchright can alter CSP, security headers, response bytes, console, and
+service-worker behavior. Use official Playwright for those checks when the engine
+choice is open; disclose this limitation when Patchright is specifically required.
 
 When browser work ends, retain required evidence, close the task's session, and
 run its `delete-data`. Confirm cleanup and remove disposable scratch. Keep a

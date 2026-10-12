@@ -218,12 +218,13 @@ repeated composition problem make them the simplest honest representation.
 - [`DaoFP.tex`](https://github.com/BartoszMilewski/DaoFP/blob/7a03427c75c830518aa6ffdbcf1b9d131f8f4cfc/DaoFP.tex)
   owns the book assembly and chapter order.
 
-Read only the tier justified by the target pressure:
+Use this map to locate relevant material; a design question need not load a
+whole tier:
 
 | Tier           | Chapters | Use for                                                                       |
 | -------------- | -------- | ----------------------------------------------------------------------------- |
-| Default        | 1-9      | Composition, algebraic shape, construction, observation, laws, and genericity |
-| Evidence-gated | 10-15    | Free construction, defunctionalization, recursion ownership, and effects      |
+| Foundations    | 1-9      | Composition, algebraic shape, construction, observation, laws, and genericity |
+| Constructions  | 10-15    | Free construction, defunctionalization, recursion ownership, and effects      |
 | Specialized    | 16-22    | Comonadic context, optics, Kan extensions, enrichment, and dependent types    |
 
 Within the specialized tier, chapter 17 supplies the practical lens laws and
