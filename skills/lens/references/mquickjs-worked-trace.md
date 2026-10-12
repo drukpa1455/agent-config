@@ -6,9 +6,11 @@ cooperative interruption. It was reproduced against `bellard/mquickjs` commit
 `ee50431eac9b14b99f722b537ec4cac0c8dd75ab` on macOS arm64 with the existing
 Apple Clang toolchain.
 
-Run it only with explicit permission to build upstream source. Do not install a
-compiler or dependencies merely for this trace. Keep the study checkout clean by
-building an archived copy in temporary storage.
+Use the recorded evidence for source comparisons. Run relevant probes when
+reproduction is part of the authorized task, using an available compiler and
+an archived copy in temporary storage. If the toolchain is missing, identify
+the setup needed and resolve it within the task's scope. Preserve the study
+checkout and distinguish recorded results from a fresh reproduction.
 
 ## Verify and isolate the source
 

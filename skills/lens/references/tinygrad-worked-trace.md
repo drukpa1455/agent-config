@@ -2,9 +2,9 @@
 
 This example demonstrates the method, evidence format, and transfer boundary. It
 was reproduced against `tinygrad/tinygrad` commit
-`e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b`. Verify it again when the checkout
-revision differs; do not preserve the expected output by ignoring changed
-source.
+`e69ce4be7f6e24f8641a50aa4dfba5a97224ee9b`. Use that revision for reproduction.
+Recheck affected claims when applying the trace to changed source; the recorded
+output describes the pinned study.
 
 ## Isolate one path
 
@@ -51,9 +51,10 @@ False
 True [4, 6, 8]
 ```
 
-Do not install Python or Tinygrad dependencies merely to run this example. If
-the available interpreter is incompatible, the source and tests can still
-establish the path; report that the runtime trace was not reproduced.
+For a source comparison, the recorded trace and linked source may be enough.
+When reproduction is requested, use a compatible existing interpreter or resolve
+missing setup within the task's scope. State when the runtime trace was not
+reproduced; reading the recorded output is not a fresh execution.
 
 ## Follow the evidence
 

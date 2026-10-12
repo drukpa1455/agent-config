@@ -1,6 +1,7 @@
 # Agent Config
 
-Read `README.md` before changing this repository.
+`README.md` documents component selection, installation, and repository tools.
+Consult the relevant section when changing one of those interfaces.
 
 - `global/AGENTS.md` owns the optional shared working agreement.
 - `skills/<name>/` owns one self-contained, on-demand capability.
@@ -9,11 +10,12 @@ Read `README.md` before changing this repository.
 - `scripts/work` owns optional worktree creation and merged-task cleanup.
 - `scripts/update` owns guarded, fast-forward checkout updates.
 
-Keep personal preferences distinct from generic coding advice. Add instructions
-when they convey useful context or address a concrete failure; avoid turning a
-local incident into a universal workflow. Preserve skill invocation metadata and
-keep each package's references inside it. Installed links are projections, not
-source files.
+Keep enduring preferences in the shared agreement, task-specific knowledge in
+skills and references, and concrete operational safeguards in scripts. A useful
+preference may change a decision even when the agent already knows the concept.
+Review the benefit and unwanted work a rule could cause; word count alone does
+not establish value. Preserve invocation metadata and keep each skill's resources
+inside its package. Installed links are projections, not source files.
 
 For prose, review meaning, triggers, and affected links. For changes to `link`,
 `work`, or `update`, run the corresponding `scripts/test-<name>` in isolation.

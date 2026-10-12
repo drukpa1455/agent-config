@@ -1,7 +1,9 @@
 # Setup
 
-Use installed CLIs when available. Setup downloads npm packages and browser
-binaries; disclose that before running it. Keep installations outside repositories.
+Reuse installed tools. If the selected CLI is missing, install only what the
+authorized task needs, respecting any no-install constraint. Keep this reusable
+automation runtime outside project repositories. Setup can download npm packages
+and browser binaries; explain that when setup is needed.
 
 For Playwright CLI, use Node.js 20+ and the upstream installer:
 
@@ -29,8 +31,9 @@ read. Do not carry their `userDataDir` into ordinary sessions.
 Retire old profiles and output only after checking ownership and retained evidence.
 The former saved Playwright profile was
 `~/.local/share/persistent-browser/official-profile`. If it exists, resolve reuse
-or an authorized migration while its browser is closed before initializing the
-canonical profile named in `SKILL.md`. Do not silently leave two saved profiles.
+or migration within the task's authorization while its browser is closed, before
+initializing the default profile named in `SKILL.md`. Preserve a user-selected
+profile path and avoid leaving duplicate saved profiles.
 
 See the [upstream CLI guide](https://github.com/microsoft/playwright-cli#readme)
 for sessions, persistent profiles, dashboard, and command details.

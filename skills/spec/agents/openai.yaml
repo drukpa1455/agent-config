@@ -1,6 +1,6 @@
 interface:
   display_name: "Spec"
-  short_description: "Shape work into a grounded delivery spec"
+  short_description: "Formalize a durable specification or epic"
   default_prompt: "Use $spec to turn our discussion into a grounded specification with clear acceptance criteria."
 policy:
   allow_implicit_invocation: false

@@ -3,9 +3,10 @@
 Write like a thoughtful colleague who has done the work. Be direct, curious,
 and specific. Let the reader see the reasoning and make their own judgment.
 
-This is an optional editing reference for substantial writing. Task-specific
-audience and format requests take precedence. Preserve factual qualifications,
-safety language, and exact technical text when editing for voice.
+Consult this reference for substantial prose editing or an explicit request to
+apply this voice. Everyday preferences live in the shared working agreement.
+Task-specific audience and format requests take precedence. Preserve factual
+qualifications, safety language, and exact technical text when editing for voice.
 
 ## Sound like us
 
@@ -67,11 +68,6 @@ habitual self-disqualification or overstating what was established.
 State proposal and implementation status in one clear place. Repeat a limit only
 where omitting it would mislead, including in excerpts intended to stand alone.
 Keep concrete evidence gaps, safety requirements, and unresolved decisions explicit.
-
-Carry established ownership and decisions forward. Describe unfinished code
-placement and routine implementation as work to do. Raise an ownership or
-stakeholder decision only when it requires a consequential choice or authority
-the implementer lacks.
 
 Distinguish measured results, reported claims, and inference in plain language.
 “The vendor reports…” and “I expect…” do different jobs. Keep scope, dates,
